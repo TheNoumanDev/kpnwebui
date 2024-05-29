@@ -1,0 +1,69 @@
+cssStyling: true
+   
+Styles:
+  Text:
+    selectable: true
+    textStyle:
+      fontSize: 16
+      color: 0xFF232323
+
+material3: true
+
+Colors:
+  darkGrey: 0xFF333333
+  white: 0xFFFFFFFF
+
+  subtleGrey: 0xFFF3F3F3
+  snowGrey: 0xFFE3E3E3
+  smokeGrey: 0xFFD3D3D3
+  silverGrey: 0xFFB3B3B3
+  mediumGrey: 0xFF939393
+  hazyGrey: 0xFF737373
+  dimGrey: 0xFF535353
+  coalGrey: 0xFF232323
+  asphaltGrey: 0xFF131313
+  cinematicBlack: 0xFF0C0C0C
+
+  darkGreen: 0xFF009900
+  darkBlue: 0xFF0077CC
+  mintBlue: 0xFFF7FCFC
+  orange: 0xFFFF9000
+  darkRed: 0xFFE52E2E
+
+  green: 0xFF00C300
+  limeGreen: 0xFFDEFF00
+  tvGreen: 0xFF00A800
+  tvLimeGreen: 0xFFC8E600
+
+  blue: 0xFF00AAFF
+  deepBlue: 0xFF00009E
+
+  darkOrange: 0xFFEE7700
+  tvOrange: 0xFFE68A00
+
+  red: 0xFFff3333
+  tvRed: 0xFFff1A1A
+
+  greenColor: 0xFF009900
+  infoColor: 0xFF0077CC
+  warningColor: 0xFFFF9000
+  dangerColor: 0xFFE52E2E
+  primary: 0xFF009900
+
+Widgets:
+
+  Button:
+    borderRadius: 100
+    backgroundColor: 0xFF0077CC
+    padding: 20 30
+
+  Input:
+    variant: box
+    margin: 10 0
+    borderColor: 0xFF939393
+    focusedBorderColor: 0xFF0077CC
+
+Text:
+  bodyMedium:
+    fontSize: 16
+    color: black

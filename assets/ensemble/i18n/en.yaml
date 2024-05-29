@@ -1,0 +1,848 @@
+kpn:
+  # common labels 
+  cancel: Cancel
+  save: Save
+  confirm: Confirm
+  close: Close
+  restore: Restore
+  modify: Modify
+  add: Add
+  start: Start
+  activate: Activate
+  protocol: Protocol
+  device: Device
+  devices: Devices
+  device_count_single: device
+  device_count_multiple: devices
+  extender_count_single: extender
+  extender_count_multiple: extenders
+  select_device: Select device
+  port: Port
+  interface: Connection type
+  mac_address: MAC Address
+  host_name: Hostname
+  domain_name: Domain
+  ip_address: IP Address
+  ip4: IPv4
+  ip6: IPv6
+  ip4_ip6: IPv4/IPv6
+  ip4_address: IPv4 Address
+  ip6_address: IPv6 Address
+  subnet_mask: Subnet Mask
+  apply: Apply
+  password: Password
+  sign_in: Sign In
+  logout: Logout
+  status: Status
+  user_name: Username
+  enabled: Enabled
+  disabled: Disabled
+  screen_unavailable: This screen is unavailable
+  connection: Connection
+  connection_type: Connection Type
+  device_name: Device Name
+  icon: Icon
+  bitrate: Bitrate
+  time_active: Time Active
+  serial_number: Serial Number
+  reload: Reload
+  reload_analysis: Reload Analysis
+  reloading: Reloading...
+  network_name: Network Name
+  speed: Speed down/up
+  manufacturer: Manufacturer
+  reset: Reset
+  print: Print
+  mode: Mode
+  filter: Filter
+  model: Model
+  led: LED
+  led_on: On
+  led_off: Off
+  led_dimmed: Dimmed
+  unpair: Unpair
+  operational: Operational
+  continue: Continue
+  both: Both
+  description: Description
+  action: Action
+  software_version: Firmware Version
+  wifi_2g: 2.4 GHz
+  wifi_5g: 5 GHz
+  yes: Yes
+  no: No
+  active: Active
+  inactive: Inactive
+  custom: Custom
+  factory_default: Factory Defaults
+  guest_network: Guest Network
+  master_device: Master Device
+  
+  # common API messages 
+  success: Changes saved
+  error: An error has occurred. Try again.
+  waiting_for_response: Waiting...
+  no_connectivity: |-
+    There is currently no active internet connection.
+    This may be a temporary situation due to maintenance. Connect the device correctly and/or restart if necessary. 
+
+  # validation errors 
+  invalid_ipv6: Invalid IPv6
+  invalid_ipv4: Invalid IPv4
+  invalid_port: Invalid port
+
+  # navigation 
+  nav:
+    dashboard: Overview
+    internet_link: Internet connection
+    local_network: Home network
+    security: WiFi security
+    wifi: WiFi network
+    phone: Telephony
+    modem_settings: Settings
+    feedback_title: Feedback web interface
+    feedback: Feedback
+
+  # dashboard 
+  home:
+    wifi_signal_on: Wi-Fi is on
+    wifi_signal_off: Wi-Fi is off
+    main_wifi: Main Wi-Fi Network
+    main_wifi_description: Number of connected devices
+    guest_wifi: Guest Wi-Fi Network
+    guest_wifi_description: Number of connected devices
+    extra_2g_wifi: Extra Wi-Fi Network 2.4 GHz
+    extra_2g_wifi_description: Number of connected devices
+    extra_5g_wifi: Extra Wi-Fi Network 5 GHz
+    extra_5g_wifi_description: Number of connected devices
+    wifi_active: On
+    wifi_inactive: Off
+    internet_connection: Internet Connection
+    interface_type_ethernet: Fiber
+    interface_type_else: DSL
+    internet_connection_status: Connected to the internet via
+    active_connection_type: The internet connection is active
+    inactive_connection_type: The internet connection is not active
+    internet_ip_address: IP Address
+    internet_last_change: Time active
+    this_modem: This Device
+    info_about_device: Technical details about this device
+    model_name: Model
+    serial_number: Serial Number
+    firmware_version: Firmware
+    iptv: TV
+    iptv_on: Interactive TV is ready for use
+    iptv_off: Interactive TV is not active
+    iptv_on_description: You can watch TV when a TV receiver is connected.
+    iptv_stb_exists_description: "The following TV receivers have been detected:"
+    iptv_stb_not_exists_description: No connected TV receivers
+    4g_dongle: Mobile Internet Backup
+    4g_dongle_Connected: Mobile internet backup is active
+    4g_dongle_NotPresent: No dongle in the modem
+    4g_dongle_Unconfigured: The dongle is not configured
+    4g_dongle_Connecting: The dongle is connecting
+    4g_dongle_PendingDisconnect: The dongle is disconnecting soon
+    4g_dongle_Disconnecting: The dongle is disconnecting
+    4g_dongle_Disconnected: The dongle is set up and standby
+    phone: Telephony
+    phone_description_active: Landline phone service is active
+    phone_description_disabled: Landline phone service is not active
+    phone_description_error: Landline phone service is not active
+    phone_description_active_and_error: Landline phone service is not active
+    phone_active: Active
+    phone_inactive: Not active
+    phoneline: Phone Line
+
+
+    # connected devices card 
+    # this will be preceded by number of connected devices, eg 13 in total 
+    in_total: connected devices
+    wired: Wired
+    wired_description: Number of connected devices
+    wifi: Wifi
+    wifi_description: Number of connected devices
+
+    # active filters card 
+    active_filters: Filters
+    active_filters_description: Here are all active filters
+    firewall_level: Firewall Level
+    parental_control: Parental Control
+    parental_control_description: Number of devices under management
+    firewall: Port Forwarding
+    firewall_description: Port forwarding active in the network
+    blocked_devices: Blocked Devices
+    blocked_devices_description: Devices blocked from accessing the home network
+
+    wifi_radio_toggle_description: Depending on local conditions, it may take a few minutes for Wi-Fi to be fully activated and displayed correctly on the web page. This is due to regulatory requirements.
+    available_upgrade_version: "New firmware available:"
+
+
+  login:
+    welcome: Welcome
+    error: The password is incorrect. Please try again.
+    # commercial names
+    F5359s: KPN Box 12
+    WE620242s: SuperWifi 2
+    sw1: SuperWifi 1
+    BoxV14: KPN Box 14
+    Experia: Experia Wifi
+    H369As: KPN Box 10
+    unknown: Unknown
+
+    session_timeout: The session has ended. Please log in again.
+    firmware_version: "Firmware Version"
+    ui_version: "UI Version"
+    reset_password_cta: Forgot access password?
+    reset_password_title: Reset Password
+    reset_password: Reset Password
+    reset_password_description: |
+      Reset Password
+
+      Click 'Reset Password'
+
+      Press the WiFi button on the modem briefly within 5 minutes to confirm.
+
+      Log in now with the password (Admin password) mentioned on the sticker on the back of the device.
+    reset_password_step1: Click 'Reset Password'
+    reset_password_step2: Press the WiFi button on the modem briefly within 5 minutes to confirm.
+    reset_password_step3: Log in now with the password (Admin password) mentioned on the sticker on the back of the device.
+    reset_password_submitted: Password reset performed.
+    reset_password_error: Something went wrong. Please try again.
+
+    led_error: Cannot read LED value. Please try again.
+    
+    extenders:
+      searching: Searching for extenders...
+      no_extenders: There are no extenders on your network.
+      extender_accessible: Accessible
+      extender_noaccessible: Unattainable
+      extender_problem: Problem
+
+  internet_link:
+    dsl_informatie: DSL/ETH Information
+    ppp_informatie: PPP Information
+    info: Information
+    speed: Speed
+    internet_usage: Usage
+    4g_backup: "Mobile Internet Backup"
+    vpn: VPN
+    ipv6: IPv6
+    dns: DNS
+    ipv6_description: |
+      You can enable or disable IPv6 here. IPv6 is enabled by default for a properly functioning internet connection.
+    dsl_status: Status
+    dsl_status_up: Connected
+    dsl_status_down: Disconnected
+    dsl_act_rate: Actual rate (kBps)
+    dsl_max_rate: Maximum rate (kBps)
+    noise_margin: Noise margin (dB)
+    attenuation: Attenuation (dB)
+    power: Power (dBmV)
+    dsl_max_down: DSL Max download link speed
+    dsl_max_up: DSL Max upload link speed
+
+    internet_status: Status
+    internet_status_up: Connected
+    internet_status_down: Disconnected
+
+    time_active: Time active
+    standard: Standard
+    line_encoding: Line encoding
+    link_encapsulation: Link encapsulation
+
+    ppp_status: PPP Status
+    ppp_status_up: Connected
+    ppp_status_down: Disconnected
+    ppp_keep_alive_time: PPP keepalive time
+    ppp_keep_alive_echo: PPP Keepalive retries
+    mtu: MTU
+    standard_gw_address: Standard gateway
+    ip_version: IP version
+    public_address_ipv4: IPv4 Address
+    primary_dns_ipv4: Primary DNS server IPv4
+    secondary_dns_ipv4: Secondary DNS server IPv4
+    public_address_ipv6: IPv6 Address
+    local_address_ipv6: IPv6 Link-Local address
+    delegated_prefix: Delegated prefix
+    primary_dns_ipv6: Primary DNS server (IPv6)
+    secondary_dns_ipv6: Secondary DNS server (IPv6)
+    ppp_username: PPP Username
+    ppp_password: PPP Password
+    internet_usage_description: Here you can find the usage data of the internet connection. This is the traffic between the device and the internet.
+    dsl_internet: DSL/Ethernet
+    wan_connection_type: Connection Type
+    sent: Sent
+    received: Received
+    downstream: Downstream
+    upstream: Upstream
+    data: Data
+    packages: Packages
+    errors: Errors
+    lost_packages: Lost packages
+    unicast_packages: Unicast packages
+    multicast_packages: Multicast packages
+    broadcast_packages: Broadcast packages
+    ip_laag: IP Layer
+    ppp_data: PPP Data
+    wan_data: WAN Data
+    extender_data: Extender Data
+    ip_data: IP Data
+    ip_iptv: Data Interactive TV
+    ip_bridge_guest: IP Bridge guest
+    ip_usb: IP USB
+
+    # Trace route
+    trace_route: ICMP
+    trace_route_description: |-
+      With traceroute or ping, you can check the route or reachability of internet destinations.
+    trace_or_ping_route: Trace Route
+    hostname_or_ip: Hostname or IP address
+    host_address: Host Address
+    trace_route_failed: Trace route failed
+    response_time: Response Time
+    error_code: Error Code
+    time_exceeded: Time Exceeded
+    timeout: Timeout
+    completed: Trace route completed
+    destination_unreachable: Destination Unreachable
+
+    # Ping
+    diagnostics_state: Diagnostics State
+    ip_host: IP Host
+    packets_success: Packets Success
+    packets_failed: Packets Failed
+    packet_size: Packet Size
+    average_response_time: Average Response Time
+    minimum_response_time: Minimum Response Time
+    maximum_response_time: Maximum Response Time
+
+    # 4G
+    4g_backup_description: Here you can adjust the settings of the dongle for mobile internet backup.
+    4g_apn: APN
+    4g_pin: SIM card PIN
+    4g_phone_number: Phone Number
+    4g_imsi: IMSI Number
+    4g_imei: IMEI Number
+    4g_manufacturer: Manufacturer
+    4g_model: Model
+
+    # DNS
+    dns_description: DNS is one of the most important functions for an internet connection. Set alternative DNS servers here for IPv4 and/or IPv6 if automatic DNS servers should not be used.
+    dns_proxy_checkbox: Use DNS proxy (recommended)
+    dns_v4_custom_ip: Use another DNSv4 service
+    dns_v6_custom_ip: Use another DNSv6 service
+    dns_v4_primary: Primary DNSv4 service
+    dns_v4_secondary: Secondary DNSv4 service
+    dns_v6_primary: Primary DNSv6 service
+    dns_v6_secondary: Secondary DNSv6 service
+
+  dns_confirmations:
+    dns_settings: DNS Settings
+    dns_settings_new: New DNS Settings
+    dns_description: Below you will find an overview of the DNS settings
+    dns_warning: This will restart your network and devices may be disconnected.
+
+  # local network tabs 
+  local_network:
+    topology: Topology
+    connected_devices: Connected devices
+    connected_devices_lowercase: connected devices
+    connected_devices_inactive: Devices no longer connected
+    confirm_unpairing_repeater: Are you sure you want to unpair this device?
+    unpairing_repeater_description: |-
+      Unpairing extenders can be done if a previously paired device is no longer present in the home network and can be removed from the topology.
+      It can also be used to redo the pairing procedure.
+    dhcp: DHCP
+    reserved_ip: Reserve IP Address
+    dyndns: DynDNS
+    ipv6: IPv6
+    arp_table: MAC Address Table
+    usage: Usage
+    last_connection: Last connected
+    removing_device: Removing device...
+    confirm_removing_all_devices: Are you sure you want to remove all inactive devices?
+    removing_all_devices: Removing all inactive devices...
+    dhcp_description: Here you can set the DHCP servers for the Wi-Fi and guest networks. Devices connecting to the network will receive an IP address from the DHCP server.
+    main_network: Home Network
+    guest_network: Guest Network
+    dhcp_server: DHCP Server
+    subnet_mask_prefix: Subnet Mask (bits)
+    pool_start: Start IP address pool
+    pool_end: End IP address pool
+    lease_time_minutes: Lease time (in seconds)
+    dhcp_leases: DHCP Leases
+    thuisnetwerk_dhcp_leases: Home Network DHCP Leases
+    gastnetwerk_dhcp_leases: Guest Network DHCP Leases
+    total_txt: Total
+    dns_server: DNS Server
+    dns_server_primary: Primary DNS server
+    dns_server_secondary: Secondary DNS server
+    dyndns_description: |
+      Here you can set up Dynamic DNS (DynDNS). With DynDNS, you link a host or domain name to an IP address of your home network.
+    dyndns_service: DynDNS Provider
+    dyndns_host: Host or domain name
+    dyndns_email: Email address or username
+    remaining_time: Remaining time
+    dhcp_type: DHCP
+    ip_type_dynamic: Dynamic
+    ip_type_reserved: Reserved
+    ip_type_static: Static
+    reserved_ip_description: |
+      Here you can reserve an IP address from your home network for a specific device.
+    ipv6_description: Here you can enable or disable prefix delegation.
+    ipv6_prefix_delegation: IPv6 Prefix Delegation
+    enabled_with_dhcp: Enabled with DHCPv6
+    ethernet_ports: Ethernet Ports
+    ethernet_ports_description: |-
+      This page provides insight and control over the Ethernet ports. Received and transmitted data counters are determined from the internet perspective.
+      The received counters are equivalent to downstream or downloading from the internet, and transmitted is equivalent to upstream or sending to the internet.
+      Use the switch at port 4 to use it exclusively for guest network use. All devices connected to this port will communicate via this isolated network.
+    connection_type_ethernet: LAN
+    connection_type_wifi: Wi-Fi
+    connection_type_main_2g: Main Wi-Fi 2.4 GHz
+    connection_type_main_5g: Main Wi-Fi 5 GHz
+    connection_type_guest: Guest Network
+    connection_type_extra_2g: Extra Wi-Fi 2.4 GHz
+    connection_type_extra_5g: Extra Wi-Fi 5 GHz
+    mac_address_randomized: Randomized MAC Address
+    mac_address_randomized_yes: Yes
+    mac_address_randomized_no: No
+    mac_address_randomized_tooltip: |-
+      Note that a MAC address marked as random runs the risk of falling outside this permission list if the wifi device
+      dynamically adjusts it. To prevent this, it is necessary to set a static MAC address on the respective wifi device.
+    ip_address_source: Source IP Address
+    link_speed: Link Speed
+    duplex: Duplex Setting
+    max_bitrate: Max Bitrate
+    current_bitrate: Current Bitrate
+    data: Data
+    stp_protocol: STP Protocol
+    stp_protocol_switch: Spanning Tree Mode
+    unsynced_extender_warning: This device is not successfully connected to the home network. Repeat the do-it-yourself installation and use the supplied internet cable.
+    offline_extender_warning: |-
+      This device is currently not active in the home network but has been successfully paired with this master before.
+      The device may have been turned off, power supply failed, a schedule is active, or the connection has been intentionally or unintentionally disconnected.
+      Once the device becomes active again, the connection will be automatically restored.
+    reserved_ip_edit_title: Edit Reserved IP Address
+    link_time: Link time
+
+  dhcp_confirmations:
+    main_dhcp: Home Network DHCP
+    main_dhcp_description: Below you will find an overview of the DHCP settings of the home network
+    main_dhcp_warning: Changes to the DHCP settings require logging in again via the set IP address. Connected (Wi-Fi) devices may need to be restarted to apply the new settings.
+    main_dhcp_new: New Home Network DHCP
+
+    guest_dhcp: Guest Network DHCP
+    guest_dhcp_description: Below you will find an overview of the DHCP settings of the Guest Network
+    guest_dhcp_warning: This will restart your network and devices may be disconnected.
+    guest_dhcp_new: New Guest Network DHCP
+
+  # wifi tabs 
+  wifi:
+    main: Main Wi-Fi Network
+    settings: Wi-Fi Network
+    wifi_mesh: Mesh
+    PMF: Protected Management Frames (PMF)
+    guest_wifi: Guest Network
+    guest_wifi_switch: Guest Network
+    extra_wifi: Extra Wi-Fi Network
+    schema: Schedule
+    spectrum: Spectrum
+    usage: Usage
+    settings_description: |
+      Scan the QR code to connect a device directly to the Wi-Fi network.
+
+      A new QR code will be generated immediately if you change the Wi-Fi name or password of the main network. Use the new QR code from that moment on.
+    main_wifi: Main Wi-Fi Network
+    name_ssid: Wi-Fi Name (SSID)
+    password: Wi-Fi Password
+    visibility: Wi-Fi Name Visible
+    encryption_type: Security
+    max_clients: Maximum Number of Devices
+    max_clients_2g: Maximum Number of Devices 2.4 GHz
+    max_clients_5g: Maximum Number of Devices 5 GHz
+    wps_pairing: Connect via WPS
+    wps_pairing_description: Devices can now connect to the Wi-Fi network via WPS.
+    pairing_in_progress: Connecting via WPS...
+    wps_pairing_failed: WPS connection failed
+    wifi_reset: Reset Wi-Fi
+    wifi_reset_description: |
+      **Confirm to reset.**
+      
+      With a Wi-Fi reset, only the Wi-Fi details are reset to factory settings and cleared in the network. After this, the Wi-Fi details from the sticker (back or bottom of the device) will be active again.
+    wifi_reset_success: The Wi-Fi reset has been performed.
+    wifi_mesh_description: Here you can find the data of the devices that form the mesh Wi-Fi network. These include the modem and one or more Wi-Fi extenders.
+    radio: Wi-Fi Signal
+    radio_on_off: Wi-Fi Signal
+    wifi_steering_checkbox: Exclusively wired connected extenders
+    radio_description: You can adjust the settings of the Wi-Fi signal here. These settings apply to the Wi-Fi network, the guest network, and the extra Wi-Fi network.
+    wireless_mode_2g: 2.4 GHz Wi-Fi Standard
+    bandwidth_2g: 2.4 GHz Bandwidth
+    channel_2g: 2.4 GHz Channel
+    wireless_mode_5g: 5 GHz Wi-Fi Standard
+    bandwidth_5g: 5 GHz Bandwidth
+    channel_5g: 5 GHz Channel
+    auto_select_channel: Automatic Channel Selection
+    guest_wifi_description: |
+      The guest network is a separate Wi-Fi network with its own Wi-Fi name and password. Visitors can use the internet via the guest network, but do not have access to your home network.
+
+      Scan the QR code and automatically connect to the guest network.
+
+      A new QR code will be generated immediately if you change the Wi-Fi name or password of the guest network. Use the new QR code from that moment on.
+    airtime_percentage: Bandwidth Limit
+    guest_client_timebox: Guest Network Active Time
+    guest_client_timebox_warning: |
+      **Warning!**
+
+      When the new Wi-Fi settings are saved, the Guest Wi-Fi network will be disabled after the set time.
+    extra_wifi_description: |
+      You can create an extra Wi-Fi network here that only uses the 2.4 GHz band or the 5 GHz band. Devices that, for example, only work on the 2.4 GHz band can be connected to the extra Wi-Fi network on the 2.4 GHz band.
+    extra_wifi_description_2g: |
+      Scan the QR code to connect a device directly to the Wi-Fi network on the 2.4 GHz band.
+
+      A new QR code will be generated immediately if you change the Wi-Fi name or password of the extra Wi-Fi network. Use the new QR code from that moment on.
+    extra_wifi_2g: Extra Wi-Fi Network 2.4 GHz
+    extra_wifi_5g: Extra Wi-Fi Network 5 GHz
+    extra_wifi_description_5g: |
+      Scan the QR code and automatically connect to the extra Wi-Fi network on the 5 GHz band.
+
+      A new QR code will be generated immediately if you change the Wi-Fi name or password of the extra Wi-Fi network. Use the new QR code from that moment on.
+    spectrum_description: |
+      Here you can see which Wi-Fi channel you are using on the 2.4 GHz and 5 GHz bands and how busy or quiet it is on all Wi-Fi channels. The available space on a channel depends on the channels used by Wi-Fi networks in your area and the channel you are using.
+
+      You can manually choose a channel in Wi-Fi Signal, but this usually leads to poorer performance. For optimal performance, this setting is default set to Automatic.
+
+      A Wi-Fi channel also uses space from adjacent Wi-Fi channels. In the spectrum analysis, you can see the overlap between the channels used by Wi-Fi networks in your area and the channels you are using.
+
+      You can manually choose the bandwidth in Wi-Fi Signal, but this usually leads to poorer performance. For optimal performance, this setting is default set to Automatic.
+    availability_2g: 2.4 GHz Availability
+    availability_5g: 5 GHz Availability
+    signal_2g: 2.4 GHz Spectrum Analysis
+    signal_5g: 5 GHz Spectrum Analysis
+    current_channel: Current Channel
+    restart_all_devices: Restart All Devices
+    reset_all_devices: Reset All Devices to Factory Settings
+    mac_address_2: 2.4 GHz MAC Address
+    mac_address_5: 5 GHz MAC Address
+    wifi_schema: Wi-Fi Schedule
+    wifi_schema_description: Here you can set a schedule for when the Wi-Fi network is active or inactive. The modem consumes less power when the Wi-Fi network is inactive.
+    wifi_schema_enable: Schedule Active
+    selected_wifi_schema: Selected Schedule
+    selected_wifi_schema_name: Name of Selected Schedule
+    usage_description: On this page you will find data on the internet usage of the Ethernet ports in the device. Sent data is determined from the perspective of the device. This means that sent data from this modem or SuperWifi point is sent to the connected devices (downstream). Received data therefore runs from the devices towards the modem or SuperWifi point (upstream).
+    link_speed: Link Speed
+    duplex: Duplex
+    lost_packages: Lost Packages
+    multicast_packets: Multicast Packets
+    broadcast_packets: Broadcast Packets
+    wifi_5_profile: Wi-Fi 5 Profile
+    wifi_6_profile: Wi-Fi 6 Profile
+    updating_in_progress: Wi-Fi settings are being changed.
+    update_wifi_error: The connection may have been lost due to the changes made. Refresh the screen manually and see if the changes are complete.
+    off: Off
+    optional: Optional 
+    required: Required
+
+  wifi_confirmations:
+    main_wifi: Change Main Wi-Fi Network
+    main_wifi_description: Below is an overview of the Main Wi-Fi Network main settings
+    main_wifi_warning: If you change the settings of the Main Wi-Fi Network, all devices connected via the Main Wi-Fi Network will lose their connection. They need to reconnect using the settings above.
+    main_wifi_new: New Main Wi-Fi Network Settings
+    main_wifi_new_description: Use the data below to connect to your Main Wi-Fi Network
+
+    guest_wifi: Change Guest Wi-Fi
+    guest_wifi_description: Below is an overview of the Guest Wi-Fi settings.
+    guest_wifi_warning: If you change the settings of the Guest Wi-Fi network, all devices connected via the Guest Wi-Fi network will lose their connection. They need to reconnect using the settings above.
+    guest_wifi_new: New Guest Wi-Fi Settings
+    guest_wifi_new_description: Use the data below to connect to your Guest Wi-Fi network
+
+    extra_2g_wifi: Change Extra Wifi 2g
+    extra_2g_wifi_description: Below is an overview of the Extra Wi-Fi network 2g settings
+    extra_2g_wifi_warning: If you change the settings of the Extra Wi-Fi network, all devices connected via the Extra Wi-Fi network 2g will lose their connection. They need to reconnect using the settings above.
+    extra_2g_wifi_new: New Extra Wifi 2g Settings
+    extra_2g_wifi_new_description: Use the data below to connect to your Extra 2g network
+
+    extra_5g_wifi: Change Extra Wifi 5g
+    extra_5g_wifi_description: Below is an overview of the Extra Wi-Fi network 5g settings
+    extra_5g_wifi_warning: If you change the settings of the Extra Wi-Fi network, all devices connected via the Extra Wi-Fi network 5g will lose their connection. They need to reconnect using the settings above.
+    extra_5g_wifi_new: New Extra 5g Wifi Settings
+    extra_5g_wifi_new_description: Use the data below to connect to your Extra 5g network
+
+  radio_confirmations:
+    profile_5_warning: If you change the settings of the Wi-Fi network to the Wi-Fi 5 standard, all devices connected via the Wi-Fi network will lose their connection
+    profile_5_update: The Wi-Fi network data has been changed to the Wi-Fi 5 standard
+    profile_6_warning: If you change the settings of the Wi-Fi network to the Wi-Fi 6 standard, all devices connected via the Wi-Fi network will lose their connection
+    profile_6_update: The Wi-Fi network data has been changed to the Wi-Fi 6 standard
+
+  # security tabs 
+  security:
+    firewall: Firewall
+    device_block: Device Access
+    port_forwarding: Port Forwarding
+    upnp: UPnP
+    dmz: DMZ
+    both_protocols: TCP/UDP
+    firewall_description: |
+      Here you can set the security level of the firewall.
+      This applies to all communication from the home network (LAN & WiFi) to the internet.
+      Communication from the internet to the home network is fully blocked.
+      Use port forwarding, UPnP, or DMZ for adjustments.
+    firewall_level: Security Level
+    firewall_level_low: Low
+    firewall_level_medium: Medium
+    firewall_level_high: High
+    firewall_level_custom: Custom
+    firewall_level_description_low: Use 'Custom' level to make your own choices.
+    firewall_level_description_medium: Use 'Custom' level to make your own choices.
+    firewall_level_description_high: Use 'Custom' level to make your own choices.
+    firewall_level_description_custom: The firewall can be equipped with specific settings. This is the expert mode.
+    firewall_level_edit_confirmation: Are you sure you want to apply this change?
+    custom_rules_title: Custom Rules
+    custom_rules_description: |-
+      Here you can add or remove custom filter rules in the firewall.
+      Choose the buttons for basic behavior to block everything or allow everything, then create specific block or allow actions.
+    static_rules_title: Applied Rules
+    static_rules_description_low: "This security level allows everything by default. So there are no applications with restrictions below:"
+    static_rules_description_medium: "This security level allows everything by default with the following blocked applications below:"
+    static_rules_description_high: "This security level has an overall outgoing block active with the following allowed applications below:"
+    static_rules_remark: These are the current settings for this firewall level. Choose custom security level to make your own choices.
+    add_custom_rule: Add Custom Rule
+    edit_custom_rule: Edit Custom Rule
+    firewalls_rules_progress: Please wait. Checking firewall rules.
+    drop_all: Block Everything
+    allow_all: Allow Everything
+    drop_all_action_description: Function to allow specific traffic types is now active.
+    allow_all_action_description: Function to block specific traffic types is now active.
+    custom_firewall_rules_description: Below traffic types can be blocked or allowed depending on the made basic choice.
+    ip_version: IP Version
+    allow_ping: Modem responds to pings
+    open_ports_ipv6: Open IPv6 Ports
+    open_port: Open Port
+    port_forwarding_edit_title: Edit Port Forwarding
+    port_forwarding_description: |
+      With port forwarding, you can reach devices within your home network from the internet.
+    service: Service
+    source_prefix_tooltip: |
+      Accepted example values without IP source restriction:
+        Leave field empty
+        0.0.0.0
+        0.0.0.0/0
+
+      Accepted example values with IP source restriction:
+        123.123.123.0/24 = source limited to this subnet
+        123.123.123.123/32 = source limited to 1 specific IP address
+        123.123.123.123 = source limited to 1 specific IP address
+
+      Accepted example values for ports:
+        80 = port 80 only
+        80-90 = series of ports from 80 to 90
+    rule_ip_tooltip: |-
+      Accepted example values without IP source restriction:
+        Leave field empty
+        0.0.0.0
+        0.0.0.0/0
+
+      Accepted example values with IP source restriction:
+        123.123.123.0/24 = source limited to this subnet
+        123.123.123.123/32 = source limited to 1 specific IP address
+        123.123.123.123 = source limited to 1 specific IP address
+    rule_port_tooltip: |-
+      Accepted example values for ports:
+        80 = port 80 only
+        80-90 = series of ports from 80 to 90
+    rule_id: ID
+    custom_source_prefix: Source IP Address
+    custom_source_port: Source Port Number
+    source_prefix: Internet IP Address
+    source_port: Internet Port Number
+    destination_ip: Destination IP Address
+    destination_port: Destination Port Number
+    action: Action
+    action_accept: Accept
+    action_drop: Drop
+    dmz_description: |
+      You are about to bypass the firewall security for the set device. Make sure there is a separate firewall security active on the set device.
+    upnp_description: |
+      Here you can set up UPnP IGD (Universal Plug and Play Internet Gateway Device). With UPnP, devices within the home network can automatically open ports.
+
+      UPnP is disabled by default due to security risks. Use UPnP only if you are aware of the security risks.
+    upnp_igd: UPnP IGD
+    upnp_advertising_period: UPnP Advertisement Period
+    device_blocking: WiFi Shielding
+    device_blocking_title: WiFi Shielding (MAC Filtering)
+    device_blocking_description: |-
+      With this function, you create a list of all WiFi devices that are allowed to access this home network. WiFi devices not on this list will not be allowed to connect via WiFi. Two categories of devices are not covered by this filtering function:
+      1) Devices connected via Ethernet have always access and are not on this list.
+      2) WiFi guest network since it is intended for temporary access and is isolated from the home network.
+      WiFi extenders present in the home network are automatically included in this permissions list. Optionally, use the button to add all currently connected WiFi devices at once.
+    device_blocking_switch: Device Blockade On/Off
+    allowed_devices: Allowed Devices
+    mac_filtering_success_message: |-
+      The WiFi Shielding (MAC Filtering) function is now enabled. Make sure all WiFi devices that require access are on this list. If an unintended exclusion has occurred and access via WiFi is now blocked, log in to the modem from a device connected via Ethernet and restore the situation.
+    parental_control: Parental Control
+    parental_control_description: Here you can set up parental control for each connected device, possibly based on a schedule.
+    delete_custom_rule_wifi_management: These firewall rules are necessary for remote management of WiFi extenders. If they are deleted, they can be restored by manually adding them or by performing a factory reset.
+    remove_whitelisted_devices: Remove All
+    whitelist_all_wifi_devices: Add All WiFi Devices
+    device_blocking_mac_address_hint: |-
+      WiFi MAC addresses can be added in multiple ways:
+      1) Use the button to add all currently connected WiFi devices.
+      2) Use the MAC input field to add 1 or more (use "," between each address) MAC addresses.
+      3) The MAC address notation is 12:34:56:AB:CD:EF
+
+
+  # modem management tabs 
+  modem:
+    information: Information
+    admin_password: Login Password
+    time_ntp: Time (NTP)
+    time: Time
+    remote_help: Remote Help
+    backup: Backup
+    system: System
+    performance_charts: Performance Charts
+    performance_charts_description: You can view the performance of this device here.
+    model_name: Model
+    product_class: Model Number
+    serial_number: Serial Number
+    hardware_version: Hardware Version
+    software_version: Firmware Version
+    rescue_software_version: Rescue Firmware Version
+    bootloader_version: Bootloader Version
+    rescue_bootloader_version: Rescue Bootloader Version
+    uptime: Active Time
+    mac_base: Base (Sticker)
+    mac_2g: 2.4GHz WiFi
+    mac_5g: 5GHz WiFi
+    mac_guest_2g: Guest Network 2.4GHz WiFi
+    mac_guest_5g: Guest Network 5GHz WiFi
+    mac_extra_2g: Extra Network 2.4GHz WiFi
+    mac_extra_5g: Extra Network 5GHz WiFi
+    base_ip: IP Address (Internet)
+    date_time: Date and Time
+    ntpservers: NTP Servers
+    current_date_time: Date and Time
+    change_admin_password: Change Password
+    admin_password_description: |
+      You can change the password of this device here. This password is used only for logging into this device.
+    admin_password_helptext: A password of 8 to 63 characters is allowed. Use a combination of uppercase, lowercase, numbers, and special characters for the most secure password.
+    current_password: Current Password
+    new_password: New Password
+    confirm_new_password: Confirm New Password
+    invalid_password: Incorrect Password
+    passwords_not_matching: New Password and Confirm New Password do not match.
+    password_requirements_title: "Your password must contain at least:"
+    password_requirements_1: at least 10 characters
+    password_requirements_2: at least one digit or special character $@.!%*#?&
+    password_requirements_3: not more than 2 identical consecutive characters
+    system_description: You can resolve some internet, TV, calling, or WiFi problems by restarting the device.
+    system_reboot_description: Reboot this device
+    system_reboot: Reboot
+    system_reset_description: Reset this device
+    system_reset: Reset to Factory Settings
+    factory_reset_dialog: All personal settings will be erased. From the network, WiFi and telephone data will be automatically restored to the latest values so you can continue using KPN services. WiFi extenders will automatically reconnect once the master is back online.
+    device_reboot_dialog: |
+      **Confirm to reboot.**
+
+      When this device restarts, all active connections will be disconnected and it may take some time before the home network is operational again. No settings will be lost.
+    remote_help_description: |
+      On this page, you can enable remote help. This allows you to make this web page available from the internet. You can then configure this modem remotely, via the internet.
+
+      This is also used by the KPN helpdesk. If you share the set username and password with a KPN employee, they can help with the settings of your modem.
+
+      Do not share this information with just anyone.
+    remote_username: Remote Username
+    remote_password: Remote Password
+    upgrade_modem: Upgrade Your Device
+    upgrade_modem_description: |
+      This upgrade improves the performance and security of your device. The device will automatically restart to install the new software, which may take about 5 minutes. During the upgrade, there will be a temporary interruption in your internet connection.
+    upgrade: Upgrade
+    available_upgrade_version: "There is a new firmware version available: "
+    upgrade_unavailable: There is currently no newer version of software available for the device.
+    group_reboot: Restart Home Network
+    group_reset: Reset Home Network
+    wifi_reset: Reset to Factory Settings
+    group_reboot_description: When the entire home network restarts, all active connections will be disconnected and it may take some time before the home network is operational again. No settings will be lost.
+    group_reset_description: All personal settings will be erased. From the network, WiFi, and telephone data will be automatically restored to the latest values so you can continue using KPN services. WiFi extenders will also be reset and will need to go through the installation procedure again.
+  
+  phone:
+    info: Information
+    number_configutations: Phone Number Settings
+    call_history: Call History
+    phone_profile: Phone Profile
+    phone_info_description: Here you will find information about the phone numbers set up on the modem. KPN phone numbers are automatically configured.
+    internal_calling: Internal Calling
+    internal_calling_description: |
+      Internal calling is possible if you have 2 telephones. Note that this is only possible if the modem has more than 1 telephone port!
+
+      With **1, you call the device connected to telephone port 1, with **2 you call the device on telephone port 2.
+    phone_profiles: Phone Numbers
+    phone_numbers: Phone Number
+    origin: Set By
+    origin_user: User
+    origin_kpn: KPN
+    authentication_name: Username
+    number_configutations_description: |
+      Here you can view and set up phone numbers. KPN phone numbers are automatically configured. The maximum number of phone numbers is 4.
+
+      Do you have multiple phone numbers? Then you can receive incoming calls for different numbers via one telephone port. For outgoing calls, one phone number must be selected per telephone port.
+
+    use_your_own_devices: Use Your Own Device for KPN Phone Number
+    use_your_own_devices_button: Turn Off KPN Phone Numbers
+    use_your_own_devices_description: |
+      If you want to set up a KPN phone number on another device, the KPN phone numbers on this modem must be turned off.
+    fx_ports_incoming: Telephone Ports Incoming Calls
+    fx_ports_outgoing: Telephone Ports Outgoing Calls
+    no_number_selected: No phone number selected
+    call_history_description: Here you will see an overview of recent calls.
+    filter_call_history: Filter
+    call_type: Call Type
+    call_type_all: All Calls
+    call_type_incoming: Incoming
+    call_type_missed: Missed
+    call_type_outgoing: Outgoing
+    call_type_pushed_away: Outgoing
+    internal_phone_number: Internal Phone Number
+    external_phone_number: External Phone Number
+    date_and_time: Date and Time
+    duration: Duration
+    seconds: seconds
+    on_off: On/Off
+    fx_port_1: Phone 1
+    fx_port_2: Phone 2
+
+    # phone edit modal
+    profile_configuration_modal_description: |
+      Here you can set up a phone number that is not from KPN.
+      You can edit or delete a KPN phone number, but doing so will make the number no longer work on this modem. A KPN phone number will be automatically reconfigured if you reset the modem to factory settings.
+    test: Phone Test
+    test_description: With this phone test, you make the device ring. This way you can check if the device is functioning and properly connected to the modem.
+
+    status: Status
+    number: Phone Number
+    username: Username
+    password: Password
+    proxy: Proxy
+    domain: Domain
+    server: Registrar
+
+    phone_delete_confirmation: You are about to delete a phone number set by KPN. Once deleted, this can only be restored by fully resetting the modem, resulting in the loss of most configured data.
+
+    # phone edit validation
+    invalidProxyserver: Invalid proxy server
+    invalidregistrarserver: Invalid registrar server
+    invalidDomainName: Invalid domain name
+
+# Translation for Ensemble platform
+ensemble:
+  input:
+    required: This field is required
+    validation:
+      # minimumLength: The field must be at least $n characters long
+      # maximumLength: The field must be at most $n characters long
+      invalidPhoneType: Invalid phone number
+      invalidEmailType: Invalid email
+      invalidIPAddressType: Invalid IP Address
+
+      #catch all
+      invalidInput: Invalid input

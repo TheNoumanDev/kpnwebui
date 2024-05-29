@@ -1,0 +1,926 @@
+kpn:
+  # common labels
+  cancel: Annuleren
+  save: Opslaan
+  confirm: Bevestigen
+  close: Sluiten
+  restore: Herstellen
+  modify: Aanpassen
+  add: Toevoegen
+  start: Start
+  activate: Activeren
+  protocol: Protocol
+  device: Apparaat
+  devices: Apparaten
+  device_count_single: apparaat
+  device_count_multiple: apparaten
+  extender_count_single: extender
+  extender_count_multiple: extenders
+  select_device: Selecteer apparaat
+  port: Poort
+  interface: Type verbinding
+  mac_address: MAC-adres
+  host_name: Hostnaam
+  domain_name: Domein
+  ip_address: IP-adres
+  ip4: IPv4
+  ip6: IPv6
+  ip4_ip6: IPv4/IPv6
+  ip4_address: IPv4-adres
+  ip6_address: IPv6-adres
+  subnet_mask: Subnet mask
+  apply: Toepassen
+  password: Wachtwoord
+  sign_in: Inloggen
+  logout: Uitloggen
+  status: Status
+  user_name: Gebruikersnaam
+  enabled: Aan
+  disabled: Uit
+  screen_unavailable: Dit scherm is niet beschikbaar
+  verbinding: Verbinding
+  verbinding_type: Verbindingstype
+  device_name: Naam apparaat
+  icon: Icoon
+  bitrate: Bitrate
+  time_active: Tijd actief
+  serial_number: Serienummer
+  connection_type: Type verbinding
+  reload: Opnieuw laden
+  reload_analysis: Analyse opnieuw laden
+  reloading: Aan het laden...
+  network_name: Netwerknaam
+  speed: Snelheid down/up
+  manufacturer: Fabrikant
+  reset: Reset
+  print: Afdrukken
+  mode: Mode
+  filter: Filter
+  model: Model
+  led: LED
+  led_on: Aan
+  led_off: Uit
+  on: Aan
+  off: Uit
+  led_dimmed: Gedimd
+  unpair: Ontkoppelen
+  operational: Operationeel
+  continue: Doorgaan
+  both: Beide
+  description: Beschrijving
+  action: Actie
+  software_version: Firmwareversie
+  wifi_2g: 2,4 GHz
+  wifi_5g: 5 GHz
+  yes: Ja
+  no: Nee
+  active: Actief
+  inactive: Inactief
+  custom: Aangepast
+  factory_default: Standaard instellingen
+  guest_network: Gast netwerk
+  master_device: Master Apparaat
+  device_no_ipv6: Het geselecteerde apparaat heeft geen IPv6-adres
+  device_select_to_view_ipv6: Selecteer een apparaat om de IPv6-adressen te bekijken
+
+  # week days
+  monday: Maandag
+  tuesday: Dinsdag
+  wednesday: Woensdag
+  thursday: Donderdag
+  friday: Vrijdag
+  saturday: Zaterdag
+  sunday: Zondag
+  
+  # common API messages
+  success: Wijzigingen opgeslagen
+  error: Er is een fout opgetreden. Probeer het nogmaals.
+  waiting_for_response: Wachten...
+  no_connectivity: |-
+    Er is op dit moment geen actieve internet verbinding.
+    Mogelijk is dit een tijdelijke situatie vanwege onderhoud. Sluit het apparaat correct aan en/of herstart eventueel.
+  slave_device_banner: |-
+    Dit apparaat functioneert in slave mode. Instellingen kunnen worden ingezien, wijzigingen dienen te worden ingegeven op het master apparaat van dit thuisnetwerk. Klik op de blauwe knop om verbinding te maken met het master apparaat.
+  # validation errors
+  invalid_ipv6: Ongeldig IPv6
+  invalid_ipv4: Ongeldig IPv4
+  invalid_port: Ongeldig poort
+
+  # speed test:
+  speed_test:
+    dialog_title: Internetsnelheidstest
+    downstream: Download
+    upstream: Upload
+    speed: Snelheid
+    latency: Ping
+    packet_size: Pakket grootte
+    duration: Tijdsduur
+    start_time: Starttijd
+    end_time: Stoptijd
+    button_label: Snelheidstest
+    test_again: Opnieuw testen
+    previous_tests: "Eerdere tests:"
+    testing: Lopende test...
+
+  # navigation
+  nav:
+    dashboard: Overzicht
+    internet_link: Internetverbinding
+    local_network: Thuisnetwerk
+    security: Beveiliging
+    wifi: Wifinetwerk
+    phone: Telefonie
+    modem_settings: Instellingen
+    feedback_title: Feedback webinterface
+    feedback: Feedback
+
+  # dashboard
+  home:
+    wifi_signal_on: Wifi staat aan
+    wifi_signal_off: Wifi staat uit
+    main_wifi: Wifinetwerk
+    main_wifi_description: Aantal verbonden apparaten
+    guest_wifi: Gastnetwerk
+    guest_wifi_description: Aantal verbonden apparaten
+    extra_2g_wifi: Extra wifinetwerk 2,4 GHz
+    extra_2g_wifi_description: Aantal verbonden apparaten
+    extra_5g_wifi: Extra wifinetwerk 5 GHz
+    extra_5g_wifi_description: Aantal verbonden apparaten
+    wifi_active: Aan
+    wifi_inactive: Uit
+    internet_connection: Internetverbinding
+    interface_type_ethernet: Glasvezel
+    interface_type_else: DSL
+    interface_type_dsl_hybrid: DSL + Internet Buitengebied
+    internet_connection_status: Verbonden met het internet via
+    active_connection_type: De internetverbinding is actief
+    inactive_connection_type: De internetverbinding is niet actief
+    internet_ip_address: IP-adres
+    internet_last_change: Tijd actief
+    this_modem: Dit apparaat
+    info_about_device: Hier staan technische gegevens over dit apparaat
+    model_name: Model
+    device_name: Naam
+    serial_number: Serienummer
+    firmware_version: Firmware
+    iptv: Televisie
+    iptv_on: Interactieve TV is klaar voor gebruik
+    iptv_off: Interactieve TV is niet actief
+    iptv_on_description: Je kunt tv-kijken als een tv-ontvanger is aangesloten.
+    iptv_stb_exists_description: "De onderstaande tv ontvangers zijn gedetecteerd:"
+    iptv_stb_not_exists_description: Geen aangesloten tv ontvangers
+    4g_dongle: Mobiel internet back-up
+    4g_dongle_Connected: Mobiel internet backup is actief
+    4g_dongle_NotPresent: Er zit geen dongel in het modem
+    4g_dongle_Unconfigured: De dongel is niet ingesteld
+    4g_dongle_Connecting: De dongel is bezig met verbinden
+    4g_dongle_PendingDisconnect: De dongel verbreekt de verbinding zometeen
+    4g_dongle_Disconnecting: De dongel verbreekt de verbinding
+    4g_dongle_Disconnected: De dongel is ingesteld en stand-by
+    phone: Telefonie
+    phone_description_active: Vaste telefonie is actief
+    phone_description_disabled: Vaste telefonie is niet actief
+    phone_description_error: Vaste telefonie is niet actief
+    phone_description_active_and_error: Vaste telefonie is niet actief
+    phone_active: Actief
+    phone_inactive: Niet actief
+    phone_error: Error
+    phoneline: Telefoonlijn
+    ipv6_disabled: IPv6 functie is uitgeschakeld
+    ipv6_no_connection: Geen ipv6 internet verbinding
+
+    # connected devices card
+    # this will be preceded by number of connected devices, e.g. 13 in totaal
+    in_total: verbonden apparaten
+    wired: Bekabeld
+    wired_description: Aantal verbonden apparaten
+    wifi: Wifi
+    wifi_description: Aantal verbonden apparaten
+
+    # active filters card
+    active_filters: Filters
+    active_filters_description: Hier staan alle actieve filters
+    firewall_level: Firewall Niveau
+    parental_control: Ouderlijk toezicht
+    parental_control_description: Aantal apparaten in beheer
+    firewall: Port forwarding
+    firewall_description: Port forwarding actief in het netwerk
+    blocked_devices: Geblokkeerde apparaten
+    blocked_devices_description: Apparaten geblokkeerd voor toegang thuisnetwerk
+
+    wifi_radio_toggle_description: Afhankelijk van lokale omstandigheden kan het enkele minuten duren voordat wifi daadwerkelijk volledig geactiveerd is en de juiste weergave op de webpagina te zien is. Dit heeft te maken met wettelijke bepalingen.
+    available_upgrade_version: "Nieuwe firmware beschikbaar:"
+
+    # hybrid access
+    hybrid_access: Internet Buitengebied
+    hybrid_access_status_disabled: Deze dienst is niet actief op deze aansluiting.
+    hybrid_access_status_dslDown: Internet Buitengebied dienst is actief maar de vaste DSL verbinding is nog niet actief. Loop de DSL verbinding na of deze juist is aangesloten.
+    hybrid_access_status_dslUp: Is actief.
+    hybrid_access_status_disconnected: De internet buitengebied dienst is geactiveerd maar de communicatie faalt. Controleer of de internet buitengebied box correct is aangesloten en de SIM kaart bevat voor mobiele communicatie.
+    hybrid_access_status_variant: De box in gebruik voor internet buitengebied maakt gebruik van een vaste set instellingen die op dit moment niet correct zijn.
+    hybrid_access_status_variant_link: Klik hier om deze aan te passen.
+    hybrid_access_status_variant_warning: |-
+      Umaakt gebruik van de dienst “Internet Buitengebied”. De huidige instellingen verhinderen de correcte werking van de dienst. De ipadres gegevens dienen te worden aangepast om de werking te garanderen. Klik op de onderstaande link om dit te herstellen.
+    hybrid_access_status_variant_fix: Herstel IP adres en subnet mask van het hoofdnetwerk van uw modem
+    
+  login:
+    welcome: Welkom
+    error: Het wachtwoord is verkeerd. Probeer het opnieuw.
+    # commercial names
+    F5359s: KPN Box 12
+    WE620242s: SuperWifi 2
+    sw1: SuperWifi 1
+    BoxV14: KPN Box 14
+    Experia: Experia Wifi
+    H369As: KPN Box 10
+    unknown: Onbekend
+
+    session_timeout: De sessie is beëindigd. Log alsjeblieft nogmaals in.
+    firmware_version: "Firmwareversie"
+    ui_version: "UI-versie"
+    reset_password_cta: Toegangswachtwoord vergeten?
+    reset_password_title: Wachtwoord resetten
+    reset_password: Reset wachtwoord
+    reset_password_description: |
+      Wachtwoord resetten
+
+      Klik op 'Reset wachtwoord'
+
+      Druk nu binnen 5 minuten kort op de WPS-knop van het modem ter bevestiging.
+
+      Log nu in met het wachtwoord (Admin password) vermeld op de sticker aan de achterzijde van het apparaat.
+    reset_password_step1: Klik op 'Reset wachtwoord'
+    reset_password_step2: Druk nu binnen 5 minuten kort op de WiFi-knop van het modem ter bevestiging.
+    reset_password_step3: Log nu in met het wachtwoord (Admin password) vermeld op de sticker aan de achterzijde van het apparaat.
+    reset_password_submitted: Wachtwoord resetten uitgevoerd.
+    reset_password_error: Er ging helaas iets mis probeer het nog een keer.
+
+    led_error: Kan LED-waarde niet lezen. Probeer het nog eens.
+    
+    extenders:
+      searching: Zoek naar extenders...
+      no_extenders: Er zijn geen extenders op uw netwerk
+      extender_accessible: Bereikbaar
+      extender_noaccessible: Onbereikbaar
+      extender_problem: Probleem
+      
+  internet_link:
+    dsl_informatie: DSL/ETH informatie
+    ppp_informatie: PPP informatie
+    info: Informatie
+    speed: Snelheid
+    internet_usage: Gebruik
+    4g_backup: "Mobiel internet back-up"
+    vpn: VPN
+    ipv6: IPv6
+    dns: DNS
+    ipv6_description: |
+      Je kunt hier IPv6 aan- of uitzetten. IPv6 staat standaard aan voor een goed werkende internetverbinding.
+    ipv6_duid: IPv6 DUID
+    dsl_status: Status
+    dsl_status_up: Verbonden
+    dsl_status_down: Niet verbonden
+    dsl_act_rate: Actual rate (kBps)
+    dsl_max_rate: Maximum rate (kBps)
+    noise_margin: Noise margin (dB)
+    attenuation: Attenuation (dB)
+    power: Power (dBmV)
+    dsl_max_down: DSL Max download link snelheid
+    dsl_max_up: DSL Max upload link snelheid
+
+    internet_status: Status
+    internet_status_up: Verbonden
+    internet_status_down: Niet verbonden
+
+    time_active: Tijd actief
+    standard: Standaard
+    line_encoding: Line encoding
+    link_encapsulation: Link encapsulation
+
+    ppp_status: PPP-status
+    ppp_status_up: Verbonden
+    ppp_status_down: Niet verbonden
+    ppp_keep_alive_time: PPP keepalive-tijd
+    ppp_keep_alive_echo: PPP Keepalive-herkansingen
+    mtu: MTU
+    standard_gw_address: Standaard gateway
+    ip_version: IP-versie
+    public_address_ipv4: IPv4-adres
+    primary_dns_ipv4: Primaire DNS-server IPv4
+    secondary_dns_ipv4: Secundaire DNS-server IPv4
+    public_address_ipv6: IPv6-adres
+    local_address_ipv6: IPv6 Link-Local adres
+    delegated_prefix: Delegated prefix
+    primary_dns_ipv6: Primaire DNS-server (IPv6)
+    secondary_dns_ipv6: Secundaire DNS-server (IPv6)
+    ppp_username: PPP Gebruikersnaam
+    ppp_password: PPP Wachtwoord
+    internet_usage_description: Je vindt hier de gebruiksdata van de internetverbinding. Dit is het verkeer tussen het apparaat en het internet.
+    dsl_internet: DSL/Ethernet
+    wan_connection_type: Type verbinding
+    sent: Verzonden
+    received: Ontvangen
+    downstream: Downstream
+    upstream: Upstream
+    data: Data
+    packages: Pakketten
+    errors: Fouten
+    lost_packages: Verloren pakketten
+    unicast_packages: Unicast pakketten
+    multicast_packages: Multicast pakketten
+    broadcast_packages: Broadcast pakketten
+    ip_laag: IP-laag
+    ppp_data: PPP-data
+    wan_data: WAN-data
+    extender_data: Extender-data
+    ip_data: IP-data
+    ip_iptv: Data Interactieve TV
+    ip_bridge_guest: IP Bridge gast
+    ip_usb: IP USB
+
+    # Trace route
+    trace_route: ICMP
+    trace_route_description: |-
+      Met traceroute of ping kun je de route of bereikbaarheid van internet bestemmingen controleren.
+    trace_or_ping_route: Route traceren
+    hostname_or_ip: Hostnaam of IP adres
+    host_address: Adres host
+    trace_route_failed: Traceroute mislukt
+    response_time: Responstijd
+    error_code: Foutcode
+    time_exceeded: Tijd overschreden
+    timeout: Timeout
+    completed: Traceroute afgerond
+    destination_unreachable: Bestemming niet bereikbaar
+
+    #ping
+    diagnostics_state: Diagnostics State
+    ip_host: IP Host
+    packets_success: Packets Success
+    packets_failed: Packets Failed
+    packet_size: Packet Size
+    average_response_time: Average Response Time
+    minimum_response_time: Minimum Response Time
+    maximum_response_time: Maximum Response Time
+
+    #4g
+    4g_backup_description: Je kunt hier de instellingen aanpassen van de dongel voor mobiel internet Back-up.
+    4g_apn: APN
+    4g_pin: Pincode simkaart
+    4g_phone_number: Telefoonnummer
+    4g_imsi: IMSI-nummer
+    4g_imei: IMEI-nummer
+    4g_manufacturer: Fabrikant
+    4g_model: Model
+
+    #dns
+    dns_description: DNS is een van de belangrijkste functies voor een internetverbinding. Stel hier alternatieve DNS servers in voor ipv4 en/of ipv6 indien niet de automatisch verkregen DNS servers moeten worden gebruikt.
+    dns_proxy_checkbox: DNS-proxy gebruiken (aanbevolen)
+    dns_v4_custom_ip: Andere DNSv4-service gebruiken
+    dns_v6_custom_ip: Andere DNSv6-service gebruiken
+    dns_v4_primary: Primaire DNSv4-service
+    dns_v4_secondary: Secundaire DNSv4-service
+    dns_v6_primary: Primaire DNSv6-service
+    dns_v6_secondary: Secundaire DNSv6-service
+  
+    homeplugs:
+      transmission: Snelheid (Verzenden / Ontvangen)
+
+  dns_confirmations:
+    dns_settings: DNS instellingen
+    dns_settings_new: Nieuwe DNS-instellingen
+    dns_description: Hieronder vindt u een overzicht van de DNS instellingen
+    dns_warning: Hierdoor wordt uw netwerk opnieuw opgestart en kunnen apparaten worden losgekoppeld.
+
+  # local network tabs
+  local_network:
+    topology: Topologie
+    connected_devices: Verbonden apparaten
+    connected_devices_lowercase: verbonden apparaten
+    connected_devices_inactive: Niet meer verbonden apparaten
+    confirm_unpairing_repeater: Weet je zeker dat je dit apparaat wilt ontkoppelen?
+    unpairing_repeater_description: |-
+      Ontkoppelen van extenders kan worden gedaan indien een eerder gekoppeld apparaat niet meer aanwezig is in het thuisnetwerk en uit de topologie verwijderd kan worden.
+      Ook kan het gebruikt worden om de koppel procedure opnieuw uit te voeren.
+    dhcp: DHCP
+    reserved_ip: IP-adres reserveren
+    dyndns: DynDNS
+    ipv6: IPv6
+    arp_table: Tabel MAC-adressen
+    usage: Gebruik
+    last_connection: Laatste keer verbonden
+    removing_device: Apparaat aan het verwijderen...
+    confirm_removing_all_devices: Weet u zeker dat u alle inactieve apparaten wilt verwijderen?
+    removing_all_devices: Alle inactieve apparaten verwijderen...
+    dhcp_description: Je kunt hier de DHCP-servers voor het wifi- en gastnetwerk instellen. Apparaten die met het netwerk verbinden krijgen een IP-adres van de DHCP-server.
+    main_network: Thuisnetwerk
+    guest_network: Gastnetwerk
+    dhcp_server: DHCP-server
+    subnet_mask_prefix: Subnet mask (bits)
+    pool_start: Startadres IP-pool
+    pool_end: Eindadres IP-pool
+    lease_time_minutes: Leasetijd (in seconden)
+    dhcp_leases: DHCP-leases
+    thuisnetwerk_dhcp_leases: Thuisnetwerk DHCP-leases
+    gastnetwerk_dhcp_leases: Gastnetwerk DHCP leases
+    total_txt: Totaal
+    dns_server: DNS-server
+    dns_server_primary: Primaire DNS server
+    dns_server_secondary: Secundaire DNS server
+    dhcp_authoritative: DHCP Autoritatief
+    dyndns_description: |
+      Je kunt hier Dynamic DNS (DynDNS) instellen. Met DynDNS koppel je een host- of domeinnaam met een IP-adres van je thuisnetwerk.
+    dyndns_service: DynDNS provider
+    dyndns_host: Host- of domeinnaam
+    dyndns_email: E-mailadres of gebruikersnaam
+    remaining_time: Overgebleven tijd
+    dhcp_type: DHCP
+    ip_type_dynamic: Dynamisch
+    ip_type_reserved: Gereserveerd
+    ip_type_static: Statisch
+    reserved_ip_description: |
+      Je kunt hier een IP-adres van je thuisnetwerk reserveren voor een bepaald apparaat.
+    ipv6_description: Je kunt hier prefix delegation aan- of uitzetten.
+    ipv6_prefix_delegation: IPv6 prefix delegation
+    enabled_with_dhcp: Aan met DHCPv6
+    ethernet_ports: Ethernetpoorten
+    ethernet_ports_description: |-
+      Deze pagina gaat over inzicht en controle over de ethernet poorten. Ontvangen en verzonden data tellers worden bepaald vanuit het internet perspectief.
+      De tellers ontvangen staat gelijk aan downstream of downloaden van het internet, verzonden staat gelijk aan upstream of versturen naar het internet.
+      Gebruik de schakelaar bij poort 4 om deze exclusief voor gast netwerk gebruik in te zetten. Alle apparatuur aangesloten op deze poort communiceert dan via dit afgezonderde netwerk
+    connection_type_ethernet: LAN
+    connection_type_wifi: WiFi
+    connection_type_main_2g: Wifinetwerk 2,4 GHz
+    connection_type_main_5g: Wifinetwerk 5 GHz
+    connection_type_guest: Gastnetwerk
+    connection_type_extra_2g: Extra wifinetwerk 2,4 GHz
+    connection_type_extra_5g: Extra wifinetwerk 5 GHz
+    mac_address_randomized: Willekeurig MAC-adres
+    mac_address_randomized_yes: Ja
+    mac_address_randomized_no: Nee
+    mac_address_randomized_tooltip: |-
+      Let op een MAC-adres dat als willekeurig is aangemerkt loopt het
+      risico om buiten deze toestemmingslijst vallen indien het wifi apparaat
+      dit dynamisch aanpast. Om dit te voorkomen is het noodzakelijk om op
+      het desbetreffende wifi apparaat een statisch MAC-adres in te stellen.
+    ip_address_source: Bron IP-adres
+    link_speed: Link snelheid
+    duplex: Duplex instelling
+    max_bitrate: Max bitrate
+    current_bitrate: Huidige bitrate
+    data: Data
+    stp_protocol: STP protocol
+    stp_protocol_switch: Spanning Tree Mode
+    unsynced_extender_warning: Dit apparaat is niet succesvol aan het thuisnetwerk gekoppeld. Herhaal de doe-het-zelf installatie en gebruik de aangeleverde internetkabel.
+    offline_extender_warning: |-
+      Dit apparaat is momenteel niet actief in het thuisnetwerk maar eerder wel succesvol gekoppeld geweest op deze master.
+      Mogelijk is het apparaat uitgezet, de stroom toevoer uitgevallen, een tijdsschema is actief of op andere manier is de verbinding bewust of onbewust verbroken.
+      Zodra het apparaat weer actief wordt zal de verbinding automatisch hersteld worden.
+    reserved_ip_edit_title: Gereserveerd ip adres aanpassen
+    link_time: Koppel tijdstip
+    device_info: Apparaat info
+    pairing_status: Koppelingsstatus
+    wifi_radio: WiFi-radio
+    device_schedule: Schema
+    daily_limit: Dagelijkse limiet
+    always_allow: Blokkeren opheffen
+    always_block: Continue blokkeren
+    schedule: Op basis van tijdschema blokkeren
+    time_countdown: Op basis van tijdbudget blokkeren
+
+    # sheduling
+    apply_to_all_days: Geldig voor alle dagen
+
+  topology_legend:
+    ethernet_green: ">=1 Gbit ethernet verbonden"
+    ethernet_red: "<1 Gbit ethernet verbonden"
+    wifi_green: ">=5 Ghz draadloos verbonden"
+    wifi_red: "<5 Ghz draadloos verbonden"
+    switch: netwerkswitch
+    plug: via 230v stroomnet verbonden
+
+  dhcp_confirmations:
+    main_dhcp: Thuisnetwerk DHCP
+    main_dhcp_description: Hieronder vindt u een overzicht van de DHCP-instellingen van het thuisnetwerk
+    main_dhcp_warning: Wijzigingen in de DHCP instellingen maken het noodzakelijk om opnieuw in te loggen via het ingestelde IP-adres. Aangesloten (wifi)apparaten dienen mogelijk herstart te worden om deze van de nieuwe instellingen gebruik te laten maken.
+    main_dhcp_new: Nieuwe Thuisnetwerk DHCP
+
+    guest_dhcp: Gastnetwerk DHCP
+    guest_dhcp_description: Hieronder vindt u een overzicht van de DHCP-instellingen van het Gastnetwerk
+    guest_dhcp_warning: Hierdoor wordt uw netwerk opnieuw opgestart en kunnen apparaten worden losgekoppeld.
+    guest_dhcp_new: Nieuwe Gastnetwerk DHCP
+
+
+  # wifi tabs
+  wifi:
+    main: Wifinetwerk
+    settings: Wifinetwerk
+    PMF: Beveiligde Management Frames (PMF)
+    wifi_mesh: Mesh
+    guest_wifi: Gastnetwerk
+    guest_wifi_switch: Gastnetwerk
+    extra_wifi: Extra wifinetwerk
+    schema: Tijdschema
+    spectrum: Spectrum
+    usage: Gebruik
+    settings_description: |
+      Scan de QR-code om een apparaat direct te verbinden met het wifinetwerk.
+
+      Er wordt direct een nieuwe QR-code gemaakt als je de wifinaam of het wifiwachtwoord van het hoofdnetwerk verandert. Gebruik vanaf dat moment de nieuwe QR-code.
+    main_wifi: Wifinetwerk
+    name_ssid: Wifinaam (SSID)
+    password: Wifiwachtwoord
+    visibility: Wifinaam zichtbaar
+    encryption_type: Beveiliging
+    max_clients: Maximaal aantal apparaten
+    max_clients_2g: Maximaal aantal apparaten 2,4 GHz
+    max_clients_5g: Maximaal aantal apparaten 5 GHz
+    wps_toggle: WPS functionaliteit toestaan
+    wps_pairing: Verbinden via WPS
+    wps_pairing_description: Apparaten kunnen nu via WPS met het wifinetwerk verbinden.
+    pairing_in_progress: Bezig met verbinden via WPS...
+    wps_pairing_failed: Verbinden via WPS mislukt
+    wifi_reset: Reset wifi
+    wifi_reset_description: |
+      **Bevestig om te resetten.**
+      
+      Middels een wifi reset worden alleen de wifi gegevens teruggezet naar fabrieksinstellingen en gewist in het netwerk. Hierna zijn de wifi gegevens van de sticker (achter of onderop het apparaat) weer actief.
+    wifi_reset_success: De Wifi reset is uitgevoerd je kan je appara.
+    wifi_mesh_description: Je vindt hier de gegevens van de apparaten die het mesh-wifinetwerk vormen. Dit zijn het modem en een of meer wifiversterkers.
+    radio: Wifisignaal
+    radio_on_off: Wifisignaal
+    wifi_steering_checkbox: Wifi op extenders aanlaten
+    radio_description: Je kunt hier de instellingen van het wifisignaal aanpassen. Deze instellingen gelden voor het wifinetwerk, het gastnetwerk en het extra wifinetwerk.
+    wireless_mode_2g: 2,4 GHz wifistandaard
+    bandwidth_2g: 2,4 GHz bandbreedte
+    channel_2g: 2,4 GHz kanaal
+    wireless_mode_5g: 5 GHz wifistandaard
+    bandwidth_5g: 5 GHz bandbreedte
+    channel_5g: 5 GHz kanaal
+    auto_select_channel: Automatische kanaalselectie
+    guest_wifi_description: |
+      Het gastnetwerk is een apart wifinetwerk met een eigen wifinaam en -wachtwoord. Bezoek kan internetten via het gastnetwerk, maar heeft geen toegang tot je thuisnetwerk.
+
+      Scan de QR-code en verbind automatisch met het gastnetwerk.
+
+      Er wordt direct een nieuwe QR-code gemaakt als je de wifinaam of het wifiwachtwoord van het gastnetwerk verandert. Gebruik vanaf dat moment de nieuwe QR-code.
+    airtime_percentage: Limiet bandbreedte
+    guest_client_timebox: Tijd gastnetwerk actief
+    guest_client_timebox_warning: |
+      **Waarschuwing!**
+
+      Wanneer de nieuwe Wifi settings worden opgeslagen dan wordt het Gast Wifi netwerk uitgeschakeld na de ingestelde tijd
+    extra_wifi_description: |
+      Je kunt hier een extra wifinetwerk aanmaken die alleen de 2,4 GHz-band of de 5 GHz-band gebruikt. Apparaten die bijvoorbeeld alleen op de 2,4 GHz-band werken kan je verbinden met het extra wifinetwerk op de 2,4 GHz-band.
+    extra_wifi_description_2g: |
+      Scan de QR-code om een apparaat direct te verbinden met het wifinetwerk op de 2,4 GHz-band.
+
+      Er wordt direct een nieuwe QR-code gemaakt als je de wifinaam of het wifiwachtwoord van het extra wifinetwerk verandert. Gebruik vanaf dat moment de nieuwe QR-code.
+    extra_wifi_2g: Extra wifinetwerk 2,4 GHz
+    extra_wifi_5g: Extra wifinetwerk 5 GHz
+    extra_wifi_description_5g: |
+      Scan de QR-code en verbind automatisch met het extra wifinetwerk op de 5 GHz-band.
+
+      Er wordt direct een nieuwe QR-code gemaakt als je de wifinaam of het wifiwachtwoord van het extra wifinetwerk verandert. Gebruik vanaf dat moment de nieuwe QR-code.
+    spectrum_description: |
+      Je ziet hier welk wifikanaal je gebruikt van de 2,4 Ghz- en de 5 GHz-band en hoe druk of rustig het is op alle wifikanalen. De beschikbare ruimte op een kanaal hangt af van de kanalen die wifinetwerken in je omgeving gebruiken en het kanaal dat je zelf gebruikt.
+
+      Je kunt handmatig een kanaal kiezen bij Wifisignaal, maar dit leidt meestal tot mindere prestaties. Voor de beste prestaties staat deze instelling standaard op Automatisch.
+
+      Een wifikanaal gebruikt ook ruimte van aangrenzende wifikanalen. Bij de spectrumanalyse zie je de overlap tussen de kanalen die wifinetwerken in je omgeving gebruiken en de kanalen die je zelf gebruikt.
+
+      Je kunt handmatig de bandbreedte kiezen bij Wifisignaal, maar dit leidt meestal tot mindere prestaties. Voor de beste prestaties staat deze instelling standaard op Automatisch.
+    availability_2g: 2,4 GHz beschikbaarheid
+    availability_5g: 5 GHz beschikbaarheid
+    signal_2g: 2,4 GHz spectrumanalyse
+    signal_5g: 5 GHz spectrumanalyse
+    current_channel: Huidig kanaal
+    restart_all_devices: Herstart alle apparaten
+    reset_all_devices: Zet alle apparaten terug naar fabrieksinstellingen
+    mac_address_2: 2,4 GHz MAC-adres
+    mac_address_5: 5 GHz MAC-adres
+    wifi_schema: Tijdschema
+    wifi_schema_description: Je kunt hier via een tijdschema instellen wanneer het wifinetwerk actief of niet actief is. Het modem verbruikt minder stroom als het wifinetwerk niet actief is.
+    wifi_schema_enable: Tijdschema actief
+    selected_wifi_schema: Gekozen tijdschema
+    selected_wifi_schema_name: Naam gekozen tijdschema
+    usage_description: Op deze pagina vind u gegevens over het internet verbruik van de ethernet poorten in het apparaat. Verzonden data wordt bepaald vanuit het perspectief van het apparaat. Dat houdt in dat verzonden data vanuit dit modem of SuperWifi punt naar de verbonden apparaten wordt verzonden (downstream). Ontvangen data loopt dus vanuit de apparaten richting het modem of SuperWifi punt(upstream).
+    link_speed: Link speed
+    duplex: Duplex
+    lost_packages: Verloren pakketten
+    multicas_packets: Multicast pakketten
+    broadcast_packages: Broadcast pakketten
+    wifi_5_profile: Wifi-5 profiel
+    wifi_6_profile: Wifi-6 profiel
+    updating_in_progress: WiFi instellingen worden nu gewijzigd.
+    update_wifi_error: Mogelijk is de verbinding verloren gegaan door de aangebrachte wijzigingen. Ververs het scherm handmatig en kijk of de wijzigingen zijn voltooid.
+    off: Uit
+    optional: Optioneel 
+    required: Benodigd
+    is_on: staat aan
+    is_off: staat uit
+
+  wifi_confirmations:
+    main_wifi: Thuisnetwerk veranderen
+    main_wifi_description: Hieronder een overzicht van de Thuisnetwerk hoofdinstellingen
+    main_wifi_warning: Als je de instellingen van Thuisnetwerk wijzigt, verliezen alle apparaten die via Thuisnetwerk zijn aangesloten hun verbinding. Ze moeten opnieuw verbinding maken met behulp van de bovenstaande instellingen.
+    main_wifi_new: Nieuwe Thuisnetwerk instellingen
+    main_wifi_new_description: Gebruik de onderstaande gegevens om met je Thuisnetwerk te verbinden
+
+    guest_wifi: Gast Wifi veranderen
+    guest_wifi_description: Hieronder een overzicht van de Gast Wifi instellingen.
+    guest_wifi_warning: Als je de instellingen van het Gast Wifi netwerk wijzigt, verliezen alle apparaten die via het Gast Wifi netwerk zijn aangesloten hun verbinding. Ze moeten opnieuw verbinding maken met behulp van de bovenstaande instellingen.
+    guest_wifi_new: Nieuwe Gast Wifi instellingen
+    guest_wifi_new_description: Gebruik de onderstaande gegevens om met je Gast Wifi netwerk te verbinden
+
+    extra_2g_wifi: Extra Wifi 2g veranderen
+    extra_2g_wifi_description: Hieronder een overzicht van de Extra wifinetwork 2g instellingen
+    extra_2g_wifi_warning: Als je de instellingen van het Extra Wifi-netwerk wijzigt, verliezen alle apparaten die via het Extra Wifi-netwerk 2g zijn aangesloten hun verbinding. Ze moeten opnieuw verbinding maken met behulp van de bovenstaande instellingen.
+    extra_2g_wifi_new: Nieuwe Extra Wifi 2g instellingen
+    extra_2g_wifi_new_description: Gebruik onderstaande gegevens om verbinding te maken met uw Extra 2g netwerk
+
+    extra_5g_wifi: Extra Wifi 5g veranderen
+    extra_5g_wifi_description: Hieronder een overzicht van de Extra wifinetwork 5g instellingen
+    extra_5g_wifi_warning: Als je de instellingen van het Extra Wifi-netwerk wijzigt, verliezen alle apparaten die via het Extra Wifi-netwerk 5g zijn aangesloten hun verbinding. Ze moeten opnieuw verbinding maken met behulp van de bovenstaande instellingen.
+    extra_5g_wifi_new: Nieuwe Extra 5g Wifi-instellingen
+    extra_5g_wifi_new_description: Gebruik onderstaande gegevens om verbinding te maken met uw Extra 5g netwerk
+
+  radio_confirmations:
+    profile_5_warning: Als je de instellingen van het Wifi netwerk wijzigt naar de Wifi 5 standaard, verliezen alle apparaten die via het Wifi netwerk zijn aangesloten hun verbinding
+    profile_5_update: De Wifi netwerk gegevens zijn gewijzigd naar de Wifi 5 standaard
+    profile_6_warning: Als je de instellingen van het Wifi netwerk wijzigt naar de Wifi 6 standaard, verliezen alle apparaten die via het Wifi netwerk zijn aangesloten hun verbinding
+    profile_6_update: De Wifi netwerk gegevens zijn gewijzigd naar de Wifi 6 standaard
+
+  # security tabs
+  security:
+    firewall: Firewall
+    device_block: Toegang apparaten
+    port_forwarding: Port forwarding
+    upnp: UPnP
+    dmz: DMZ
+    both_protocols: TCP/UDP
+    firewall_description: |
+      Je kunt hier het beveiligingsniveau van de firewall instellen.
+      Dit gaat over alle communicatie van het thuisnetwerk (lan&wifi) naar het internet toe.
+      Communicatie van het internet naar het thuisnetwerk is volledig geblokkeerd.
+      Gebruik voor aanpassingen hiervoor de functies port forwarding, upnp of dmz.
+    firewall_level: Beveiligingsniveau
+    firewall_level_low: Laag
+    firewall_level_medium: Middel
+    firewall_level_high: Hoog
+    firewall_level_custom: Aangepast
+    firewall_level_description_low: Gebruik level 'Aangepast; om eigen keuzes te maken.
+    firewall_level_description_medium: Gebruik level 'Aangepast' om eigen keuzes te maken.
+    firewall_level_description_high: Gebruik level 'Aangepast' om eigen keuzes te maken.
+    firewall_level_description_custom: De firewall kan met specifieke instellingen worden uitgerust. Dit is de expert mode.
+    firewall_level_edit_confirmation: Weet u zeker dat u deze wijziging wilt doorvoeren?
+    custom_rules_title: Aangepaste regels
+    custom_rules_description: |-
+      Hier kunt zelf filter regels toevoegen of verwijderen in de firewall. 
+      Kies middels de knoppen voor het basisgedrag alles blokkeren of alles toelaten en maak vervolgens specifieke blokkeer of toestaan acties aan.
+    static_rules_title: Toegepaste regels
+    static_rules_description_low: "Dit beveiligingsniveau laat standaard alles toe. Er zijn dus onderstaand geen applicaties met beperkingen:"
+    static_rules_description_medium: "Dit beveiligingsniveau laat standaard alles toe met onderstaand de volgende geblokkeerde applicaties:"
+    static_rules_description_high: "Dit beveiligingsniveau heeft een algehele uitgaande blokkade actief staan met onderstaand de volgende toegelaten applicaties:"
+    static_rules_remark: Dit is de huidige set van instellingen voor dit firewall niveau. Kies voor beveiligingsniveau aangepast om eigen keuzes te maken.
+    add_custom_rule: Aangepaste regel toevoegen
+    edit_custom_rule: Aangepaste regel bewerken
+    firewalls_rules_progress: Even geduld. De firewall regels worden nagelopen.
+    drop_all: Alles blokkeren
+    allow_all: Alles toelaten
+    drop_all_action_description: Functie om specifieke verkeerstypen door te laten staat nu actief.
+    allow_all_action_description: Functie om specifieke verkeerstypen te blokkeren staat nu actief.
+    custom_firewall_rules_description: Onderstaande verkeerstypen kunnen afhankelijk van de gemaakte basis keuze worden geblokkeerd of toegelaten.
+    ip_version: IP-versie
+    allow_ping: Modem reageert op pings
+    open_ports_ipv6: IPv6-poorten openen
+    open_port: Poort openen
+    port_forwarding_edit_title: Port forwarding aanpassen
+    port_forwarding_description: |
+      Met port forwarding kan je apparaten binnen je thuisnetwerk ook vanaf het internet bereiken.
+    service: Service
+    source_prefix_tooltip: |
+      Geaccepteerde voorbeeld waardes zonder IP source restrictie:
+        Veld leeg laten
+        0.0.0.0
+        0.0.0.0/0
+
+      Geaccepteerde voorbeeld waardes met IP source restrictie:
+        123.123.123.0/24 = source beperkt tot dit subnet
+        123.123.123.123/32 = source beperkt tot 1 specifiek ip adres
+        123.123.123.123 = source beperkt tot 1 specifiek ip adres
+
+      Geaccepteerde voorbeeld waardes voor poorten:
+        80 = alleen poort 80
+        80-90 = serie poorten van 80 tot 90
+    rule_ip_tooltip: |-
+      Geaccepteerde voorbeeld waardes zonder IP source restrictie:
+        Veld leeg laten
+        0.0.0.0
+        0.0.0.0/0
+
+      Geaccepteerde voorbeeld waardes met IP source restrictie:
+        123.123.123.0/24 = source beperkt tot dit subnet
+        123.123.123.123/32 = source beperkt tot 1 specifiek ip adres
+        123.123.123.123 = source beperkt tot 1 specifiek ip adres
+    rule_port_tooltip: |-
+      Geaccepteerde voorbeeld waardes voor poorten:
+        80 = alleen poort 80
+        80-90 = serie poorten van 80 tot 90
+    rule_id: Id  
+    custom_source_prefix: Bron IP adres
+    custom_source_port: Bron poort nummer
+    source_prefix: Internet IP adres
+    source_port: Internet poort nummer
+    destination_ip: Doel IP-adres
+    destination_port: Doel poort nummer
+    action: Actie
+    action_accept: Accept
+    action_drop: Drop
+    dmz_description: |
+      Je staat op het punt om de firewall beveiliging voor het ingestelde apparaat te passeren. Wees er zeker van dat er op het ingestelde apparaat een separate firewall beveiliging actief is.
+    upnp_description: |
+      Je kunt hier UPnP IGD (Universal Plug and Play Internet Gateway Device) instellen. Met UPnP kunnen apparaten binnen het thuisnetwerk automatisch poorten openen.
+
+      UPnP staat standaard uit vanwege veiligheidsrisico's. Gebruik UPnP alleen als je precies weet wat de veiligheidsrisico's zijn.
+    upnp_igd: UPnP IGD
+    upnp_advertising_period: UPnP Advertisement Period
+    device_blocking: Wifi afscherming
+    device_blocking_title: Wifi afscherming (MAC filteren)
+    device_blocking_description: |-
+      Met deze functie leg je een lijst aan van alle wifi apparaten die toegang mogen hebben tot dit thuisnetwerk. Wifi apparaten die niet voorkomen op deze lijst wordt niet toegestaan om verbinding te maken via wifi. Twee categorieën apparaten vallen niet onder deze filter functie:
+      1) Bekabeld aangesloten apparaten via ethernet hebben altijd toegang en komen niet op deze lijst voor.
+      2) Wifi gastnetwerk aangezien dit bedoeld is voor toegang van tijdelijke aard en afgeschermd is van het thuisnetwerk.
+      In het thuisnetwerk aanwezige wifi extenders maken automatisch deel uit van deze toestemmingslijst. Gebruik eventueel de knop om alle nu verbonden wifi apparaten in 1 keer toe te voegen.
+    device_blocking_switch: Apparaat blokkade aan/uit
+    allowed_devices: Toegestane apparaten
+    mac_filtering_success_message: |-
+      De functie Wifi afscherming (MAC filteren) staat nu aan. Wees er zeker van dat alle wifi apparaten die toegang nodig hebben op deze lijst staan. Als er toch een onbedoelde uitsluiting is ontstaan en de toegang via wifi nu geblokkeerd is, log dan in op het modem via een bekabeld aangesloten apparaat en herstel de situatie.
+    # parental control
+    parental_control: Ouderlijk toezicht
+    parental_control_description: Hier kan parental control (ouderlijk toezicht) worden ingesteld per aangesloten apparaat, eventueel gebaseerd op tijdschema.
+    delete_custom_rule_wifi_management: Deze firewall regels zijn noodzakelijk voor het beheer op afstand van wifi extenders. Bij eventuele verwijdering kunnen deze hersteld worden door deze handmatig toe te voegen of door het uitvoeren van een fabrieksreset.
+    remove_whitelisted_devices: Verwijder alles
+    whitelist_all_wifi_devices: Voeg alle Wifi-apparaten toe
+    device_blocking_mac_address_hint: |-
+      Het toevoegen van wifi MAC adressen kan op meerdere manieren:
+      1) Gebruik de knop om alle nu verbonden wifi apparaten toe te voegen.
+      2) Gebruik het MAC invoerveld om 1 of meer (gebruik "," tussen elk adres) MAC adressen toe te voegen.
+      3) De MAC adres notatie is 12:34:56:AB:CD:EF
+
+  # modem management tabs
+  modem:
+    information: Informatie
+    admin_password: Login wachtwoord
+    time_ntp: Tijd (NTP)
+    time: Tijd
+    remote_help: Hulp op afstand
+    backup: Backup
+    system: Systeem
+    performance_charts: Prestaties
+    performance_charts_description: Je kunt hier de prestaties van dit apparaat bekijken.
+    model_name: Model
+    product_class: Modelnummer
+    serial_number: Serienummer
+    hardware_version: Hardware versie
+    software_version: Firmware versie
+    rescue_software_version: Rescue firmware versie
+    bootloader_version: Bootloader versie
+    rescue_bootloader_version: Rescue bootloader versie
+    uptime: Tijd actief
+    mac_base: Base (Sticker)
+    mac_2g: 2.4Ghz wifi
+    mac_5g: 5Ghz wifi
+    mac_guest_2g: Gast netwerk 2.4Ghz wifi
+    mac_guest_5g: Gast netwerk 5Ghz wifi
+    mac_extra_2g: Extra netwerk 2.4Ghz wifi
+    mac_extra_5g: Extra netwerk 5Ghz wifi
+    base_ip: IP-adres (internet)
+    date_time: Datum en tijd
+    ntpservers: NTP-servers
+    current_date_time: Datum en tijd
+    change_admin_password: Wachtwoord wijzigen
+    admin_password_description: |
+      Je kunt hier het wachtwoord van dit apparaat veranderen. Dit wachtwoord gebruik je alleen voor het inloggen op dit apparaat.
+    admin_password_helptext: Een wachtwoord van 8 tot 63 karakters groot is toegestaan. Gebruik een combinatie van hoofdletters, kleine letters, getallen en speciale karakters voor een zo veilig mogelijk wachtwoord.
+    current_password: Huidig wachtwoord
+    new_password: Nieuw wachtwoord
+    confirm_new_password: Herhaal nieuw wachtwoord
+    invalid_password: Verkeerd wachtwoord
+    passwords_not_matching: Nieuw wachtwoord en Herhaal nieuw wachtwoord zijn niet hetzelfde.
+    password_requirements_title: "Je wachtwoord bevat minimaal:"
+    password_requirements_1: minimaal 10 karakters
+    password_requirements_2: ten minste één cijfer of speciaal teken bevatten $@.!%*#?&
+    password_requirements_3: niet meer dan 2 dezelfde opeenvolgende karakters
+    system_description: Je kunt sommige problemen met internet, tv, bellen of wifi oplossen door het apparaat te herstarten.
+    system_reboot_description: Herstart dit apparaat
+    system_reboot: Herstart
+    system_reset_description: Reset dit apparaat
+    system_reset: Zet terug naar fabrieksinstellingen
+    factory_reset_dialog:  Alle persoonlijke instellingen worden gewist. Vanuit het netwerk worden wifi en telefonie gegevens automatisch hersteld naar de laatste actuele waardes zodat je gebruik kan blijven maken van de KPN diensten. Wifi extenders maken automatisch weer verbinding zodra de master terug is.
+    device_reboot_dialog: |
+      **Bevestig om te herstarten.**
+
+       Als dit apparaat opnieuw opstart, zullen alle actieve verbindingen verbroken worden en kan het even duren voordat het thuisnetwerk weer operationeel is. Er gaan geen instellingen verloren.
+    #remote help tab
+    remote_help_description: |
+      Op deze pagina kunt u hulp-op-afstand inschakelen. Hiermee stelt u deze webpagina ter beschikbaar vanaf het internet. U kunt dan dit modem op afstand, via het internet, instellen.
+
+      Dit wordt ook gebruikt door de KPN helpdesk. Als u de ingestelde gebruikersnaam en wachtwoord deelt met een KPN medewerker, kan deze helpen met de instellingen van uw modem.
+
+      Deel deze gegevens niet zomaar met iedereen.
+    remote_username: Gebruikersnaam op afstand
+    remote_password: Wachtwoord op afstand
+    upgrade_modem: Upgrade je apparaat
+    upgrade_modem_description: |
+      Deze upgrade verbetert de prestaties en beveiliging van je apparaat. Het apparaat zal automatisch worden herstart om de nieuwe software te installeren, wat ongeveer 5 minuten kan duren. Tijdens de upgrade zal er een tijdelijke onderbreking van je internetverbinding optreden.
+    upgrade: Upgrade
+    available_upgrade_version: "Er is een nieuwe firmware versie beschikbaar: "
+    upgrade_unavailable: Op dit moment is er geen nieuwere versie software voor het apparaat beschikbaar.
+    group_reboot: Herstart thuisnetwerk
+    group_reset: Reset thuisnetwerk
+    wifi_reset: Zet terug naar fabrieksinstellingen
+    group_reboot_description: Als het gehele thuisnetwerk opnieuw opstart, zullen alle actieve verbindingen verbroken worden en kan het even duren voordat het thuisnetwerk weer operationeel is. Er gaan geen instellingen verloren.
+    group_reset_description: Alle persoonlijke instellingen worden gewist. Vanuit het netwerk worden wifi en telefonie gegevens automatisch hersteld naar de laatste actuele waardes zodat je gebruik kan blijven maken van de KPN diensten. Wifi extenders zullen ook zijn gereset en dienen opnieuw door de installatieprocedure te gaan.
+
+  phone:
+    info: Informatie
+    number_configutations: Instellingen telefoonnummers
+    call_history: Belgeschiedenis
+    phone_profile: Telefoonprofiel
+    phone_info_description: Je vindt hier informatie over de telefoonnummers die zijn ingesteld op het modem. Telefoonnummers van KPN worden automatisch ingesteld.
+    internal_calling: Intern bellen
+    internal_calling_description: |
+      Intern bellen is mogelijk indien je 2 telefoontoestellen hebt. Let op alleen mogelijk indien het modem meer dan 1 telefoon poort heeft!
+      
+      Met **1 bel je naar het toestel dat op telefoonpoort 1 is aangesloten, met **2 bel je naar het toestel op telefoonpoort 2.
+    phone_profiles: Telefoonnummers
+    phone_numbers: Telefoonnummer
+    origin: Ingesteld door
+    origin_user: Gebruiker
+    origin_kpn: KPN
+    authentication_name: Gebruikersnaam
+    number_configutations_description: |
+      Je kunt hier telefoonnummers bekijken en instellen. Telefoonnummers van KPN worden automatisch ingesteld. Het maximum aantal telefoonnummers is 4.
+
+      Heb je meerdere telefoonnummers? Dan kan je inkomende gesprekken voor verschillende nummers ontvangen via één telefoonpoort. Voor uitgaande gesprekken moet 1 telefoonnummer worden gekozen per telefoonpoort.
+
+    use_your_own_devices: Eigen apparaat gebruiken voor KPN-telefoonnummer
+    use_your_own_devices_button: Zet KPN-telefoonnummers uit
+    use_your_own_devices_description: |
+      Als je een KPN-telefoonnummer wilt instellen op een ander apparaat moeten de KPN-telefoonnummers op dit modem worden uitgezet.
+    fx_ports_incoming: Telefoonpoorten inkomende gesprekken
+    fx_ports_outgoing: Telefoonpoorten uitgaande gesprekken
+    no_number_selected: Geen telefoonnummer geselecteerd
+    call_history_description: Je ziet hier een overzicht met recente gesprekken.
+    filter_call_history: Filter
+    call_type: Type gesprek
+    call_type_all: Alle gesprekken
+    call_type_incoming: Inkomend
+    call_type_missed: Gemist
+    call_type_outgoing: Uitgaand
+    call_type_pushed_away: Uitgaand
+    internal_phone_number: Intern telefoonnummer
+    external_phone_number: Extern telefoonnummer
+    date_and_time: Datum en tijd
+    duration: Duur
+    seconds: seconden
+    on_off: Uit/Aan
+    fx_port_1: Phone 1
+    fx_port_2: Phone 2
+
+    # phone edit modal
+    profile_configuration_modal_description: |-
+      Je kunt hier een telefoonnummer instellen dat niet van KPN is.
+      Een KPN-telefoonnummer kan je aanpassen of verwijderen, maar het nummer zal daardoor niet meer werken op dit modem. Een KPN-telefoonnummer wordt automatisch opnieuw ingesteld als je het modem terugzet naar fabrieksinstellingen.
+    test: Telefoontest
+    test_description: Met deze telefoontest laat je het toestel overgaan. Zo controleer je of het toestel functioneert en goed op het modem is aangesloten.
+
+    status: Status
+    number: Telefoonnummer
+    username: Gebruikersnaam
+    password: Wachtwoord
+    proxy: Proxy
+    domain: Domein
+    server: Registrar
+
+    phone_delete_confirmation: U staat op het punt om een door KPN ingesteld telefoonnummer te wissen. Eenmaal gewist kan dit alleen worden teruggezet door het modem volledig te resetten met verlies van de meeste ingestelde gegevens.
+
+    # phone edit validation
+    invalidProxyserver: Ongeldige proxy server
+    invalidregistrarserver: Ongeldige registrar server
+    invalidDomainName: Ongeldige domein naam
+
+# Translation for Ensemble platform
+ensemble:
+  input:
+    required: dit veld is verplicht
+    validation:
+      # minimumLength: The field must be at least $n characters long
+      # maximumLength: The field must be at most $n characters long
+      invalidPhoneType: Ongeldig telefoonnummer
+      invalidEmailType: Ongeldig e-mail
+      invalidIPAddressType: Ongeldig IP-adres
+
+      #catch all
+      invalidInput: Ongeldige invoer

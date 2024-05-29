@@ -1,0 +1,4193 @@
+Import:
+  - common
+  - wifiUtils
+  - mockData
+  
+
+View:
+
+  styles:
+    scrollableView: true
+    backgroundColor: 0xFFEAEAEA
+
+  body:
+    Column:
+      styles:
+        fontSize: 16
+      children:
+        - PageHeader:
+            inputs:
+              title: r@kpn.nav.wifi
+              showConnectionWarning: ${ensemble.storage.internetConnected == false}
+              showSlaveDeviceWarning: ${ isMaster() == false }
+        - TabBar:
+            selectedIndex: ${wifiPageTabIndex}
+            styles: { tabPadding: 0 16, color: 0xFF009900, tabBackgroundColor: 0xFFFFFFFF, tabFontWeight: bold, activeTabColor: 0xFF009900, indicatorColor: 0xFF009900, indicatorThickness: 4 }
+            items:
+              - label: r@kpn.wifi.main
+                body: Hoofd
+
+              - label: r@kpn.wifi.guest_wifi
+                body: GuestWiFi
+
+              - label: r@kpn.wifi.extra_wifi
+                body: ExtraWiFi
+
+              - label: r@kpn.wifi.radio
+                body: Radio
+
+              - label: r@kpn.wifi.schema
+                body: Schema
+
+              - label: r@kpn.wifi.spectrum
+                body: Spectrum
+
+
+
+Hoofd:
+  onLoad:
+    invokeAPI:
+      name: getPrivWiFi
+      onResponse: |
+        //@code
+        mainWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID, getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.KeyPassPhrase);
+        mainWifiQrCodeLoading.visible = false;
+        if (getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModeEnabled == "WPA3-Personal") {
+          privWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.MFPConfig;
+          privWiFiPMF.itemsFromString = 'r@kpn.wifi.required,Disabled';
+        } else if (getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModeEnabled == "WPA2-WPA3-Personal"){
+          privWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.MFPConfig;
+          privWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+        } else {
+          privWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.MFPConfig;
+          privWiFiPMF.itemsFromString = 'r@kpn.wifi.off ,r@kpn.wifi.optional,r@kpn.wifi.required';
+        }
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [0, 0]
+            borderRadius: 10
+            padding: 16 16 40 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.wifi.main
+
+            # barcode
+            - Flex:
+                direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                styles: { crossAxis: center, gap: 40 }
+                children:
+                  - Text:
+                      styles:
+                        expanded: "${device.width >= 768 ? true : false}"
+                        textStyle:
+                          overflow: wrap
+                      text: r@kpn.wifi.settings_description
+                  - Stack:
+                      alignment: center
+                      children:
+                        - QRCode:
+                            id: mainWifiQrCode
+                            value: "placeholder"
+                            styles: { size: 250 }
+                        - Column:
+                            id: mainWifiQrCodeLoading
+                            styles: { crossAxis: center, mainAxis: spaceAround, backgroundColor: 0xCCFFFFFF, padding: 100 }
+                            children:
+                              - Progress:
+                                  styles: { size: 50 }
+                                  display: circular
+
+            # form
+            - Text:
+                text: r@kpn.wifi.main_wifi
+                styles: 
+                  textStyle:
+                    fontWeight: bold
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                children:
+                  - Checkbox:
+                      id: privWiFiVisibility
+                      label: r@kpn.wifi.visibility
+                      value: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.SSIDAdvertisementEnabled}
+                      enabled: ${ isMaster() }
+                      onChange:
+                        invokeAPI:
+                          name: setPrivWiFiVisibility
+                          inputs:
+                            visibility: ${this.value}
+                          onResponse:
+                            showToast:
+                              widget: SuccessToast
+                              styles:
+                                padding: 0
+                              options:
+                                type: custom
+                                duration: 15
+                                dismissable: true
+                                alignment: center
+                          onError:
+                            showToast:
+                              message: r@kpn.error
+                              options:
+                                dismissable: true
+                                type: error
+                                duration: 15
+                                alignment: center
+
+            - Divider:
+                styles:
+                  margin: 16 0
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                children:
+                  - TextInput:
+                      id: privWiFiSsid
+                      label: r@kpn.wifi.name_ssid
+                      value: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID}
+                      required: true
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  - PasswordInput:
+                      id: privWiFiPassword
+                      label: r@kpn.wifi.password
+                      readOnly: ${ensemble.storage.deviceMode != 'Master'}
+                      selectable: true
+                      obscureToggle: true
+                      value: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.KeyPassPhrase}
+                      required: true
+                      validator:
+                        minLength: 8
+                        maxLength: 63
+
+                  - Dropdown:
+                      id: privWiFiSecurity
+                      label: r@kpn.wifi.encryption_type
+                      items: ${filterWifiSecurityModes(getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModesAvailable)}
+                      value: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModeEnabled}
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                      onChange: 
+                        executeCode:
+                          body: |
+                            if (this.value == "WPA3-Personal") {
+                              privWiFiPMF.value = 'r@kpn.wifi.required';
+                              privWiFiPMF.itemsFromString = 'r@kpn.wifi.required';
+                              extra2gWiFiWPS.value = getPrivWiFi.body.status.wlanvap.vap2g0priv.WPS.Enable;
+                              extra2gWiFiWPS.enabled = false;
+                            } else if (this.value == "WPA2-WPA3-Personal"){
+                              privWiFiPMF.value = 'r@kpn.wifi.required';
+                              privWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+                            } else {
+                              privWiFiPMF.value = 'r@kpn.wifi.off';
+                              privWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+                            }
+
+                  - Dropdown:
+                      id: privWiFiPMF
+                      label: r@kpn.wifi.PMF
+                      enabled: ${privWiFiSecurity.value != 'WPA3-Personal'}
+
+            - Row:
+                visible: ${ensemble.storage.deviceMode == "Master" }
+                styles: { gap: 10, mainAxis: end, crossAxis: center }
+                children:
+                  - Text:
+                      id: privWifiUpdateStatus
+                  - Button:
+                      label: r@kpn.restore
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap:
+                        invokeAPI:
+                          name: getPrivWiFi
+                  - Button:
+                      label: r@kpn.save
+                      validateForm: true
+                      onTap:
+                        showDialog:
+                          widget: MainWifiUpdateConfirmation
+                          options:
+                            style: none
+
+            - Divider:
+                styles:
+                  margin: 16 0
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                children:
+                  - Checkbox:
+                      id: extra2gWiFiWPS
+                      label: r@kpn.wifi.wps_toggle
+                      value: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.WPS.Enable}
+                      enabled: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModeEnabled != "WPA3-Personal" && ensemble.storage.deviceMode == 'Master'  }
+                      onChange:
+                        executeActionGroup:
+                          actions:
+                            - invokeAPI:
+                                name: setWiFiWPS
+                                inputs:
+                                  enable: ${this.value}
+                                  service: "NeMo.Intf.vap2g0priv.WPS"
+                            - invokeAPI:
+                                name: setWiFiWPS
+                                inputs:
+                                  enable: ${this.value}
+                                  service: "NeMo.Intf.vap5g0priv.WPS"
+                                onResponse:
+                                  showToast:
+                                    widget: SuccessToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 15
+                                      dismissable: true
+                                      alignment: center
+                                onError:
+                                  showToast:
+                                    message: r@kpn.error
+                                    options:
+                                      dismissable: true
+                                      type: error
+                                      duration: 15
+                                      alignment: center
+
+
+MainWifiUpdateConfirmation:
+  Column:
+    styles:
+      width: 720
+      backgroundColor: white
+    children:
+
+      # pre submit content
+      - Column:
+          id: preSubmitContent
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.main_wifi
+                  - CloseDialogIcon
+            - Text:
+                text: r@kpn.wifi_confirmations.main_wifi_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${privWiFiSsid.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${privWiFiPassword.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${privWiFiSecurity.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${privWiFiPMF.value}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+
+            # warning
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.wifi_confirmations.main_wifi_warning
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            preSubmitContent.visible = false;
+                            loading.visible = true;
+                          onComplete:
+                            executeActionGroup:
+                              actions:
+                                - startTimer:
+                                    options:
+                                      startAfter: 30
+                                      repeat: false
+                                    onTimer:
+                                      executeCode:
+                                        body: |
+                                          loading.visible = false;
+                                          timeoutError.visible = true;
+                                - invokeAPI:
+                                    name: setPrivWiFi
+                                    inputs:
+                                      ssid: ${privWiFiSsid.value}
+                                      password: ${privWiFiPassword.value}
+                                      security: ${privWiFiSecurity.value}
+                                      PMF: ${privWiFiPMF.value}
+                                    onResponse:
+                                      invokeAPI:
+                                        name: getPrivWiFi
+                                        onResponse: |
+                                          //@code
+                                          mainWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID, getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.KeyPassPhrase);
+                                          loading.visible = false;
+                                          postSubmitContent.visible = true;
+                                          ensemble.storage.set('mainWifi',getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID);
+                                          ensemble.storage.set('vap2g0priv',getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID);
+                                          ensemble.storage.set('vap5g0priv',getPrivWiFi.body.status.wlanvap.vap5g0priv.SSID);
+                                          ensemble.storage.set('vap2g0ext',getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID);
+                                          ensemble.storage.set('vap5g0ext',getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID);
+                                    onError:
+                                      showToast:
+                                        message: r@kpn.error
+                                        options:
+                                          dismissable: true
+                                          type: error
+                                          duration: 15
+                                          alignment: center
+
+      # loading
+      - Column:
+          id: loading
+          visible: false
+          styles:
+            crossAxis: stretch
+            height: 500
+            gap: 16
+          children:
+            - Progress:
+                display: linear
+                styles: { color: 0xFF009900, thickness: 8 }
+            - Spacer
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE99B
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: grey
+            - Text:
+                text: r@kpn.wifi.updating_in_progress
+                styles:
+                  textAlign: center
+            - Spacer
+    
+      # timeout error
+      - Column:
+          id: timeoutError
+          visible: false
+          styles:
+            crossAxis: stretch
+            height: 500
+            padding: 16
+            gap: 16
+          children:
+            - Spacer
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE9C5
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: orange
+            - Text:
+                text: r@kpn.wifi.update_wifi_error
+                styles:
+                  textAlign: center
+            - Spacer
+    
+      # post submit
+      - Column:
+          id: postSubmitContent
+          visible: false
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.main_wifi_new
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.main_wifi_new_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID}
+                      styles: { expanded: true }
+
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.KeyPassPhrase}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.ModeEnabled}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.MFPConfig}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - QRCode:
+                      value: getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID, getPrivWiFi.body.status.wlanvap.vap2g0priv.Security.KeyPassPhrase);
+                      styles: { size: 200 }
+            - Divider
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+
+Radio:
+  onLoad:
+    invokeAPI:
+      name: getWifiStatus
+      onResponse:
+        invokeAPI:
+          name: get2gRadio
+          onResponse:
+            invokeAPI:
+              name: get5gRadio
+              onResponse: |
+                ensemble.invokeAPI("getSswSteeringMaster");
+      
+                if (get2gRadio.body.status.AutoChannelEnable)
+                  radio2gChannel.value = 'Auto';
+                else
+                  radio2gChannel.value = ''+get2gRadio.body.status.Channel;
+      
+                if (response.body.status.AutoChannelEnable)
+                  radio5gChannel.value = 'Auto';
+                else
+                  radio5gChannel.value = ''+response.body.status.Channel;
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [0, 0]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.wifi.radio
+            - Text:
+                text: r@kpn.wifi.radio_description
+            - Divider:
+                styles: { margin: 8 0 }
+
+
+            - Conditional:
+                conditions:
+                  - if: ${ ensemble.storage.appConfig.deviceType != "sw2" }
+                    Column:
+                      styles:
+                        gap: 12
+                      children:
+                        # use a hidden switch to control enabled flag of the second form
+                        - Column:
+                            styles:
+                              height: 0
+                            children:
+                              - Switch:
+                                  id: wifiStatus
+                                  label: r@kpn.wifi.radio_on_off
+                                  value: ${getWifiStatus.body.status.Status}
+                                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+
+                        # switch wifi radio
+                        - FittedRow:
+                            styles:
+                              crossAxis: center
+                              childrenFits:
+                                - auto
+                                - auto
+                                - auto
+                                - 1
+                            children:
+                              - Text:
+                                  text: r@kpn.wifi.radio_on_off
+                                  styles:
+                                    width: 200
+                              - Row:
+                                  testId: wifiSwitch
+                                  onTap: |
+                                    if (ensemble.storage.deviceMode == 'Master') {
+                                      if (wifiStatus.value) {
+                                        wifiStatus.value = false;
+                                        wifiStatusSwitchSpacer.size = 0;
+                                        ensemble.invokeAPI("setWifiStatus", {
+                                          "status": false
+                                        });
+                                        this.backgroundColor = 0xFFD3D3D3;
+                                        wifiRadioIcon.backgroundColor = 'black';
+                                      } else {
+                                        wifiStatus.value = true;
+                                        wifiStatusSwitchSpacer.size = 24;
+                                        ensemble.invokeAPI("setWifiStatus", {
+                                          "status": true 
+                                        });
+                                        this.backgroundColor = 0x44009900;
+                                        wifiRadioIcon.backgroundColor = 'white';
+                                      }
+                                    }
+
+                                  styles:
+                                    borderRadius: 100
+                                    padding: 3
+                                    width: 58
+                                    height: 32
+                                    backgroundColor: "${getWifiStatus.body.status.Status ? 0x44009900 : 0xFFD3D3D3}"
+
+                                  children:
+                                    - Spacer:
+                                        id: wifiStatusSwitchSpacer
+                                        styles:
+                                          size: '${ getWifiStatus.body.status.Status ? 24 : 0 }'
+                                    - Icon:
+                                        name: wifi
+                                        styles:
+                                          color: "${getWifiStatus.body.status.Status ? 'white' : (ensemble.storage.deviceMode == 'Master' ? 'black' : 'grey')  }"
+                                          size: 18
+                                          borderRadius: 100
+                                          padding: 4
+                                          backgroundColor: "${getWifiStatus.body.status.Status ? (ensemble.storage.deviceMode == 'Master' ? 0xFF009900 : 'grey')  : 'white'}"
+
+                              - Spacer:
+                                  styles:
+                                    size: 16
+                              - Conditional:
+                                  conditions:
+                                    - if: ${ensemble.storage.deviceMode == 'Master'}
+                                      Checkbox:
+                                        trailingText: r@kpn.wifi.wifi_steering_checkbox
+                                        value: "${getSswSteeringMaster.body.status.SyncEnableField ? false : true}"
+                                        enabled: ${ensemble.storage.deviceMode == 'Master'}
+                                        onChange:
+                                          invokeAPI:
+                                            name: setSswSteeringMaster
+                                            inputs:
+                                              status: "${this.value == true ? false : true}"
+                                    - else:
+                                      Spacer:
+                                        styles:
+                                          size: 16
+
+
+                        - Divider:
+                            styles: { margin: 8 0 }
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                  labelMaxWidth: 200
+                children:
+                  - Dropdown:
+                      id: radio2gWirelessMode
+                      label: r@kpn.wifi.wireless_mode_2g
+                      value: ${get2gRadio.body.status.OperatingStandards}
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      items: ${ getRadioStandardsDropdownItems(get2gRadio.body.status.SupportedStandards) }
+                  - Dropdown:
+                      id: radio2gBandwidth
+                      label: r@kpn.wifi.bandwidth_2g
+                      value: ${get2gRadio.body.status.CurrentOperatingChannelBandwidth}
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      items: ${ getRadioBandwidthDropdownItems(get2gRadio.body.status.MaxChannelBandwidth) }
+                  - Dropdown:
+                      id: radio2gChannel
+                      label: r@kpn.wifi.channel_2g
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      itemsFromString: ${ 'Auto,'+get2gRadio.body.status.PossibleChannels }
+                  - Dropdown:
+                      id: radio5gWirelessMode
+                      label: r@kpn.wifi.wireless_mode_5g
+                      value: ${get5gRadio.body.status.OperatingStandards}
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      items: ${ getRadioStandardsDropdownItems(get5gRadio.body.status.SupportedStandards) }
+                  - Dropdown:
+                      id: radio5gBandwidth  
+                      label: r@kpn.wifi.bandwidth_5g
+                      value: ${get5gRadio.body.status.CurrentOperatingChannelBandwidth}
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      items: ${ getRadioBandwidthDropdownItems(get5gRadio.body.status.MaxChannelBandwidth) }
+                  - Dropdown:
+                      id: radio5gChannel
+                      label: r@kpn.wifi.channel_5g
+                      enabled: ${ isMaster() && wifiStatus.value }
+                      itemsFromString: ${ 'Auto,'+get5gRadio.body.status.PossibleChannels }
+                  - Row:
+                      visible: ${ensemble.storage.deviceMode == "Master" }
+                      styles: { margin: 16 0, mainAxis: end, crossAxis: center }
+                      children:
+                        - Text:
+                            id: radioUpdateStatus
+                        - Button:
+                            label: r@kpn.restore
+                            styles:
+                              outline: true
+                              labelStyle:
+                                color: 0xFF0077CC
+                            onTap:
+                              invokeAPI:
+                                name: getWifiStatus
+                                onResponse:
+                                  invokeAPI:
+                                    name: get2gRadio
+                                    onResponse:
+                                      invokeAPI:
+                                        name: get5gRadio
+                        - Button:
+                            label: r@kpn.save
+                            validateForm: true
+                            styles:
+                              margin: 0 0 0 10
+                            onTap:
+                              executeCode:
+                                body: |
+                                  //@code
+  
+                                  if (radio2gChannel.value == 'Auto') {
+                                    ensemble.invokeAPI('set2gRadioAutoChannel', {
+                                      'bandwidth': radio2gBandwidth.value,
+                                      'standard': radio2gWirelessMode.value
+                                    });
+                                  } else {
+                                    ensemble.invokeAPI('set2gRadioStaticChannel', {
+                                      'channel': radio2gChannel.value,
+                                      'bandwidth': radio2gBandwidth.value,
+                                      'standard': radio2gWirelessMode.value
+                                    });
+                                  }
+  
+                                  if (radio5gChannel.value == 'Auto') {
+                                    ensemble.invokeAPI('set5gRadioAutoChannel', {
+                                      'bandwidth': radio5gBandwidth.value,
+                                      'standard': radio5gWirelessMode.value
+                                    });
+                                  } else {
+                                    ensemble.invokeAPI('set5gRadioStaticChannel', {
+                                      'channel': radio5gChannel.value,
+                                      'bandwidth': radio5gBandwidth.value,
+                                      'standard': radio5gWirelessMode.value
+                                    });
+                                  }
+                                onComplete:
+                                  showToast:
+                                    widget: SuccessToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 15
+                                      dismissable: true
+                                      alignment: center
+
+            ## Radio profile shortcuts for master units
+            ## not applicable to v10
+            - Conditional:
+                conditions:
+                  - if: ${ ensemble.storage.deviceMode == "Master"  && ensemble.storage.appConfig.deviceType != "v10"}
+                    Column:
+                      styles:
+                        gap: 12
+                      children:
+                        - Divider:
+                            styles: { margin: 16 0 }
+                        # wifi 5 profile
+                        - Row:
+                            visible: ${}
+                            styles: { crossAxis: center }
+                            children:
+                              - Text:
+                                  text: r@kpn.wifi.wifi_5_profile
+                                  styles:
+                                    width: 200
+                                    labelStyle:
+                                      fontWeight: bold
+                              - Button:
+                                  label: r@kpn.apply
+                                  onTap:
+                                    showDialog:
+                                      widget: RadioProfile5Confirmation
+
+                        # wifi 6 profile
+                        - Row:
+                            visible: ${ensemble.storage.deviceMode == "Master" }
+                            styles: { crossAxis: center }
+                            children:
+                              - Text:
+                                  text: r@kpn.wifi.wifi_6_profile
+                                  styles:
+                                    width: 200
+                                    labelStyle:
+                                      fontWeight: bold
+                              - Button:
+                                  label: r@kpn.apply
+                                  onTap:
+                                    showDialog:
+                                      widget: RadioProfile6Confirmation
+
+RadioProfile5Confirmation:
+  Column:
+    styles:
+      width: 720
+    children:
+      # warning
+      - Column:
+          id: wifiRadioWarning
+          styles: { gap: 24 }
+          children:
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.radio_confirmations.profile_5_warning
+
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            radio2gWirelessMode.value = 'g,n';
+                            radio2gBandwidth.value = '20MHz';
+                            radio2gChannel.value = 'Auto';
+                            radio5gWirelessMode.value = 'a,n,ac';
+                            radio5gBandwidth.value = '80MHz';
+                            radio5gChannel.value = 'Auto';
+  
+                            ensemble.invokeAPI('set2gRadioAutoChannel', {
+                              'bandwidth': radio2gBandwidth.value,
+                              'standard': radio2gWirelessMode.value
+                            });
+  
+                            ensemble.invokeAPI('set5gRadioAutoChannel', {
+                              'bandwidth': radio5gBandwidth.value,
+                              'standard': radio5gWirelessMode.value
+                            });
+                            wifiRadioWarning.visible = false;
+                            wifiRadioConfirmation.visible = true;
+
+      - Column:
+          styles: { gap: 24 }
+          id: wifiRadioConfirmation
+          visible: false
+          children:
+            - Text:
+                text: r@kpn.radio_confirmations.profile_5_update
+            - Row:
+                styles: { mainAxis: end }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+RadioProfile6Confirmation:
+  Column:
+    styles:
+      width: 720
+    children:
+      # warning
+      - Column:
+          id: wifiRadioWarning
+          styles: { gap: 24 }
+          children:
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.radio_confirmations.profile_6_warning
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            radio2gWirelessMode.value = 'g,n,ax';
+                            radio2gBandwidth.value = '20MHz';
+                            radio2gChannel.value = 'Auto';
+                            radio5gWirelessMode.value = 'a,n,ac,ax';
+                            radio5gBandwidth.value = '80MHz';
+                            radio5gChannel.value = 'Auto';
+  
+                            ensemble.invokeAPI('set2gRadioAutoChannel', {
+                              'bandwidth': radio2gBandwidth.value,
+                              'standard': radio2gWirelessMode.value
+                            });
+  
+                            ensemble.invokeAPI('set5gRadioAutoChannel', {
+                              'bandwidth': radio5gBandwidth.value,
+                              'standard': radio5gWirelessMode.value
+                            });
+                          onComplete: |
+                            //@code
+                            wifiRadioWarning.visible = false;
+                            wifiRadioConfirmation.visible = true;
+
+      - Column:
+          styles: { gap: 24 }
+          id: wifiRadioConfirmation
+          visible: false
+          children:
+            - Text:
+                text: r@kpn.radio_confirmations.profile_6_update
+            - Row:
+                styles: { mainAxis: end }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+GuestWiFi:
+  onLoad:
+    invokeAPI:
+      name: getWLanManager
+      onResponse:
+        invokeAPI:
+          name: getGuestWiFiStatus
+          onResponse:
+            invokeAPI:
+              name: getGuestWiFiInfo
+              onResponse:
+                invokeAPI:
+                  name: getGuestWiFiTimer
+                  onResponse: |
+                    //@code
+                    guestWifiQrCode.value = getWifiQrCode(getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID, getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.KeyPassPhrase);
+                    guestWifiBarcodeLoading.visible = false;
+                    if (getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.ModeEnabled == "WPA3-Personal") {
+                      guestWiFiPMF.value = getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.MFPConfig;
+                      guestWiFiPMF.itemsFromString = 'r@kpn.wifi.required,Disabled';
+                    } else if (getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.ModeEnabled == "WPA2-WPA3-Personal"){
+                      guestWiFiPMF.value = getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.MFPConfig;
+                      guestWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+                    } else {
+                      guestWiFiPMF.value = getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.MFPConfig;
+                      guestWiFiPMF.itemsFromString = 'r@kpn.wifi.off ,r@kpn.wifi.optional,r@kpn.wifi.required';
+                    }
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [0, 0]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.wifi.guest_wifi
+
+            - Row:
+                styles:
+                  crossAxis: center
+                children:
+                  - Form:
+                      styles:
+                        width: 72
+                      children:
+                        - Switch:
+                            id: guestWifiStatus
+                            value: ${ getWLanManager.body.status.vap2g0guest.Status } 
+                            enabled: ${ensemble.storage.deviceMode == 'Master'}
+                            onChange:
+                              invokeAPI:
+                                name: setNMCGuest
+                                inputs:
+                                  status: '${ this.value == true ? "1" : "0" }'
+                                onResponse: |
+                                  ensemble.invokeAPI("setWLanManager", {
+                                    "service": "vap2g0guest",
+                                    "status": guestWifiStatus.value
+                                  });
+                                  ensemble.invokeAPI("setWLanManager", {
+                                    "service": "vap5g0guest",
+                                    "status": guestWifiStatus.value
+                                  });
+
+                                  ensemble.invokeAPI("getGuestWiFiStatus");
+                                  ensemble.invokeAPI("getGuestWiFiTimer");
+
+                                  var widget = "SuccessToast";
+                                  var styles = { padding: 0 };
+                                  var options = {
+                                    type: 'custom',
+                                    duration: 15,
+                                    dismissible: true,
+                                    alignment: 'center'
+                                  };
+                                  showToast(widget, styles, options);
+
+                                  guestNetworkStatus.text = "r@kpn.wifi.guest_wifi_switch " + (this.value ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off" );
+
+                  - Text:
+                      id: guestNetworkStatus
+                      text: 'r@kpn.wifi.guest_wifi_switch ${ getWLanManager.body.status.vap2g0guest.Status ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off"}'
+            
+            # barcode
+            - Flex:
+                direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                styles: { crossAxis: center, gap: 40 }
+                children:
+                  - Text:
+                      styles:
+                        expanded: "${device.width > 768 ? true : false}"
+                        textStyle:
+                          overflow: wrap
+                      text: r@kpn.wifi.guest_wifi_description
+                  - Stack:
+                      alignment: center
+                      children:
+                        - QRCode:
+                            id: guestWifiQrCode
+                            value: "placeholder"
+                            styles: { size: 250 }
+                        - Column:
+                            id: guestWifiBarcodeLoading
+                            styles: { crossAxis: center, mainAxis: spaceAround, backgroundColor: 0xCCFFFFFF, padding: 100 }
+                            children:
+                              - Progress:
+                                  styles: { size: 50 }
+                                  display: circular
+
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                children:
+                  - Dropdown:
+                      id: guestWifiTimeLimit
+                      label: r@kpn.wifi.guest_client_timebox
+                      hintText: Selecteer activatietijd
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                      items: [
+                        {label: 'Ongelimiteerd', value: 0},
+                        {label: '1 uur', value: 1},
+                        {label: '2 uur', value: 2},
+                        {label: '4 uur', value: 4},
+                        {label: '24 uur', value: 24},
+                        {label: '48 uur', value: 48}
+                      ]
+                      onChange:
+                        showDialog:
+                          widget: GuestWifiTimeLimitWarning
+
+                  - Text:
+                      text: "${getGuestWiFiTimer.body.status == 0 ? 'Ongelimiteerd' : getGuestWiFiTimer.body.status.prettyDuration()}"
+                      label: Resterende Wifi duur
+
+                  - Checkbox:
+                      id: guestWifiVisibility
+                      label: r@kpn.wifi.visibility
+                      value: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSIDAdvertisementEnabled}
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                      onChange:
+                        invokeAPI:
+                          name: setGuestWiFiVisibility
+                          inputs:
+                            visibility: ${this.value}
+                          onResponse:
+                            showToast:
+                              body: SuccessToast
+                              styles:
+                                padding: 0
+                              options:
+                                type: custom
+                                duration: 15
+                                dismissable: true
+                                alignment: center
+                          onError:
+                            showToast:
+                              message: r@kpn.error
+                              options:
+                                dismissable: true
+                                type: error
+                                duration: 15
+                                alignment: center
+
+            - Divider:
+                styles: { margin: 16 0 }
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                children:
+
+                  - TextInput:
+                      id: guestWifiSsid
+                      label: r@kpn.wifi.name_ssid
+                      value: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID}
+                      required: true
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  - TextInput:
+                      id: guestWifiPassword
+                      obscureText: true
+                      obscureToggle: true
+                      label: r@kpn.wifi.password
+                      value: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.KeyPassPhrase}
+                      required: true
+                      readOnly: ${ensemble.storage.deviceMode != 'Master'}
+                      selectable: true
+                  - Dropdown:
+                      id: guestWifiSecurity
+                      label: r@kpn.wifi.encryption_type
+                      items: ${filterWifiSecurityModes(getGuestWiFiInfo.body.status.wlanvap.vap2g0guest.Security.ModesAvailable)}
+                      value: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.ModeEnabled}
+                      enabled: ${ensemble.storage.deviceMode == 'Master'}
+                      onChange: 
+                        executeCode:
+                          body: |
+                            if (this.value == "WPA3-Personal") {
+                              guestWiFiPMF.value = 'r@kpn.wifi.required';
+                              guestWiFiPMF.itemsFromString = 'r@kpn.wifi.required';
+                            } else if (this.value == "WPA2-WPA3-Personal"){
+                              guestWiFiPMF.value = 'r@kpn.wifi.required';
+                              guestWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+                            } else {
+                              guestWiFiPMF.value = 'r@kpn.wifi.off';
+                              guestWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+                            }
+                  - Dropdown:
+                      visible: ${ isMaster && ensemble.storage.appConfig.deviceType != "sw2"}
+                      id: guestWifiBandwidthLimit
+                      label: r@kpn.wifi.airtime_percentage
+                      value: ${getGuestWiFiStatus.body.status.BandwidthLimitation}
+                      items: [
+                        {label: 'Ongelimiteerd', value: 0},
+                        {label: '10 Mbps', value: 10000},
+                        {label: '20 Mbps', value: 20000},
+                        {label: '30 Mbps', value: 30000},
+                        {label: '40 Mbps', value: 40000},
+                        {label: '50 Mbps', value: 50000}
+                      ]
+
+                  - Dropdown:
+                      id: guestWiFiPMF
+                      label: r@kpn.wifi.PMF
+                      enabled: ${guestWifiSecurity.value != 'WPA3-Personal'}
+
+                  - Spacer:
+                      styles: {size: 20}
+                  - Row:
+                      visible: ${ensemble.storage.deviceMode == "Master" }
+                      styles: { mainAxis: end, crossAxis: center }
+                      children:
+                        - Text:
+                            id: guestWifiUpdateStatus
+                        - Button:
+                            label: r@kpn.restore
+                            styles:
+                              outline: true
+                              labelStyle:
+                                color: 0xFF0077CC
+                            onTap:
+                              invokeAPI:
+                                name: getGuestWiFiStatus
+                                onResponse:
+                                  invokeAPI:
+                                    name: getGuestWiFiInfo
+                        - Button:
+                            label: r@kpn.save
+                            validateForm: true
+                            styles: { margin: 0 0 0 10 }
+                            onTap:
+                              showDialog:
+                                widget: GuestWifiUpdateConfirmation
+                                options:
+                                  style: none
+
+
+GuestWifiTimeLimitWarning:
+  Column:
+    styles:
+      gap: 8
+      width: 600
+    children:
+      - Text:
+          text: r@kpn.wifi.guest_client_timebox_warning
+      # loading
+      - Column:
+          id: loading
+          visible: false
+          styles:
+            mainAxis: center
+            crossAxis: center
+            gap: 16
+          children:
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE99B
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: grey
+            - Text:
+                text: r@kpn.wifi.updating_in_progress
+                styles:
+                  textAlign: center
+      - Row:
+          id: buttons
+          styles: { gap: 10, mainAxis: end, crossAxis: center }
+          children:
+            - Button:
+                label: r@kpn.cancel
+                styles:
+                  outline: true
+                  labelStyle:
+                    color: 0xFF0077CC
+                onTap: closeAllDialogs
+            - Button:
+                label: r@kpn.save
+                onTap:
+                  executeCode:
+                    body: |
+                      //@code
+                      loading.visible = true;
+                      buttons.visible = false;
+                      if (guestWifiTimeLimit.value == 0) {
+                        ensemble.invokeAPI('disabledGuestWiFiTimer'); 
+                      } else {
+                        ensemble.invokeAPI('setGuestWiFiTimeLimit', {"duration": guestWifiTimeLimit.value});
+                      }
+                    onComplete:
+                      startTimer:
+                        options:
+                          startAfter: 5
+                        onTimer:
+                          invokeAPI:
+                            name: setNMCGuest
+                            inputs:
+                              status: "1"
+                            onResponse:
+                              invokeAPI:
+                                name: setWLanManager
+                                inputs:
+                                  service: "vap2g0guest"
+                                  status: true
+                                onResponse:
+                                  invokeAPI:
+                                    name: setWLanManager
+                                    inputs:
+                                      service: "vap5g0guest"
+                                      status: true
+                                    onResponse:
+                                      invokeAPI:
+                                        name: getGuestWiFiStatus
+                                        onResponse:
+                                          invokeAPI:
+                                            name: getGuestWiFiTimer
+                                            onResponse: closeAllDialogs
+
+
+GuestWifiUpdateConfirmation:
+  Column:
+    styles:
+      width: 720
+      backgroundColor: white
+    children:
+
+      # pre submit content
+      - Column:
+          id: preSubmitContent
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.guest_wifi
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.guest_wifi_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${guestWifiSsid.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${guestWifiPassword.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${guestWifiSecurity.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${guestWiFiPMF.value}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+
+            # warning
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.wifi_confirmations.guest_wifi_warning
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            preSubmitContent.visible = false;
+                            loading.visible = true;
+                          onComplete:
+                            invokeAPI:
+                              name: setGuestWiFi
+                              inputs:
+                                ssid: ${guestWifiSsid.value}
+                                password: ${guestWifiPassword.value}
+                                security: ${guestWifiSecurity.value}
+                                PMF: ${guestWiFiPMF.value}
+                              onResponse:
+                                invokeAPI:
+                                  name: setGuestWiFiBandwidth
+                                  inputs:
+                                    bandwidth: ${guestWifiBandwidthLimit.value}
+                                  onResponse:
+                                    invokeAPI:
+                                      name: getGuestWiFiStatus
+                                      onResponse:
+                                        invokeAPI:
+                                          name: getGuestWiFiInfo
+                                          onResponse: |
+                                            //@code
+                                            var qrCodeString = getWifiQrCode(getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID, getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.KeyPassPhrase);
+                                            guestWifiQrCode.value = qrCodeString;
+                                            loading.visible = false;
+                                            postSubmitContent.visible = true;
+                                            
+                                            ensemble.storage.set('guestWifi',getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID);
+                                            ensemble.storage.set('vap2g0guest',getGuestWiFiInfo.body.status.wlanvap.vap2g0guest.SSID);
+                                            ensemble.storage.set('vap5g0guest',getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID);
+                              onError:
+                                showToast:
+                                  message: r@kpn.error
+                                  options:
+                                    dismissable: true
+                                    type: error
+                                    duration: 15
+                                    alignment: center
+
+
+      # loading
+      - Column:
+          id: loading
+          visible: false
+          styles:
+            crossAxis: stretch
+            height: 500
+            gap: 16
+          children:
+            - Progress:
+                display: linear
+                styles: { color: 0xFF009900, thickness: 8 }
+            - Spacer
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE99B
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: grey
+            - Text:
+                text: r@kpn.wifi.updating_in_progress
+                styles:
+                  textAlign: center
+            - Spacer
+
+      # post submit
+      - Column:
+          id: postSubmitContent
+          visible: false
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.guest_wifi_new
+
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.guest_wifi_new_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID}
+                      styles: { expanded: true }
+
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.KeyPassPhrase}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.ModeEnabled}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.MFPConfig}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - QRCode:
+                      value: ${getWifiQrCode(getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID, getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.Security.KeyPassPhrase)}
+                      styles: { size: 200 }
+            - Divider
+            
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+ExtraWiFi:
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.wifi.extra_wifi
+            - Text:
+                text: r@kpn.wifi.extra_wifi_description
+
+            - Spacer:
+                styles:
+                  size: 8
+
+            - TabBar:
+                styles:
+                  indicatorSize: tab
+                  tabPadding: 4 32
+                  indicatorThickness: 4
+                  borderRadius: 8
+                  indicatorColor: 0xFF009900
+                  activeTabColor: 0xFF009900
+                  inactiveTabColor: 0xFF535353
+                  activeTabBackgroundColor: 0xFF009900
+                  tabBackgroundColor: 0xFFF3F3F3
+                  tabFontSize: 15
+                  tabFontWeight: bold
+                selectedIndex: ${extraWifiTab}
+                items:
+                  - label: r@kpn.wifi_2g
+                    body: ExtraWifi2g
+
+                  - label: r@kpn.wifi_5g
+                    body: ExtraWifi5g
+
+
+
+ExtraWifi2g:
+  onLoad:
+    invokeAPI:
+      name: getWLanManager
+      onResponse:
+        invokeAPI:
+          name: getPrivWiFi
+          onResponse: |
+            // extra 2g Qr Code
+            extra2gWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.KeyPassPhrase);
+            extra2gWifiQrCodeLoading.visible = false;
+            if (getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.ModeEnabled == "WPA3-Personal") {
+              extra2gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.MFPConfig;
+              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,Disabled';
+            } else if (getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.ModeEnabled == "WPA2-WPA3-Personal"){
+              extra2gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.MFPConfig;
+              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+            } else {
+              extra2gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.MFPConfig;
+              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+            }
+  body:
+    Column:
+      styles:
+        padding: 16 0
+        gap: 16
+      children:
+        - Row:
+            styles:
+              crossAxis: center
+            children:
+              - Form:
+                  styles:
+                    width: 72
+                  children:
+                    - Switch:
+                        id: extra2gWiFiStatus
+                        value: ${getWLanManager.body.status.vap2g0ext.Status}
+                        enabled: ${ensemble.storage.deviceMode == 'Master'}
+                        onChange:
+                          invokeAPI:
+                            name: setWLanManager
+                            inputs:
+                              service: "vap2g0ext"
+                              status: ${this.value}
+                            onResponse:
+                              executeActionGroup:
+                                actions:
+                                  - showToast:
+                                      widget: SuccessToast
+                                      styles:
+                                        padding: 0
+                                      options:
+                                        type: custom
+                                        duration: 15
+                                        dismissable: true
+                                        alignment: center
+                                  - executeCode:
+                                      body: |
+                                        extraWifi2gStatus.text = "r@kpn.wifi.extra_wifi_2g " + (this.value ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off" );
+
+                            onError:
+                              showToast:
+                                message: r@kpn.error
+                                options:
+                                  dismissable: true
+                                  type: error
+                                  duration: 15
+                                  alignment: center
+              - Text:
+                  id: extraWifi2gStatus
+                  text: 'r@kpn.wifi.extra_wifi_2g ${ getWLanManager.body.status.vap2g0ext.Status ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off"}'
+        
+        - Flex:
+            direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+            styles: { crossAxis: center, gap: 40 }
+            children:
+              - Text:
+                  styles:
+                    expanded: '${device.width > 768 ? true : false}'
+                    textStyle:
+                      overflow: wrap
+                  text: r@kpn.wifi.extra_wifi_description_2g
+              - Stack:
+                  alignment: center
+                  children:
+                    - QRCode:
+                        value: placeholder
+                        id: extra2gWifiQrCode
+                        styles: { size: 250 }
+                    - Column:
+                        id: extra2gWifiQrCodeLoading
+                        visible: false
+                        styles: { crossAxis: center, mainAxis: spaceAround, backgroundColor: 0xCCFFFFFF, padding: 100 }
+                        children:
+                          - Progress:
+                              styles: { size: 50 }
+                              display: circular
+
+        - Form:
+            styles:
+              labelPosition: '${device.width > 768 ? "start" : "top"}'
+              gap: 16
+            children:
+              - Checkbox:
+                  id: extra2gWiFiVisibility
+                  label: r@kpn.wifi.visibility
+                  value: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.SSIDAdvertisementEnabled}
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  onChange:
+                    invokeAPI:
+                      name: setExtra2gWiFiVisibility
+                      inputs:
+                        visibility: ${this.value}
+                      onResponse:
+                        showToast:
+                          widget: SuccessToast
+                          styles:
+                            padding: 0
+                          options:
+                            type: custom
+                            duration: 15
+                            dismissable: true
+                            alignment: center
+                      onError:
+                        showToast:
+                          message: r@kpn.error
+                          options:
+                            dismissable: true
+                            type: error
+                            duration: 15
+                            alignment: center
+
+        - Divider:
+            styles: { margin: 16 0 }
+        - Form:
+            styles:
+              labelPosition: '${device.width > 768 ? "start" : "top"}'
+              gap: 16
+            children:
+              - TextInput:
+                  id: extra2gWiFiSsid
+                  label: r@kpn.wifi.name_ssid
+                  value: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID}
+                  required: true
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+              - TextInput:
+                  id: extra2gWiFiPassword
+                  label: r@kpn.wifi.password
+                  obscureText: true
+                  obscureToggle: true
+                  value: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.KeyPassPhrase}
+                  required: true
+                  readOnly: ${ensemble.storage.deviceMode != 'Master'}
+                  selectable: true
+
+              - Dropdown:
+                  id: extra2gWiFiSecurity
+                  label: r@kpn.wifi.encryption_type
+                  itemsFromString: 'WPA3-Personal,WPA2-WPA3-Personal,WPA2-Personal'
+                  value: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.ModeEnabled}
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  onChange: 
+                        executeCode:
+                          body: |
+                            if (this.value == "WPA3-Personal") {
+                              extra2gWiFiPMF.value = 'r@kpn.wifi.required';
+                              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.required';
+                            } else if (this.value == "WPA2-WPA3-Personal"){
+                              extra2gWiFiPMF.value = 'r@kpn.wifi.required';
+                              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+                            } else {
+                              extra2gWiFiPMF.value = 'r@kpn.wifi.off';
+                              extra2gWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+                            }
+
+              - Dropdown:
+                      id: extra2gWiFiPMF
+                      label: r@kpn.wifi.PMF
+                      enabled: ${extra2gWiFiSecurity.value != 'WPA3-Personal'}
+
+              - Row:
+                  visible: ${ensemble.storage.deviceMode == "Master" }
+                  styles: { mainAxis: end, crossAxis: center }
+                  children:
+                    - Text:
+                        id: extra2gWifiUpdateStatus
+                    - Button:
+                        label: r@kpn.restore
+                        styles:
+                          outline: true
+                          labelStyle:
+                            color: 0xFF0077CC
+                        onTap:
+                          invokeAPI:
+                            name: getPrivWiFi
+                    - Button:
+                        label: r@kpn.save
+                        validateForm: true
+                        styles: { margin: 0 0 0 10 }
+                        onTap:
+                          showDialog:
+                            widget: ExtraWifi2gUpdateConfirmation
+                            options:
+                              style: none
+
+              - Spacer:
+                  styles: { size: 16 }
+
+
+ExtraWifi5g:
+  onLoad:
+    invokeAPI:
+      name: getWLanManager
+      onResponse:
+        invokeAPI:
+          name: getPrivWiFi
+          onResponse: |
+            // extra 5g Qr Code
+            extra5gWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.KeyPassPhrase);
+            extra5gWifiQrCodeLoading.visible = false;
+            if (getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.ModeEnabled == "WPA3-Personal") {
+              extra5gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.MFPConfig;
+              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,Disabled';
+            } else if (getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.ModeEnabled == "WPA2-WPA3-Personal"){
+              extra5gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.MFPConfig;
+              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+            } else {
+              extra5gWiFiPMF.value = getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.MFPConfig;
+              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+            }
+  body:
+    Column:
+      styles:
+        padding: 16 0
+        gap: 16
+      children:
+        - Row:
+            styles:
+              crossAxis: center
+            children:
+              - Form:
+                  styles:
+                    width: 72
+                  children:
+                    - Switch:
+                        id: extra5gWiFiStatus
+                        value: ${getWLanManager.body.status.vap5g0ext.Status}
+                        enabled: ${ensemble.storage.deviceMode == 'Master'}
+                        onChange:
+                          invokeAPI:
+                            name: setWLanManager
+                            inputs:
+                              service: "vap5g0ext"
+                              status: ${this.value}
+                            onResponse:
+                              executeActionGroup:
+                                actions:
+                                  - showToast:
+                                      widget: SuccessToast
+                                      styles:
+                                        padding: 0
+                                      options:
+                                        type: custom
+                                        duration: 15
+                                        dismissable: true
+                                        alignment: center
+                                  - executeCode:
+                                      body: |
+                                        extraWifi5gStatus.text = "r@kpn.wifi.extra_wifi_5g " + (this.value ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off" );
+
+                            onError:
+                              showToast:
+                                message: r@kpn.error
+                                options:
+                                  dismissable: true
+                                  type: error
+                                  duration: 15
+                                  alignment: center
+              - Text:
+                  id: extraWifi5gStatus
+                  text: 'r@kpn.wifi.extra_wifi_5g ${ getWLanManager.body.status.vap5g0ext.Status ? "r@kpn.wifi.is_on" : "r@kpn.wifi.is_off"}'
+        
+
+
+        - Flex:
+            direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+            styles: { crossAxis: center, gap: 40 }
+            children:
+              - Text:
+                  styles:
+                    expanded: '${device.width > 768 ? true : false}'
+                    textStyle:
+                      overflow: wrap
+                  text: r@kpn.wifi.extra_wifi_description_5g
+              - Stack:
+                  alignment: center
+                  children:
+                    - QRCode:
+                        value: placeholder
+                        id: extra5gWifiQrCode
+                        styles: { size: 250 }
+                    - Column:
+                        id: extra5gWifiQrCodeLoading
+                        visible: false
+                        styles: { crossAxis: center, mainAxis: spaceAround, backgroundColor: 0xCCFFFFFF, padding: 100 }
+                        children:
+                          - Progress:
+                              styles: { size: 50 }
+                              display: circular
+
+        - Form:
+            styles:
+              labelPosition: '${device.width > 768 ? "start" : "top"}'
+              gap: 16
+            children:
+
+              - Checkbox:
+                  id: extra5gWiFiVisibility
+                  label: r@kpn.wifi.visibility
+                  value: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.SSIDAdvertisementEnabled}
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  onChange:
+                    invokeAPI:
+                      name: setExtra5gWiFiVisibility
+                      inputs:
+                        visibility: ${this.value}
+                      onResponse:
+                        showToast:
+                          widget: SuccessToast
+                          styles:
+                            padding: 0
+                          options:
+                            type: custom
+                            duration: 15
+                            dismissable: true
+                            alignment: center
+                      onError:
+                        showToast:
+                          message: r@kpn.error
+                          options:
+                            dismissable: true
+                            type: error
+                            duration: 15
+                            alignment: center
+
+        - Divider:
+            styles: { margin: 16 0 }
+
+        - Form:
+            styles:
+              labelPosition: '${device.width > 768 ? "start" : "top"}'
+              gap: 16
+            children:
+              - TextInput:
+                  id: extra5gWiFiSsid
+                  label: r@kpn.wifi.name_ssid
+                  value: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID}
+                  required: true
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+
+              - TextInput:
+                  id: extra5gWiFiPassword
+                  label: r@kpn.wifi.password
+                  obscureText: true
+                  obscureToggle: true
+                  value: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.KeyPassPhrase}
+                  required: true
+                  readOnly: ${ensemble.storage.deviceMode != 'Master'}
+                  selectable: true
+
+              - Dropdown:
+                  label: r@kpn.wifi.encryption_type
+                  id: extra5gWiFiSecurity
+                  itemsFromString: 'WPA3-Personal,WPA2-WPA3-Personal,WPA2-Personal'
+                  value: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.ModeEnabled}
+                  enabled: ${ensemble.storage.deviceMode == 'Master'}
+                  onChange: 
+                        executeCode:
+                          body: |
+                            if (this.value == "WPA3-Personal") {
+                              extra5gWiFiPMF.value = 'r@kpn.wifi.required';
+                              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.required';
+                            } else if (this.value == "WPA2-WPA3-Personal"){
+                              extra5gWiFiPMF.value = 'r@kpn.wifi.required';
+                              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.required,r@kpn.wifi.optional';
+                            } else {
+                              extra5gWiFiPMF.value = 'r@kpn.wifi.off';
+                              extra5gWiFiPMF.itemsFromString = 'r@kpn.wifi.off,r@kpn.wifi.optional,r@kpn.wifi.required';
+                            }
+
+              - Dropdown:
+                      id: extra5gWiFiPMF
+                      label: r@kpn.wifi.PMF
+                      enabled: ${extra5gWiFiSecurity.value != 'WPA3-Personal'}
+
+              - Row:
+                  visible: ${ensemble.storage.deviceMode == "Master" }
+                  styles: { mainAxis: end, crossAxis: center }
+                  children:
+                    - Text:
+                        id: extra5gWifiUpdateStatus
+                    - Button:
+                        label: r@kpn.restore
+                        styles:
+                          outline: true
+                          labelStyle:
+                            color: 0xFF0077CC
+                        onTap:
+                          invokeAPI:
+                            name: getPrivWiFi
+                    - Button:
+                        label: r@kpn.save
+                        validateForm: true
+                        styles: { margin: 0 0 0 10 }
+                        onTap:
+                          showDialog:
+                            widget: ExtraWifi5gUpdateConfirmation
+                            options:
+                              style: none
+
+              - Spacer:
+                  styles: { size: 16 }
+
+
+ExtraWifi2gUpdateConfirmation:
+  Column:
+    styles:
+      width: 720
+      backgroundColor: white
+    children:
+      # pre submit content
+      - Column:
+          id: preSubmitContent
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.extra_2g_wifi
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.extra_2g_wifi_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra2gWiFiSsid.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra2gWiFiPassword.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra2gWiFiSecurity.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra2gWiFiPMF.value}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+
+            # warning
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.wifi_confirmations.extra_2g_wifi_warning
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            preSubmitContent.visible = false;
+                            loading.visible = true;
+                          onComplete:
+                            invokeAPI:
+                              name: setExtra2gWiFi
+                              inputs:
+                                ssid: ${extra2gWiFiSsid.value}
+                                password: ${extra2gWiFiPassword.value}
+                                security: ${extra2gWiFiSecurity.value}
+                                PMF: ${extra2gWiFiPMF.value}
+                              onResponse:
+                                invokeAPI:
+                                  name: getPrivWiFi
+                                  onResponse: |
+                                      //@code
+                                      extra2gWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.KeyPassPhrase);
+                                      extra2gWifiQrCodeLoading.visible = false;
+                                      loading.visible = false;
+                                      postSubmitContent.visible = true;
+                                  onError:
+                                    showToast:
+                                      message: r@kpn.wifi.update_wifi_error
+                                      options:
+                                        dismissable: true
+                                        type: error
+                                        duration: 15
+                                        alignment: center
+                              onError:
+                                showToast:
+                                  message: r@kpn.error
+                                  options:
+                                    dismissable: true
+                                    type: error
+                                    duration: 15
+                                    alignment: center
+
+      # loading
+      - Column:
+          id: loading
+          visible: false
+          styles:
+            crossAxis: stretch
+            height: 500
+            gap: 16
+          children:
+            - Progress:
+                display: linear
+                styles: { color: 0xFF009900, thickness: 8 }
+            - Spacer
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE99B
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: grey
+            - Text:
+                text: r@kpn.wifi.updating_in_progress
+                styles:
+                  textAlign: center
+            - Spacer
+      # post submit
+      - Column:
+          id: postSubmitContent
+          visible: false
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.extra_2g_wifi_new
+
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.extra_2g_wifi_new_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID}
+                      styles: { expanded: true }
+
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.KeyPassPhrase}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.ModeEnabled}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.MFPConfig}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - QRCode:
+                      value: ${getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap2g0ext.Security.KeyPassPhrase)}
+                      styles: { size: 200 }
+            - Divider
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+ExtraWifi5gUpdateConfirmation:
+  Column:
+    styles:
+      width: 720
+      backgroundColor: white
+    children:
+      # pre submit content
+      - Column:
+          id: preSubmitContent
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.extra_5g_wifi
+
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.extra_5g_wifi_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra5gWiFiSsid.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra5gWiFiPassword.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra5gWiFiSecurity.value}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${extra5gWiFiPMF.value}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+
+            # warning
+            - Column:
+                styles: { backgroundColor: 0xFFFAECDC, borderRadius: 12 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { padding: 16, gap: 12 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            styles: { expanded: true }
+                            text: r@kpn.wifi_confirmations.extra_5g_wifi_warning
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - Row:
+                styles: { mainAxis: end, gap: 16 }
+                children:
+                  - Button:
+                      label: r@kpn.cancel
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            preSubmitContent.visible = false;
+                            loading.visible = true;
+                          onComplete:
+                            invokeAPI:
+                              name: setExtra5gWiFi
+                              inputs:
+                                ssid: ${extra5gWiFiSsid.value}
+                                password: ${extra5gWiFiPassword.value}
+                                security: ${extra5gWiFiSecurity.value}
+                                PMF: ${extra5gWiFiPMF.value}
+                              onResponse:
+                                invokeAPI:
+                                  name: getPrivWiFi
+                                  onResponse: |
+                                    //@code
+                                    extra5gWifiQrCode.value = getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.KeyPassPhrase);
+                                    extra5gWifiQrCodeLoading.visible = false;
+                                    loading.visible = false;
+                                    postSubmitContent.visible = true;
+                                  onError:
+                                    showToast:
+                                      message: r@kpn.wifi.update_wifi_error
+                                      options:
+                                        dismissable: true
+                                        type: error
+                                        duration: 15
+                                        alignment: center
+                              onError:
+                                showToast:
+                                  message: r@kpn.error
+                                  options:
+                                    dismissable: true
+                                    type: error
+                                    duration: 15
+                                    alignment: center
+      # loading
+      - Column:
+          id: loading
+          visible: false
+          styles:
+            crossAxis: stretch
+            height: 500
+            gap: 16
+          children:
+            - Progress:
+                display: linear
+                styles: { color: 0xFF009900, thickness: 8 }
+            - Spacer
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Icon:
+                      name: 0xE99B
+                      library: kpnSI
+                      styles:
+                        size: 40
+                        color: grey
+            - Text:
+                text: r@kpn.wifi.updating_in_progress
+                styles:
+                  textAlign: center
+            - Spacer
+      # post submit
+      - Column:
+          id: postSubmitContent
+          visible: false
+          styles:
+            gap: 16
+            fontSize: 16
+            padding: 16
+          children:
+            - Row:
+                styles: { mainAxis: spaceBetween }
+                children:
+                  - GreenTitle:
+                      inputs:
+                        title: r@kpn.wifi_confirmations.extra_5g_wifi_new
+
+                  - Icon:
+                      name: 0xe993
+                      library: kpnUI
+                      styles: { color: grey }
+                      onTap: closeAllDialogs
+            - Text:
+                text: r@kpn.wifi_confirmations.extra_5g_wifi_new_description
+            - Spacer:
+                styles: { size: 1 }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.name_ssid
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID}
+                      styles: { expanded: true }
+
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.password
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.KeyPassPhrase}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.encryption_type
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.ModeEnabled}
+                      styles: { expanded: true }
+            - Divider
+            - Row:
+                children:
+                  - Text:
+                      text: r@kpn.wifi.PMF
+                      styles: { expanded: true }
+                  - Text:
+                      text: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.MFPConfig}
+                      styles: { expanded: true }
+            - Divider
+            - Spacer:
+                styles: { size: 1 }
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - QRCode:
+                      value: ${getWifiQrCode(getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID, getPrivWiFi.body.status.wlanvap.vap5g0ext.Security.KeyPassPhrase)}
+                      styles: { size: 200 }
+            - Divider
+            - Row:
+                styles: { mainAxis: center }
+                children:
+                  - Button:
+                      label: r@kpn.close
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap: closeAllDialogs
+
+
+Spectrum:
+  onLoad:
+    invokeAPI:
+      name: get2gRadio
+      onResponse:
+        invokeAPI:
+          name: get2gSpectrum
+          onResponse:
+            invokeAPI:
+              name: get5gRadio
+              onResponse:
+                invokeAPI:
+                  name: get5gSpectrum
+                  onResponse:
+                    invokeAPI:
+                      name: get2gScanResult
+                      onResponse:
+                        invokeAPI:
+                          name: get5gScanResult
+                          onResponse: |
+                            var current2gChannel = get2gRadio.body.status.Channel;
+                            var current5gChannel = get5gRadio.body.status.Channel;
+                            Availability2g.config = setAvailability2gChart(current2gChannel, get2gSpectrum.body);
+                            Availability5g.config = setAvailability5gChart(current5gChannel, get5gSpectrum.body);
+            
+                            signalGraph2g.config = setSignal2gChart(get2gScanResult.body.status);
+                            signalGraph5g.config = setSignal5gChart(get5gScanResult.body.status);
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [0, 0]
+            borderRadius: 10
+            padding: 16 16 40 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.wifi.spectrum
+            - Text:
+                text: r@kpn.wifi.spectrum_description
+            - Divider
+            - Row:
+                styles: { gap: 16, crossAxis: center }
+                children:
+                  - Text:
+                      styles:
+                        overflow: wrap
+                        textStyle:
+                          width: "${device.width <= 768 ? 110 : ''}"
+                      text: r@kpn.reload_analysis
+                  - Button:
+                      label: r@kpn.reload
+                      onTap:
+                        executeCode:
+                          body: |
+                            //@code
+                            reloadingChartIndicator.visible = true;
+                          onComplete:
+                            invokeAPI:
+                              name: get2gRadio
+                              onResponse:
+                                invokeAPI:
+                                  name: get2gSpectrum
+                                  onResponse:
+                                    invokeAPI:
+                                      name: get5gRadio
+                                      onResponse:
+                                        invokeAPI:
+                                          name: get5gSpectrum
+                                          onResponse:
+                                            invokeAPI:
+                                              name: get2gScanResult
+                                              onResponse:
+                                                invokeAPI:
+                                                  name: get5gScanResult
+                                                  onResponse: |
+                                                    //@code
+                                                    reloadingChartIndicator.visible = false;
+              
+                                                    var current2gChannel = get2gRadio.body.status.Channel;
+                                                    var current5gChannel = get5gRadio.body.status.Channel;
+                                                    Availability2g.config = setAvailability2gChart(current2gChannel, get2gSpectrum.body);
+                                                    Availability5g.config = setAvailability5gChart(current5gChannel, get5gSpectrum.body);
+              
+                                                    signalGraph2g.config = setSignal2gChart(get2gScanResult.body.status);
+                                                    signalGraph5g.config = setSignal5gChart(get5gScanResult.body.status);
+      
+
+                  - Row:
+                      visible: false
+                      id: reloadingChartIndicator
+                      styles: { gap: 8, crossAxis: center }
+                      children:
+                        - Progress:
+                            styles:
+                              size: 32
+                        - Text:
+                            text: r@kpn.reloading
+
+            - Divider
+            - Column:
+                styles: { gap: 16 }
+                children:
+                  - GreenSubtitle:
+                      inputs:
+                        title: r@kpn.wifi.availability_2g
+                  - Text:
+                        text: r@kpn.wifi.current_channel ${get2gRadio.body.status.Channel}
+                  - ChartJs:
+                      styles: { width: 860, height: 440 }
+                      id: Availability2g
+                  - Divider
+                  - GreenSubtitle:
+                      inputs:
+                        title: r@kpn.wifi.availability_5g
+                  - Text:
+                      text: r@kpn.wifi.current_channel ${get5gRadio.body.status.Channel}
+                  - ChartJs:
+                      styles: { width: 860, height: 440 }
+                      id: Availability5g
+
+                  - Divider
+
+                  - GreenSubtitle:
+                      inputs:
+                        title: r@kpn.wifi.signal_2g
+                  - Text:
+                      text: r@kpn.wifi.current_channel ${get2gRadio.body.status.Channel}
+                  - ChartJs:
+                      id: signalGraph2g
+                      styles: { width: 860, height: 430 }
+                  - Divider
+                  - GreenSubtitle:
+                      inputs:
+                        title: r@kpn.wifi.signal_5g
+                  - Text:
+                      text: r@kpn.wifi.current_channel ${get5gRadio.body.status.Channel}
+                  - ChartJs:
+                      id: signalGraph5g
+                      styles: { width: 860, height: 430 }
+
+
+Schema:
+  onLoad:
+    invokeAPI:
+      name: getTime
+      onResponse:
+        invokeAPI:
+          name: getSchedule
+          onResponse: |
+            //@code
+            response.body.data.scheduleInfo[0].schedule.map(function(range) {
+              wifiScheduler.addSelectedRange(range.begin, range.end);
+            });
+            wifiScheduler.refresh();
+  body:
+    Column:
+      styles:
+        padding: 16
+        backgroundColor: 0xffeaeaea
+      children:
+        - Column:
+            styles:
+              backgroundColor: 0xFFFFFFFF
+              shadowColor: 0xFFDEDEDE
+              shadowRadius: 3
+              shadowOffset: [0, 0]
+              borderRadius: 10
+              padding: 16
+              gap: 12
+            children:
+              - ContentTitle:
+                  inputs:
+                    title: r@kpn.wifi.wifi_schema
+              - Text:
+                  text: r@kpn.wifi.wifi_schema_description
+
+              - Divider
+
+              - Form:
+                  styles:
+                    labelPosition: '${device.width > 768 ? "start" : "top"}'
+                    gap: 16
+                  children:
+                    - Switch:
+                        testId: wifiScheduleSwitch
+                        label: r@kpn.wifi.wifi_schema_enable
+                        value: "${getSchedule.body.data.scheduleInfo[0].enable}"
+                        enabled: ${ensemble.storage.deviceMode == 'Master'}
+                        onChange:
+                          invokeAPI:
+                            name: setWifiScheduleStatus
+                            inputs:
+                              status: ${this.value}
+                            onResponse:
+                              showToast:
+                                widget: SuccessToast
+                                styles:
+                                  padding: 0
+                                options:
+                                  type: custom
+                                  duration: 15
+                                  dismissable: true
+                                  alignment: center
+                            onError:
+                              showToast:
+                                message: r@kpn.error
+                                options:
+                                  dismissable: true
+                                  type: error
+                                  duration: 15
+                                  alignment: center
+
+              - Divider
+
+              - Spacer:
+                  styles: { size: 20 }
+
+              - Row:
+                  children:
+                    - Text:
+                        text: r@kpn.modem.current_date_time
+                        styles: { expanded: true }
+                    - Text:
+                        text: ${getTime.body.data.time}
+                        styles: { expanded: true }
+
+              - Spacer:
+                  styles: { size: 20 }
+
+              - Column:
+                  styles: { gap: 8 }
+                  children:
+                    - Row:
+                        styles: { margin: 0 0 0 25 }
+                        children:
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 0 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 2 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 4 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 6 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 8 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 10 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 12 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 14 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 16 }]}
+                          - Row: { styles: { width: 84 }, children: [Text: { text: 18 }]}
+                          - Row: { styles: { width: 84 }, children: [ Text: { text: 20 }]}
+                          - Row: { styles: { width: 84 }, children: [ Text: { text: 22 }]}
+                    - WeeklyScheduler:
+                        id: wifiScheduler
+                        slotInMinutes: 15
+                        slotWidth: 8
+                        slotHeight: 32
+                        dayLabels: [ 'M','D','W','D','V','Z','Z' ]
+                        selectedColor: blue
+                        unselectedColor: green
+                        paddingBetweenDays: 14
+                        gapBetweenSlots: 2
+                        dayLabelBoxWidth: 25
+                        dayLabelBoxHeight: 18
+                        displayDayLabels: true
+                        dayLabelStyles: {  fontWeight: bold, color: 0xFF444444, fontSize: 14 }
+                        verticalDividerIndices: [4,8,12,16,20,24]
+                        verticalDividerLabels: ['4h','8h','12h','16h','20h','24h']
+                        gapToLeaveForDivider: 8
+
+              # buttons
+              - Row:
+                  visible: ${ensemble.storage.deviceMode == "Master" }
+                  styles: { mainAxis: end, gap: 20, margin: 24 0 40 0 }
+                  children:
+                    - Button:
+                        id: restore
+                        label: r@kpn.restore
+                        styles:
+                          outline: true
+                          labelStyle:
+                            color: 0xFF0077CC
+                        onTap:
+                          invokeAPI:
+                            name: getDhcpSettings
+                    - Button:
+                        label: r@kpn.apply
+                        validateForm: true
+                        onTap:
+                          executeCode:
+                            body: |
+                              //@code
+                              var selectedRanges = wifiScheduler.getSelectedRanges();
+                              var schedule = [];
+                              selectedRanges.map(function(range) {
+                                schedule.push({
+                                  "state": "Disable",
+                                  "begin": range.startTime,
+                                  "end": range.endTime
+                                });
+                              });
+                              ensemble.invokeAPI('addSchedule',{"schedule": schedule});
+                            onComplete:
+                              showToast:
+                                message: r@kpn.success
+                                options:
+                                  dismissable: true
+                                  type: success
+                                  duration: 15
+                                  alignment: center
+
+API:
+  getTime:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getTime }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Time"
+      "method": "getTime"
+      "parameters": ""
+
+  getDeviceInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDeviceInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "DeviceInfo"
+      "method": "get"
+      "parameters": ""
+
+
+  getPrivWiFi:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getPrivWiFi }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters":
+        "mibs": "wlanvap"
+        "flag": "!backhaul"
+
+  setPrivWiFiVisibility:
+    inputs: [ visibility ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap2g0priv":
+              "SSIDAdvertisementEnabled": "${visibility}"
+            "vap5g0priv":
+              "SSIDAdvertisementEnabled": "${visibility}"
+
+  setPrivWiFi:
+    inputs: [ssid, password, security, PMF]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap2g0priv":
+              "SSID": "${ssid}"
+              "Security":
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+            "vap5g0priv":
+              "SSID": "${ssid}"
+              "Security":
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+
+  # extra wifi
+  setExtra2gWiFiStatus:
+    inputs: [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "penable":
+            "vap2g0ext":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+
+  setExtra2gWiFiVisibility:
+    inputs: [ visibility ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap2g0ext":
+              "SSIDAdvertisementEnabled": "${visibility}"
+
+
+  setExtra2gWiFi:
+    inputs: [ ssid, password, security, PMF ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap2g0ext":
+              "SSID": "${ssid}"
+              "Security": 
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+
+  setExtra5gWiFiStatus:
+    inputs: [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "penable":
+            "vap5g0ext":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+
+  setWiFiWPS:
+    inputs: [ enable, service ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "${service}"
+      "method": "set"
+      "parameters":
+        "Enable": "${enable}"
+              
+  setExtra5gWiFiVisibility:
+    inputs: [ visibility ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap5g0ext":
+              "SSIDAdvertisementEnabled": "${visibility}"
+
+  setExtra5gWiFi:
+    inputs: [ ssid, password, security, PMF ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap5g0ext":
+              "SSID": "${ssid}"
+              "Security":
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+
+  # Radio
+
+  getWifiStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWifiStatus }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "get"
+      "parameters": {}
+
+  setWifiStatus:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeCode:
+        body: |
+          // set 2g and 5g radio
+          ensemble.invokeAPI("setWifiStatus2g", { "status": status });
+          ensemble.invokeAPI("setWifiStatus5g", { "status": status });
+
+          var widget = "WifiSwitchSuccessToast";
+          var styles = {
+            padding: 0
+          };
+            var options = {
+            type: 'custom',
+            duration: 35,
+            dismissible: false,
+            alignment: 'center'
+          };
+          showToast(widget, styles, options);
+        onComplete:
+          startTimer:
+            options:
+              startAfter: 30
+            onTimer:
+              invokeAPI:
+                name: getWifiStatus
+
+  setWifiStatus2g:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeConditionalAction:
+        conditions:
+          - if: ${status}
+            action:
+              invokeAPI:
+                name: setWLanManager
+                inputs:
+                  service: vap2g0priv
+                  status: true
+
+  setWifiStatus5g:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeConditionalAction:
+        conditions:
+          - if: ${status}
+            action:
+              invokeAPI:
+                name: setWLanManager
+                inputs:
+                  service: vap5g0priv
+                  status: true
+
+
+  get2gRadio:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get2gRadio }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "get"
+      "parameters": ""
+
+  get5gRadio:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get5gRadio }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "get"
+      "parameters": ""
+
+  set2gRadioAutoChannel:
+    inputs: [bandwidth, standard]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanradio":
+            "rad2g0":
+              "AutoChannelEnable": true
+              "OperatingChannelBandwidth": "${bandwidth}"
+              "OperatingStandards": "${standard}"
+
+  set2gRadioStaticChannel:
+    inputs: [channel, bandwidth, standard]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanradio":
+            "rad2g0":
+              "AutoChannelEnable": false
+              "Channel": "${channel}"
+              "OperatingChannelBandwidth": "${bandwidth}"
+              "OperatingStandards": "${standard}"
+
+  set5gRadioAutoChannel:
+    inputs: [bandwidth, standard]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanradio":
+            "rad5g0":
+              "AutoChannelEnable": true
+              "OperatingChannelBandwidth": "${bandwidth}"
+              "OperatingStandards": "${standard}"
+
+  set5gRadioStaticChannel:
+    inputs: [channel, bandwidth, standard]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanradio":
+            "rad5g0":
+              "AutoChannelEnable": false
+              "Channel": "${channel}"
+              "OperatingChannelBandwidth": "${bandwidth}"
+              "OperatingStandards": "${standard}"
+
+  # Guest WiFi
+
+  getGuestWiFiStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGuestWiFiStatus }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Guest"
+      "method": "get"
+      "parameters": ""
+
+
+  setGuestWiFiBandwidth:
+    inputs: [bandwidth]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Guest"
+      "method": "set"
+      "parameters":
+        "BandwidthLimitation": "${bandwidth}"
+
+  setGuestWiFiTimeLimit:
+    inputs: [duration]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.WlanTimer"
+      "method": "setActivationTimer"
+      "parameters":
+        "Timeout": "${duration}"
+        "InterfaceName": "guest"
+
+  setGuestWiFiStatus:
+    inputs: [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "penable":
+            "vap5g0guest":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+            "vap2g0guest":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+
+  setGuestWiFiVisibility:
+    inputs: [ visibility ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "wlanvap":
+            "vap5g0guest":
+              "SSIDAdvertisementEnabled": "${visibility}"
+            "vap2g0guest":
+              "SSIDAdvertisementEnabled": "${visibility}"
+
+  setGuestWiFi:
+    inputs: [status, ssid, password, security, visibility, PMF]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "setWLANConfig"
+      "parameters":
+        "mibs":
+          "penable":
+            "vap5g0guest":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+            "vap2g0guest":
+              "Enable": "${status}"
+              "PersistentEnable": "${status}"
+              "Status": "${status}"
+          "wlanvap":
+            "vap5g0guest":
+              "SSID": "${ssid}"
+              "SSIDAdvertisementEnabled": "${visibility}"
+              "Security":
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+            "vap2g0guest":
+              "SSID": "${ssid}"
+              "SSIDAdvertisementEnabled": "${visibility}"
+              "Security":
+                "ModeEnabled": "${security}"
+                "KeyPassPhrase": "${password}"
+                "MFPConfig": "${PMF}"
+
+  getGuestWiFiInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGuestWiFiInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.brguest"
+      "method": "getMIBs"
+      "parameters": {mibs: "wlanvap", flag: "!backhaul", traverse: "one level down"}
+
+  setGuestWiFiTimer:
+    inputs: [ guestTimer ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.WlanTimer"
+      "method": "setActivationTimer"
+      "parameters":
+        "Timeout": "${guestTimer}"
+        "InterfaceName": "guest"
+
+  disabledGuestWiFiTimer:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.WlanTimer"
+      "method": "disableActivationTimer"
+      "parameters":
+        "InterfaceName": "guest"
+
+  getGuestWiFiTimer:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGuestWiFiTimer }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.WlanTimer"
+      "method": "getActivationTimer"
+      "parameters":
+        "InterfaceName": "guest"
+
+  getLanInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getPrivWiFi }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters": 
+        mibs: "wlanvap"
+        flag: "!backhaul"
+
+
+  # Extra wifi
+
+  getExtra2gWifi:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.vap2g0ext"
+      "method": "get"
+      "parameters": {}
+
+  getExtra5gWifi:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.vap5g0ext"
+      "method": "get"
+      "parameters": { }
+
+  setSeparateWifi:
+    inputs: [mode]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "set"
+      "parameters":
+        "ConfigurationMode": "${mode}"
+
+  get2gSpectrum:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get2gSpectrum }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "getSpectrumInfo"
+      "parameters":
+        "update": true
+
+  get5gSpectrum:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get5gSpectrum }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "getSpectrumInfo"
+      "parameters":
+        "update": true
+
+  # wifi spectrum chart - 2g
+  get2gScanResult:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get2gScanResult }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "getScanResults"
+      "parameters": { }
+
+  get5gScanResult:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_get5gScanResult }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "getScanResults"
+      "parameters": { }
+
+  getWifiSignal:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters":
+        "mibs": "wlanradio"
+
+
+  getPairingEventChannel:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "events": [
+        "NMC",
+        "Scheduler",
+        "PnP",
+        "ZWave",
+        "Devices.Device",
+        "VoiceService.VoiceApplication.VoiceProfile.SIP-Trunk.Line.LINE1.Session.1.X_SOFTATHOME-COM_Conn",
+        "RuleEngine",
+        "NeMo.Intf.vap2g0priv.WPS",
+        "NeMo.Intf.vap5g0priv.WPS"
+      ]
+
+
+  getTopology:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.HGW"
+      "method": "topology"
+      "parameters": "HGW"
+
+  getSchedule:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getSchedule }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "getCompleteSchedules"
+      "parameters": 
+        "type": "WLAN"
+
+
+  setWifiScheduleStatus:
+    inputs:  [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "enableSchedule"
+      "parameters":
+        "type": "WLAN"
+        "ID": "wl0"
+        "enable": "${status}"
+
+  addSchedule:
+    inputs: [ schedule ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "addSchedule"
+      "parameters":
+        "type": "WLAN"
+        "info":
+          "base": "Weekly"
+          "def": "Enable"
+          "ID": "wl0"
+          "schedule": "${schedule}"
+          "enable": true
+          "override": ""
+
+  getDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {}
+
+  setDeviceName:
+    inputs: [mac, name]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}"
+      "method": "setName"
+      "parameters":
+        "name": "${name}"
+
+  setLedBrightness:
+    inputs: [device, brightness]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "LEDs.LED.WifiGreen"
+      "method": "set"
+      "parameters":
+        "Brightness": "${brightness}"
+
+  getWLanManager:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWLanManager }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "WLanManager.AccessPoint"
+      "method": "get"
+      "parameters": {}
+
+  setWLanManager:
+    inputs: [service, status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.${service}"
+      "method": "set"
+      "parameters":
+        "PersistentEnable": ${status}
+
+  setNMCGuest:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Guest"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+
+
+  getSswSteeringMaster:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getSswSteeringMaster }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "SSW.Steering.MasterConfig"
+      "method": "get"
+      "parameters": {}
+
+
+  setSswSteeringMaster:
+    inputs: [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "SSW.Steering.MasterConfig"
+      "method": "set"
+      "parameters":
+        "SyncEnableField": "${status}"
+
+
+Global: |-
+
+  // get QR code string
+  function getWifiQrCode (ssid, password) {
+    var qrCode = "WIFI:S:" + ssid + ";T:WPA;P:" + password +";;";
+    return (qrCode);
+  }
+  
+  function setAvailability2gChart(currentChannel, response) {
+    var labels =  response.path('$..channel', function(match) {return match+'';});
+    var data = [];
+    var bgColors = [];
+    var borderColors = [];
+  
+    response.status.map(function(item) {
+      data.push(item);
+      
+      if (item.channel == currentChannel) {
+        bgColors.push('#009900');
+      } else {
+        bgColors.push('#EFEFEF');
+      }
+    });
+  
+    return({
+      "type": "bar",
+      "data": {
+        "labels": labels,
+        "datasets": [{
+          "label": labels,
+          "backgroundColor": bgColors,
+          "borderColor": '#009900',
+          "data": data,
+          "parsing": {
+            "xAxisKey": "channel",
+            "yAxisKey": "availability"
+          }
+        }]
+      },
+      "options": {
+        "plugins": {
+          "tooltip": {
+            "displayColors": false,
+            "callbacks": {
+              "title": function customTooltip(tooltipItems) {
+                return("Channel: " + tooltipItems[0].dataset.data[tooltipItems[0].dataIndex].channel);
+              },
+              "label": function customTooltip (tooltipItem) {
+                return("");
+              },
+              "footer": function customTooltip (tooltipItems) {
+                var item = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex];
+                return([
+                  "Bandwidth: " + item.bandwidth + " MHz",
+                  "Noise level: " + item.noiselevel + " dBm",
+                  "Availability: " + item.availability,
+                  "Access points: " + item.accesspoints
+                ]);
+              }
+            }
+          },
+          "legend": {
+            "display": false
+          }
+        }
+      }
+    });
+  }
+  
+  
+  
+  function setAvailability5gChart(currentChannel, response) {
+    var labels =  response.path('$..channel', function(match) { return match+'';});
+    var data = [];
+    var bgColors = [];
+    var borderColors = [];
+  
+    response.status.map(function(item) {
+      data.push(item);
+      if (item.channel == currentChannel)
+        bgColors.push('#009900');
+      else
+        bgColors.push('#DFDFDF');
+    });
+
+    return({
+      "type": "bar",
+      "data": {
+        "labels": labels,
+        "datasets": [{
+          "label": labels,
+          "backgroundColor": bgColors,
+          "borderColor": borderColors,
+          "data": data,
+          "parsing": {
+            "xAxisKey": "channel",
+            "yAxisKey": "availability"
+          }
+        }]
+      },
+      "options": {
+        "plugins": {
+          "tooltip": {
+            "displayColors": false,
+            "labelTextColor": "green",
+            "callbacks": {
+              "title": function customTooltip(tooltipItems) {
+                return("Channel: " + tooltipItems[0].dataset.data[tooltipItems[0].dataIndex].channel);
+              },
+              "label": function customTooltip (tooltipItem) {
+                return("");
+              },
+              "footer": function customTooltip (tooltipItems) {
+                var item = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex];
+                return([
+                  "Bandwidth: " + item.bandwidth + " MHz",
+                  "Noise level: " + item.noiselevel + " dBm",
+                  "Availability: " + item.availability,
+                  "Access points: " + item.accesspoints
+                ]);
+              }
+            }
+          },
+          "legend": {
+            "display": false
+          }
+        }
+      }
+    });
+  }
+  
+  function setSignal2gChart(data2g) {
+    var colors = ["#E67B4D", "#6EDE97", "#A04CE6", "#4C56E6", "#E64C7C", "#4C9EE6"];
+    var bgColors = ["rgb(230,123,77,.1)","rgb(110,222,151,.1)","rgb(160,76,230,.1)","rgb(76,86,230,.1)","rgb(230,76,124,.1)","rgb(76,158,230,.1)"];
+    var colorCounter = 0;
+    var chartData2g = [];
+
+    data2g.map(function (d) {
+      var modifider = d.Bandwidth / 20;
+      chartData2g.push({
+        "label": d.BSSID,
+        "data": [
+          {"x": d.Channel - modifider, "y": -100, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID },
+          {"x": d.Channel, "y": d.RSSI, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID },
+          {"x": d.Channel + modifider, "y": -100, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID }
+        ],
+        "borderColor": colors[colorCounter % 6],
+        "backgroundColor": bgColors[colorCounter % 6],
+        "fill": "start"
+      });
+      colorCounter++;
+    });
+
+    return ({
+      "type": "line",
+      "data": {
+        "labels": [-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13],
+        "datasets": chartData2g
+      },
+      "options": {
+        "scales": {
+          "x": {
+            "min": 1
+          }
+        },
+        "plugins": {
+          "tooltip": {
+            "filter": function customTooltip (tooltipItem) {
+              return tooltipItem.formattedValue != "-100";
+            },
+            "callbacks": {
+              "title": function customTooltip(tooltipItems) {
+                return("Channel: " + tooltipItems[0].dataset.data[tooltipItems[0].dataIndex].x);
+              },
+              "label": function customTooltip (tooltipItem) {
+                return(tooltipItem.dataset.data[tooltipItem.dataIndex].device);
+              },
+              "footer": function customTooltip (tooltipItems) {
+                var item = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex];
+                return([
+                  "Bandwidth: " + item.bandwidth + " MHz",
+                  "MAC Address: " + item.mac,
+                  "Signal: " + item.y + " dBm",
+                ]);
+              }
+            }
+          },
+          "legend": {
+            "display": false
+          },
+          "filler": {
+            "propagate": false,
+          },
+        },
+        "interaction": {
+          "intersect": true,
+        },
+        "tension": 0.4
+      }
+    });
+  }
+
+
+  function setSignal5gChart(data5g) {
+    var colors = ["#E67B4D", "#6EDE97", "#A04CE6", "#4C56E6", "#E64C7C", "#4C9EE6"];
+    var bgColors = ["rgb(230,123,77,.1)","rgb(110,222,151,.1)","rgb(160,76,230,.1)","rgb(76,86,230,.1)","rgb(230,76,124,.1)","rgb(76,158,230,.1)"]
+    var colorCounter = 0;
+    var chartData5g = [];
+
+
+    data5g.map(function (d) {
+      var modifider = d.Bandwidth / 20;
+      chartData5g.push({
+        "label": d.BSSID,
+        "data": [
+          {"x": d.Channel - modifider, "y": -100, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID },
+          {"x": d.Channel, "y": d.RSSI, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID },
+          {"x": d.Channel + modifider, "y": -100, "bandwidth": d.Bandwidth, "mac": d.BSSID, "device": d.SSID }
+        ],
+        "borderColor": colors[colorCounter % 6],
+        "backgroundColor": bgColors[colorCounter % 6],
+        "fill": "start"
+      });
+      colorCounter++;
+    });
+
+    return ({
+      "type": "line",
+      "data": {
+        "labels": [20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,124,126,128,130,132,134,136],
+        "datasets": chartData5g
+      },
+      "options": {
+         "scales": {
+           "x": {
+             "min": 36
+           }
+        },
+        "plugins": {
+          "tooltip": {
+            "filter": function customTooltip (tooltipItem) {
+              return tooltipItem.formattedValue != "-100";
+            },
+            "callbacks": {
+              "title": function customTooltip(tooltipItems) {
+                return("Channel: " + tooltipItems[0].dataset.data[tooltipItems[0].dataIndex].x);
+              },
+              "label": function customTooltip (tooltipItem) {
+                return(tooltipItem.dataset.data[tooltipItem.dataIndex].device);
+              },
+              "footer": function customTooltip (tooltipItems) {
+                var item = tooltipItems[0].dataset.data[tooltipItems[0].dataIndex];
+                return([
+                  "Bandwidth: " + item.bandwidth + " MHz",
+                  "MAC Address: " + item.mac,
+                  "Signal: " + item.y + " dBm",
+                ]);
+              }
+            }
+          },
+          "legend": {
+            "display": false
+          },
+          "filler": {
+            "propagate": false,
+          },
+        },
+        "interaction": {
+          "intersect": true,
+        },
+        "tension": 0.4
+      }
+    });
+  }
+  
+  function showToast (widget, styles, options) {
+    var payload = {
+      widget: widget,
+      styles: styles,
+      options: options
+    };
+    ensemble.showToast(payload);
+  }

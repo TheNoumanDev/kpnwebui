@@ -1,0 +1,1347 @@
+Import:
+  - common
+  - mockData
+
+View:
+  onLoad:
+    invokeAPI:
+      name: getTrunkNames
+      onResponse:
+        invokeAPI:
+          name: getPhoneLines
+
+  styles:
+    scrollableView: true
+    backgroundColor: 0xFFEAEAEA
+
+  body:
+    Column:
+      styles:
+        fontSize: 16
+      children:
+        - PageHeader:
+            inputs:
+              title: r@kpn.nav.phone
+              showConnectionWarning: ${ensemble.storage.internetConnected == false}
+              showSlaveDeviceWarning: ${ isMaster() == false }
+        - TabBar:
+            styles: { tabPadding: 0 16, color: 0xFF009900, tabBackgroundColor: 0xFFFFFFFF, tabFontWeight: bold, activeTabColor: 0xFF009900, indicatorColor: 0xFF009900, indicatorThickness: 4 }
+            items:
+              - label: r@kpn.phone.info
+                body: Informatie
+
+              - label: r@kpn.phone.number_configutations
+                body: Configs
+
+              - label: r@kpn.phone.call_history
+                body: History
+
+
+LoadingToast:
+  onLoad:
+    startTimer:
+      options:
+        repeat: false
+        startAfter: 4
+      onTimer:
+        invokeAPI:
+          name: getTrunkNames
+          onResponse:
+            invokeAPI:
+              name: getPhoneLines
+
+  Column:
+    styles: { backgroundColor: 0xFFDAF0DA, borderRadius: 4 , width: 100, height: 100, crossAxis: center, mainAxis: center}
+    children:
+      - Progress:
+          id: progressIndicator
+          display: circular
+          styles: { color: 0xFF009900, thickness: 2 }
+
+
+Informatie:
+  body:
+    Column:
+      styles:
+        padding: 16
+      children:
+        - Column:
+            styles:
+              backgroundColor: 0xFFFFFFFF
+              shadowColor: 0xFFDEDEDE
+              shadowRadius: 3
+              shadowOffset: [ 0, 0 ]
+              borderRadius: 10
+              padding: 16
+              gap: 12
+            children:
+              - ContentTitle:
+                  inputs:
+                    title: r@kpn.phone.info
+              - Text:
+                  text: r@kpn.phone.phone_info_description
+              - Divider:
+                  styles: { margin: 8 0 }
+
+
+              - GreenSubtitle:
+                  inputs:
+                    title: r@kpn.phone.internal_calling
+              - Text:
+                  text: r@kpn.phone.internal_calling_description
+              - Divider:
+                  styles: { margin: 8 0 }
+
+              - GreenSubtitle:
+                  inputs:
+                    title: r@kpn.phone.phone_profiles
+
+              # data table
+              - DataGrid:
+                  styles:
+                    headingText: { font: heading, fontSize: 16, color: grey }
+                  borderColor: white
+                  horizontalMargin: 0
+                  headingRowHeight: 32
+                  columnSpacing: 60
+                  DataColumns:
+                    - label: r@kpn.phone.phone_numbers
+                      type: text
+                    - label: r@kpn.status
+                      type: text
+                    - label: r@kpn.phone.origin
+                      type: text
+                  item-template:
+                    data: ${getPhoneLines.body.status}
+                    name: p
+                    template:
+                      DataRow:
+                        visible: ${p.enable == "Enabled"}
+                        children:
+                          - Text:
+                              text: ${p.trunk_lines[0].directoryNumber}
+                          - Text:
+                              text: "${p.trunk_lines[0].status} ${p.trunk_lines[0].status != 'Up' ? ' - ' : ''} ${p.trunk_lines[0].status != 'Up' ? p.trunk_lines[0].statusInfo : ''}"
+                          - Text:
+                              text: ${p.sourceLabel}
+
+
+                  children:
+
+                    # row for loading state
+                    - DataRow:
+                        visible: "${getPhoneLines.body == null }"
+                        children:
+                          - Progress:
+                              styles: { size: 30 }
+                          - Text:
+                              text: ' '
+                          - Text:
+                              text: ' '
+                    # row for no data state
+                    - DataRow:
+                        visible: "${getPhoneLines.body.status.length == 0 }"
+                        children:
+                          - Text:
+                              text: '-'
+                          - Text:
+                              text: '-'
+                          - Text:
+                              text: '-'
+
+
+              - Divider
+              - GreenSubtitle:
+                  inputs:
+                    title: r@kpn.phone.test
+              - Row:
+                  styles: { crossAxis: center, gap: 24 }
+                  children:
+                    - Text:
+                        text: r@kpn.phone.test_description
+                        styles: { expanded: true }
+                    - Column:
+                        styles: { expanded: true }
+                        children:
+                          - Button:
+                              label: r@kpn.phone.test
+                              styles:
+                                outline: true
+                                borderRadius: 100
+                                backgroundColor: white
+                                borderColor: 0xFF0077CC
+                                labelStyle:
+                                  color: 0xFF0077CC
+
+                              onTap:
+                                showDialog:
+                                  widget: PhoneTestDialog
+                                  options:
+                                    style: none
+
+
+PhoneTestDialog:
+  onLoad:
+    invokeAPI:
+      name: testPhones
+
+  Row:
+    styles: 
+      backgroundColor: white
+      mainAxis: center
+      mainAxisSize: min
+    children:
+      - Column:
+          styles:
+            width: 400
+          children:
+            - Progress:
+                display: linear
+                countdown: 20
+                styles: { color: 0xFF009900, thickness: 8, backgroundColor: white }
+
+            - Column:
+                styles: { padding: 16, gap: 8, mainAxis: spaceBetween }
+                children:
+                  - GreenSubtitle:
+                      inputs:
+                        title: r@kpn.phone.test
+                  - Text:
+                      styles: { overflow: wrap }
+                      text: r@kpn.phone.test_description
+                  - Row:
+                      styles: { mainAxis: end }
+                      children:
+                        - Button:
+                            styles: 
+                              outline: true
+                              labelStyle:
+                                color: 0xFF0077CC
+                            label: r@kpn.close
+                            onTap: closeAllDialogs
+
+
+Configs:
+  onLoad:
+    invokeAPI:
+      name: getIncomingLineAssignment
+      onResponse:
+        invokeAPI:
+          name: getOutgoingLineAssignment
+          onResponse: |
+            //@code
+            // set values for outgoing dropdown
+            var outgoingLinesDropdown = [{
+              'label': 'r@kpn.phone.no_number_selected',
+              'value': ''
+            }];
+            getPhoneLines.body.status.map (function (line) {
+              if (line.enable == 'Enabled')
+                outgoingLinesDropdown.push({
+                  'label': line.trunk_lines[0].directoryNumber,
+                  'value': line.trunk_lines[0].name
+                });
+            });
+            
+            outgoing1.items = outgoingLinesDropdown;
+            outgoing1.value = getOutgoingLineAssignment.body.status[0].outgoingTrunkLine;
+            
+            outgoing2.items = outgoingLinesDropdown;
+            outgoing2.value = getOutgoingLineAssignment.body.status[1].outgoingTrunkLine;
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.phone.number_configutations
+            - Text:
+                text: r@kpn.phone.number_configutations_description
+            - Divider:
+                styles: { margin: 8 0 }
+            - GreenSubtitle:
+                inputs:
+                  title: r@kpn.phone.use_your_own_devices
+            - Flex:
+                direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                children:
+                  - Text:
+                      text: r@kpn.phone.use_your_own_devices_description
+                      styles:
+                        expanded: true
+                  - Spacer:
+                      styles: { size: 24 }
+                  - Button:
+                      label: r@kpn.phone.use_your_own_devices_button
+                      onTap:
+                        executeCode:
+                          body: |
+                            getPhoneLines.body.status.map(function(p) {
+                              if(p.enable == "Enabled" && p.source != 'webui') {
+                                ensemble.invokeAPI('togglePhoneStatus',{
+                                  'trunkName': p.name,
+                                  'lineName': p.trunk_lines[0].name,
+                                  'status': 'Disabled'
+                                });
+                              }
+                            });
+
+                          onComplete:
+                            showToast:
+                              widget: LoadingToast
+                              styles:
+                                padding: 0
+                              options:
+                                type: custom
+                                duration: 4
+                                dismissible: false
+                                alignment: center
+
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - GreenSubtitle:
+                inputs:
+                  title: r@kpn.phone.phone_profiles
+
+            # profile data table
+            - DataGrid:
+                styles:
+                  headingText: { font: heading, fontSize: 16, color: grey }
+                borderColor: white
+                horizontalMargin: 0
+                headingRowHeight: 32
+                columnSpacing: 32
+                DataColumns:
+                  - label: r@kpn.phone.on_off
+                    type: text
+                  - label: r@kpn.phone.phone_numbers
+                    type: text
+                  - label: r@kpn.status
+                    type: text
+                  - label: r@kpn.phone.authentication_name
+                    type: text
+                  - label: r@kpn.phone.origin
+                    type: text
+                  - label: ''
+                    type: text
+                item-template:
+                  data: ${getPhoneLines.body.status}
+                  name: p
+                  template:
+                    DataRow:
+                      children:
+                        - Switch:
+                            enabled: "${p.enable == 'Enabled' }"
+                            value: "${p.trunk_lines[0].enable == 'Enabled' }"
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //code
+                                  var status = 'Disabled';
+                                  if (this.value == true)
+                                    status = 'Enabled';
+                                  
+                                  ensemble.invokeAPI('togglePhoneStatus',{
+                                    'trunkName': p.name,
+                                    'lineName': p.trunk_lines[0].name,
+                                    'status': status
+                                  });
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 4
+                                      dismissible: false
+                                      alignment: center
+                        - Text:
+                            text: ${p.trunk_lines[0].directoryNumber}
+
+                        - Conditional:
+                            conditions:
+                              - if: ${p.trunk_lines[0].status == 'Up' || p.trunk_lines[0].status == 'Disabled'}
+                                widget:
+                                  Text:
+                                    text: ${p.trunk_lines[0].status}
+                              - else:
+                                widget:
+                                  Text:
+                                    text: ${p.trunk_lines[0].status} - ${p.trunk_lines[0].statusInfo}
+                        - Text:
+                            text: "${p.enable == 'Enabled' ? p.trunk_lines[0].authUserName : '-'}"
+                        - Text:
+                            text: ${p.sourceLabel}
+                        - Row:
+                            styles: { mainAxis: end }
+                            children:
+                              - Icon:
+                                  visible: "${['webui',''].indexOf(p.source) > -1 ? true : false }"
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles:
+                                    color: 0xFF0077CC
+                                    margin: 0 12 0 0
+                                  onTap:
+                                    executeCode:
+                                      body: |
+                                        //@code
+                                        ensemble.storage.selectedPhoneLine = p;
+                                      onComplete:
+                                        showDialog:
+                                          widget: PhoneProfileEdit
+                              - Icon:
+                                  visible: "${['webui',''].indexOf(p.source) > -1 ? false : true }"
+                                  name: 0xe92a
+                                  library: kpnUI
+                                  styles:
+                                    color: 0xFF0077CC
+                                    margin: 0 12 0 0
+                                  onTap:
+                                    showDialog:
+                                      widget: PhoneDeleteConfirmation
+                                      options:
+                                        maxWidth: 720
+
+                              - Icon:
+                                  visible: "${['webui',''].indexOf(p.source) > -1 ? true : false }"
+                                  name: 0xe92a
+                                  library: kpnUI
+                                  styles:
+                                    color: 0xFF0077CC
+                                    margin: 0 12 0 0
+                                  onTap:
+                                    invokeAPI:
+                                      name: clearPhoneLine
+                                      inputs:
+                                        trunkName: ${p.name}
+                                        lineName: ${p.trunk_lines[0].name}
+                                      onResponse:
+                                        invokeAPI:
+                                          name: getPhoneLines
+
+            - Spacer:
+                styles: { size: 16 }
+
+            - GreenSubtitle:
+                inputs:
+                  title: r@kpn.phone.fx_ports_incoming
+
+            # incoming port data table
+            - DataGrid:
+                styles:
+                  headingText: { font: heading, fontSize: 16, color: grey }
+                borderColor: white
+                horizontalMargin: 0
+                headingRowHeight: 32
+                columnSpacing: 60
+                DataColumns:
+                  - label: ''
+                    type: text
+                  - label: "${getPhoneLines.body.status[0].enable == 'Enabled' ? getPhoneLines.body.status[0].trunk_lines[0].directoryNumber : '-' }"
+                    type: text
+                  - label: "${getPhoneLines.body.status[1].enable == 'Enabled' ? getPhoneLines.body.status[1].trunk_lines[0].directoryNumber : '-' }"
+                    type: text
+                  - label: "${getPhoneLines.body.status[2].enable == 'Enabled' ? getPhoneLines.body.status[2].trunk_lines[0].directoryNumber : '-' }"
+                    type: text
+                  - label: "${getPhoneLines.body.status[3].enable == 'Enabled' ? getPhoneLines.body.status[3].trunk_lines[0].directoryNumber : '-' }"
+                    type: text
+                children:
+                  - DataRow:
+                      children:
+                        - Text:
+                            text: r@kpn.phone.fx_port_1
+                        - Checkbox:
+                            id: line1port1
+                            value: '${getIncomingLineAssignment.body.status[0].ep_names.contains("FXS1")}'
+                            enabled: '${getPhoneLines.body.status[0].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[0].trunk_lines[0].groupId, line1port1.value, line1port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line2port1
+                            value: '${getIncomingLineAssignment.body.status[1].ep_names.contains("FXS1")}'
+                            enabled: '${getPhoneLines.body.status[1].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[1].trunk_lines[0].groupId, line2port1.value, line2port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line3port1
+                            value: '${getIncomingLineAssignment.body.status[2].ep_names.contains("FXS1")}'
+                            enabled: '${getPhoneLines.body.status[2].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[2].trunk_lines[0].groupId, line3port1.value, line3port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line4port1
+                            value: '${getIncomingLineAssignment.body.status[3].ep_names.contains("FXS1")}'
+                            enabled: '${getPhoneLines.body.status[2].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[3].trunk_lines[0].groupId, line4port1.value, line4port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                  - DataRow:
+                      visible: "${ensemble.storage.appConfig['deviceTypeLabel'] != 'r@kpn.login.BoxV14' ? true : false}"
+                      children:
+                        - Text:
+                            text: r@kpn.phone.fx_port_2
+                        - Checkbox:
+                            id: line1port2
+                            value: '${getIncomingLineAssignment.body.status[0].ep_names.contains("FXS2")}'
+                            enabled: '${getPhoneLines.body.status[0].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[0].trunk_lines[0].groupId, line1port1.value, line1port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line2port2
+                            value: '${getIncomingLineAssignment.body.status[1].ep_names.contains("FXS2")}'
+                            enabled: '${getPhoneLines.body.status[1].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[1].trunk_lines[0].groupId, line2port1.value, line2port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line3port2
+                            value: '${getIncomingLineAssignment.body.status[2].ep_names.contains("FXS2")}'
+                            enabled: '${getPhoneLines.body.status[2].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[2].trunk_lines[0].groupId, line3port1.value, line3port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+                        - Checkbox:
+                            id: line4port2
+                            value: '${getIncomingLineAssignment.body.status[3].ep_names.contains("FXS2")}'
+                            enabled: '${getPhoneLines.body.status[2].enable == "Enabled" ? true : false }'
+                            onChange:
+                              executeCode:
+                                body: |
+                                  //@code 
+                                  updateIncomingLineAssignment(getPhoneLines.body.status[3].trunk_lines[0].groupId, line4port1.value, line4port2.value);
+                                onComplete:
+                                  showToast:
+                                    widget: LoadingToast
+                                    styles:
+                                      padding: 0
+                                    options:
+                                      type: custom
+                                      duration: 3
+                                      dismissible: false
+                                      alignment: center
+
+            - Spacer:
+                styles: { size: 16 }
+
+            - GreenSubtitle:
+                inputs:
+                  title: r@kpn.phone.fx_ports_outgoing
+
+
+            - Column:
+                id: outgoingError
+                visible: false
+                styles: { backgroundColor: 0xFFFCEBD9, borderRadius: 8, width: 460 }
+                children:
+                  - Divider:
+                      styles: { color: 0xFFEE7700, thickness: 4 }
+                  - Row:
+                      styles: { gap: 8, padding: 12 16 }
+                      children:
+                        - Icon:
+                            name: 0xe9b9
+                            library: kpnUI
+                            styles: { color: 0xFFEE7700 }
+                        - Text:
+                            text: r@kpn.error
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                  width: 500
+                children:
+                  - Dropdown:
+                      id: outgoing1
+                      label: r@kpn.phone.fx_port_1
+                      onChange:
+                        executeCode:
+                          body: |
+                            //@code 
+                            outgoingError.visible = false;
+                            updateOutgoingLineAssignment('FXS1', '**1', this.value);
+                          onComplete:
+                            startTimer:
+                              options:
+                                startAfter: 0
+                                repeat: true
+                                maxNumberOfTimes: 2
+                                repeatInterval: 3
+                              onTimer:
+                                showToast:
+                                  widget: LoadingToast
+                                  styles:
+                                    padding: 0
+                                  options:
+                                    type: custom
+                                    duration: 3
+                                    dismissible: false
+                                    alignment: center
+                              onTimerComplete: |
+                                //@code
+                                if (setOutingLineAssignment.body.errors != null) {
+                                  outgoingError.visible = true;
+                                }
+
+                  - Dropdown:
+                      id: outgoing2
+                      label: r@kpn.phone.fx_port_2
+                      visible: "${ensemble.storage.appConfig['deviceTypeLabel'] != 'r@kpn.login.BoxV14' ? true : false}"
+                      onChange:
+                        executeCode:
+                          body: |
+                            //@code 
+                            outgoingError.visible = false;
+                            updateOutgoingLineAssignment('FXS2', '**2', this.value);
+                          onComplete:
+                            startTimer:
+                              options:
+                                startAfter: 0
+                                repeat: true
+                                maxNumberOfTimes: 2
+                                repeatInterval: 3
+                              onTimer:
+                                showToast:
+                                  widget: LoadingToast
+                                  styles:
+                                    padding: 0
+                                  options:
+                                    type: custom
+                                    duration: 3
+                                    dismissible: false
+                                    alignment: center
+                              onTimerComplete: |
+                                //@code
+                                if (setOutingLineAssignment.body.errors != null) {
+                                  outgoingError.visible = true;
+                                }
+
+
+PhoneDeleteConfirmation:
+  body:
+    Column:
+      styles:
+        gap: 24
+      children:
+        - Text:
+            text: r@kpn.phone.phone_delete_confirmation
+            styles:
+              textStyle:
+                fontSize: 18
+        - Row:
+            styles: { mainAxis: end, crossAxis: center }
+            children:
+              - Button:
+                  label: r@kpn.cancel
+                  styles:
+                    outline: true
+                    margin: 0 20
+                    labelStyle:
+                      color: 0xFF0077CC
+                    onTap: closeAllDialogs
+              - Button:
+                  label: r@kpn.apply
+                  styles:
+                    backgroundColor: 0xFFE52E2E
+                    borderColor: 0xFFE52E2E
+                    borderRadius: 100
+                  onTap:
+                    invokeAPI:
+                      name: clearPhoneLine
+                      inputs:
+                        trunkName: ${p.name}
+                        lineName: ${p.trunk_lines[0].name}
+                      onResponse:
+                        invokeAPI:
+                          name: getPhoneLines
+                          onResponse: closeAllDialogs
+
+
+PhoneProfileEdit:
+  Column:
+    styles: 
+      gap : 16
+      width: 500
+    children:
+      - GreenSubtitle:
+          inputs:
+            title: r@kpn.phone.phone_profile
+      - Text:
+          text: r@kpn.phone.profile_configuration_modal_description
+      - Divider
+      - Form:
+          styles:
+            labelPosition: '${device.width > 768 ? "start" : "top"}'
+            gap: 16
+          children:
+            - TextInput:
+                label: r@kpn.phone.phone_numbers
+                id: phoneNumber
+                inputType: phone
+                required: true
+                value: ${ensemble.storage.selectedPhoneLine.trunk_lines[0].directoryNumber}
+            - TextInput:
+                label: r@kpn.phone.authentication_name
+                id: authUserName
+                required: true
+                value: ${ensemble.storage.selectedPhoneLine.trunk_lines[0].authUserName}
+            - TextInput:
+                label: r@kpn.phone.password
+                id: authPassword
+                required: true
+            - TextInput:
+                label: r@kpn.phone.proxy
+                id: outboundProxyServer
+                required: true
+                validator:
+                  regex: (^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$)|(^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$)|([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))
+                  regexError: r@kpn.phone.invalidProxyserver
+                value: ${ensemble.storage.selectedPhoneLine.sip.outboundProxyServer}
+            - TextInput:
+                label: r@kpn.phone.domain
+                id: userAgentDomain
+                required: true
+                validator:
+                  regex: ([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))
+                  regexError: r@kpn.phone.invalidDomainName
+                value: ${ensemble.storage.selectedPhoneLine.sip.userAgentDomain}
+            - TextInput:
+                label: r@kpn.phone.server
+                id: registrarServer
+                required: true
+                validator:
+                  regex: (^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$)|(^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$)|([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))
+                  regexError: r@kpn.phone.invalidregistrarserver
+                value: ${ensemble.storage.selectedPhoneLine.sip.registrarServer}
+            - Row:
+                styles: { gap: 20, mainAxis: end, crossAxis: center }
+                children:
+                  - Text:
+                      id: saveStatus
+                  - Button:
+                      label: r@kpn.cancel
+                      styles: { outline: true, color: 0xFF0077CC }
+                      onTap: closeAllDialogs
+                  - Button:
+                      label: r@kpn.save
+                      validateForm: true
+                      onTap:
+                        invokeAPI:
+                          name: setPhoneLineName
+                          inputs:
+                            lineNumber: ${p.lineNumber}
+                          onResponse:
+                            invokeAPI:
+                              name: setPhoneLine
+                              inputs:
+                                trunkName: ${p.name}
+                                lineName: ${ensemble.storage.selectedPhoneLine.trunk_lines[0].name}
+                                phoneNumber: ${phoneNumber.value}
+                                authUserName: ${authUserName.value}
+                                authPassword: ${authPassword.value}
+                                registrarServer: ${registrarServer.value}
+                                outboundProxyServer: ${outboundProxyServer.value}
+                                userAgentDomain: ${userAgentDomain.value}
+                              onError:
+                                executeCode:
+                                  body: |
+                                    //@code
+                                    saveStatus.text = 'r@kpn.error';
+                              onResponse:
+                                invokeAPI:
+                                  name: getTrunkNames
+                                  onResponse:
+                                    invokeAPI:
+                                      name: getPhoneLines
+                                      onResponse: closeAllDialogs
+
+
+History:
+  onLoad:
+    invokeAPI:
+      name: getCallHistory
+      inputs:
+        filterBy: 'all'
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.phone.call_history
+            - Text:
+                text: r@kpn.phone.call_history_description
+            - Divider:
+                styles: { margin: 8 0 }
+
+            - Form:
+                styles:
+                  labelPosition: '${device.width > 768 ? "start" : "top"}'
+                  gap: 16
+                  width: 500
+
+                children:
+                  - Dropdown:
+                      label: r@kpn.phone.filter_call_history
+                      items: [
+                        { label: 'r@kpn.phone.call_type_all', value: 'all' },
+                        { label: 'r@kpn.phone.call_type_incoming', value: 'incoming' },
+                        { label: 'r@kpn.phone.call_type_outgoing', value: 'outgoing' },
+                        { label: 'r@kpn.phone.call_type_missed', value: 'missed' },
+                      ]
+                      value: 'all'
+                      onChange:
+                        invokeAPI:
+                          name: getCallHistory
+                          inputs:
+                            filterBy: ${this.value}
+            - Spacer:
+                styles: { size: 24 }
+            - DataGrid:
+                styles:
+                  headingText: { font: heading, fontSize: 16, color: grey }
+                borderColor: white
+                horizontalMargin: 0
+                headingRowHeight: 32
+                columnSpacing: 60
+                DataColumns:
+                  - label: r@kpn.phone.call_type
+                    type: text
+                    sortable: true
+                    sortKey: type
+                  - label: r@kpn.phone.internal_phone_number
+                    type: text
+                    sortable: true
+                    sortKey: trunkLineNumber
+                  - label: r@kpn.phone.external_phone_number
+                    type: text
+                    sortable: true
+                    sortKey: remoteNumber
+                  - label: r@kpn.phone.date_and_time
+                    type: text
+                    sortable: true
+                    sortKey: startTimeSortable
+                  - label: r@kpn.phone.duration
+                    type: text
+                    sortable: true
+                    sortKey: duration
+                item-template:
+                  data: ${getCallHistory.body.status}
+                  name: historyItem
+                  template:
+                    DataRow:
+                      children:
+                        - Text:
+                            text: ${historyItem.type}
+                        - Text:
+                            text: ${historyItem.trunkLineNumber}
+                        - Text:
+                            text: ${historyItem.remoteNumber}
+                        - Text:
+                            text: ${historyItem.formattedStartTime}
+                        - Text:
+                            text: ${historyItem.formattedDuration}
+
+                children:
+                # no data placeholder
+                  - DataRow:
+                      visible: "${getCallHistory.body.status.length == 0 ? true : false}"
+                      children:
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                  # loading
+                  - DataRow:
+                      visible: "${getCallHistory.body == null ? true : false}"
+                      children:
+                        - Progress:
+                            styles: { size: 32 }
+                        - Text:
+                            text: ''
+                        - Text:
+                            text: ''
+                        - Text:
+                            text: ''
+                        - Text:
+                            text: ''
+
+
+API:
+  getPhoneLines:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getPhoneLines }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "listTrunks"
+      "parameters": { }
+    onResponse: |
+      // clear phone line selected for editing
+      var lineNumber = 0;
+      response.body.status.map( function(p) {
+        lineNumber++;
+        p.lineNumber = lineNumber;
+        if(p.enable != "Disabled") {
+          if (getTrunkNames.body.status[p.name].Name.startsWith('webui_')) {
+            p.sourceLabel = 'r@kpn.phone.origin_user';
+            p.source = 'webui';
+          } else {
+            p.sourceLabel = 'r@kpn.phone.origin_kpn';
+            p.source = 'kpn';
+          }
+        } else {
+          p.sourceLabel = '-';
+          p.source = '';
+        }
+      });
+      
+      response.body.isReady = true;
+
+  togglePhoneStatus:
+    inputs:
+      - trunkName
+      - lineName
+      - status
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "setTrunk"
+      "parameters": {
+        "trunk": {
+          "name": "${trunkName}",
+          "trunk_lines": [
+            {
+              "name": "${lineName}",
+              "enable": "${status}"
+            }
+          ]
+        }
+      }
+
+  getCallHistory:
+    inputs:
+      - filterBy
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getCallHistory }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "getCallList"
+      "parameters": { }
+    onResponse: |
+      //@code
+      if (response.body.error == null) {
+        var filteredCalls = [];
+        
+        response.body.status.map(function(i) {
+          // set type
+          if (i.callOrigin == 'local')
+            i.type = 'r@kpn.phone.call_type_outgoing';
+          else if (i.callOrigin == 'SIP' && i.callType == 'succeeded')
+            i.type = 'r@kpn.phone.call_type_incoming';
+          else if (i.callOrigin == 'SIP' && i.callType == 'missed')
+            i.type = 'r@kpn.phone.call_type_missed';
+        
+          // set duration
+          if (i.duration == 0)
+            i.formattedDuration = '-';
+          else if (i.duration < 60)
+            i.formattedDuration = i.duration + ' r@kpn.phone.seconds';
+          else
+            i.formattedDuration = i.duration.prettyDuration();
+        
+          // set data and time
+          i.formattedStartTime = convertUtcToGmtPlus1(i.startTime);
+          var date = new Date(i.startTime);
+          i.startTimeSortable = date.getTime();
+        
+          // set filtered list
+          if (filterBy == 'outgoing' && i.callOrigin == 'local')
+            filteredCalls.push(i);
+          else if (filterBy == 'incoming' && i.callOrigin == 'SIP' && i.callType == 'succeeded')
+            filteredCalls.push(i);
+          else if (filterBy == 'missed' && i.callOrigin == 'SIP' && i.callType == 'missed')
+            filteredCalls.push(i);
+          else if (filterBy == 'all')
+            filteredCalls.push(i);
+        });
+        
+        response.body.status = filteredCalls.reverse();
+      }
+  
+  testPhones:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_testPhones }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "ring"
+      "parameters": { }
+
+  clearPhoneLine:
+    inputs:
+      - trunkName
+      - lineName
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "setTrunk"
+      "parameters": {
+        "trunk": {
+          "name": "${trunkName}",
+          "enable": "Disabled",
+          "sip": {
+            "registrarServer": "",
+            "outboundProxyServer": "",
+            "userAgentDomain": ""
+          },
+          "rtp": {},
+          "trunk_lines": [
+            {
+              "name": "${lineName}",
+              "groupId": "",
+              "enable": "Disabled",
+              "directoryNumber": "",
+              "authUserName": "",
+              "authPassword": ""
+            }
+          ]
+        }
+      }
+
+
+  setPhoneLineName:
+    inputs:
+      - lineNumber
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication.VoiceProfile.SIP-Trunk${lineNumber}"
+      "method": "set"
+      "parameters":
+          "Name": "webui_${lineNumber}"
+
+
+  setPhoneLine:
+    inputs:
+      - trunkName
+      - lineName
+      - phoneNumber
+      - authUserName
+      - authPassword
+      - registrarServer
+      - outboundProxyServer
+      - userAgentDomain
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "setTrunk"
+      "parameters": {
+        "trunk": {
+          "name": "${trunkName}",
+          "enable": "Enabled",
+          "sip": {
+            "registrarServer": "${registrarServer}",
+            "outboundProxyServer": "${outboundProxyServer}",
+            "userAgentDomain": "${userAgentDomain}"
+          },
+          "rtp": {},
+          "trunk_lines": [
+            {
+              "name": "${lineName}",
+              "groupId": "G${phoneNumber}",
+              "enable": "Enabled",
+              "directoryNumber": "${phoneNumber}",
+              "authUserName": "${authUserName}",
+              "authPassword": "${authPassword}"
+            }
+          ]
+        }
+      }
+
+
+  getIncomingLineAssignment:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getIncomingLineAssignment }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "listGroups"
+      "parameters": { }
+
+  setIncomingLineAssignment:
+    inputs: [ groupId, epNames ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "setGroups"
+      "parameters": {
+        "groups": [
+          {
+            "group_id": "${groupId}",
+            "ep_names": "${epNames}"
+          }
+        ]
+      }
+
+  getOutgoingLineAssignment:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getOutgoingLineAssignment }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "listHandsets"
+      "parameters": { }
+
+  setOutingLineAssignment:
+    inputs: [ line, directoryNumber, outgoingTrunkLine ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "setHandset"
+      "parameters": {
+        "line": {
+          "line": "${line}",
+          "directoryNumber": "${directoryNumber}",
+          "outgoingTrunkLine": "${outgoingTrunkLine}",
+          "name": "${line}"
+        }
+      }
+
+
+  getTrunkNames:
+    inputs: [ line, directoryNumber, outgoingTrunkLine ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getTrunkNames }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication.VoiceProfile"
+      "method": "get"
+      "parameters": { }
+
+
+Global: |
+  //@code
+  
+  var fx1Label = "FXS1";
+  var fx2Label = "FXS2";
+  
+  function updateIncomingLineAssignment (groupId, fx1, fx2) {
+  
+    var epNames = [];
+    if (fx1 == true)
+      epNames.push(fx1Label);
+    if (fx2 == true)
+      epNames.push(fx2Label);
+  
+    ensemble.invokeAPI('setIncomingLineAssignment',{
+      'groupId': groupId, 
+      'epNames': epNames
+    });
+  }
+
+  function updateOutgoingLineAssignment (line, directoryNumber, outgoingTrunkLine) {
+    ensemble.invokeAPI('setOutingLineAssignment',{
+      'line': line, 
+      'directoryNumber': directoryNumber,
+      'outgoingTrunkLine': outgoingTrunkLine
+    });
+  }
+  
+  function reformatDateTime (d) {
+    var dd = d.substring(8,10);
+    var mm = d.substring(5,7);
+    var yyyy = d.substring(0,4);
+    var time = d.substring(11,19);
+    return (dd + '-' + mm + '-' + yyyy + '  ' + time);
+  }

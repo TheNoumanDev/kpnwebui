@@ -1,0 +1,63 @@
+ViewGroup:
+  Drawer:
+    styles:
+      borderColor: 0xFFD3D3D3
+      backgroundColor: 0xFFFFFFFF
+    items:
+      - label: r@kpn.nav.dashboard
+        icon: 0xe94f
+        iconLibrary: kpnUI
+        page: Home
+        selected: '${selectedIndex == 0 ? true : false}'
+      - label: r@kpn.nav.internet_link
+        icon: 0xe953
+        iconLibrary: kpnUI
+        page: Internet verbinding
+        selected: '${selectedIndex == 1 ? true : false}'
+      - label: r@kpn.nav.wifi
+        icon: 0xe9be
+        iconLibrary: kpnUI
+        page: WiFi
+        selected: '${selectedIndex == 2 ? true : false}'
+      - label: r@kpn.nav.local_network
+        icon: 0xe98b
+        iconLibrary: kpnUI
+        page: LokaalNetwerk
+        selected: '${selectedIndex == 3 ? true : false}'
+      - label: r@kpn.nav.security
+        icon: 0xe999
+        iconLibrary: kpnUI
+        page: Security
+        selected: '${selectedIndex == 4 ? true : false}'
+      - label: r@kpn.nav.phone
+        icon: 0xe97f
+        iconLibrary: kpnUI
+        page: Telefoon
+        selected: '${selectedIndex == 5 ? true : false}'
+      - label: r@kpn.nav.modem_settings
+        icon: 0xe9d4
+        iconLibrary: kpnUI
+        page: Modem instellingen
+        selected: '${selectedIndex == 6 ? true : false}'
+    footer:
+      Column:
+        children:
+          - Spacer
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Row:
+              onTap:
+                navigateModalScreen:
+                  name: Feedback
+              styles: { margin: 16, gap: 8, crossAxis: center }
+              children:
+                - Icon:
+                    name: 0xe91c
+                    library: kpnUI
+                - Text:
+                    text: r@kpn.nav.feedback
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Image:
+              styles: { width: 250 }
+              source: kpn-sidebar-footer.svg

@@ -1,0 +1,13 @@
+app:
+  # the base URL of our app
+  # Gateway
+  baseUrl: http://192.168.2.254
+  # baseUrl: http://mijnmodem.kpn
+  # Super Wifi 2 The hague
+  # baseUrl: http://192.168.2.1
+  # Experia Wifi wg03
+  # baseUrl: http://192.168.2.2
+
+  # for Web, we can read the URL from the browser. If this is set true,
+  # ignore the baseUrl and read the base url from the browser
+  useBrowserUrl: true

@@ -1,0 +1,25 @@
+View:
+
+  Column:
+    styles:
+      backgroundColor: 0xFFEAEAEA
+    children:
+
+      - Row:
+          styles: { backgroundColor: white, padding: 16, mainAxis: spaceBetween, crossAxis: center }
+          visible: "${device.width <= 768 ? false : true }"
+          children:
+            - Text:
+                text: r@kpn.nav.feedback
+                styles:
+                  textStyle:
+                    color: 0xFF009900
+                    fontSize: 44
+                    fontFamily: 'kpnMetricBold'
+
+      - Column:
+          styles: { backgroundColor: 0xffeaeaea, expanded: true }
+          children:
+            - WebView:
+                styles: { expanded: true }
+                uri: https://kpn.mopinion.com/survey/public/take-survey/b05812ad43af264803472da709fa246f26f079b5

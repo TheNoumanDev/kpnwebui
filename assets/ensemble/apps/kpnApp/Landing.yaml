@@ -1,0 +1,232 @@
+Import:
+  - common
+  - mockData
+
+View:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - executeCode:
+            body: |
+              app.useMockResponse = env.mockdataControl;
+    # check if master or slave
+        - invokeAPI:
+            name: getDeviceMode
+            onResponse:
+              # check if internet is connected
+              invokeAPI:
+                name: getWANInfo
+                onResponse:
+                  invokeAPI:
+                    name: getDeviceInfo
+                    onResponse:
+                      executeCode:
+                        body: |
+                          var product = '-';
+                          var softwareVersion = '-';
+                          var mode = '-';
+
+                          if (response.body.status != null) {
+                            ensemble.storage.deviceInfo = response.body.status;
+                            if (response.body.status.ProductClass != null )
+                              product = response.body.status.ProductClass;
+                            if (response.body.status.SoftwareVersion != null )
+                              softwareVersion = response.body.status.SoftwareVersion;
+                          } else {
+                            ensemble.storage.deviceInfo = null;
+                          }
+
+                          if (getDeviceMode.body.status != null && getDeviceMode.body.status.Mode != null )
+                            mode = getDeviceMode.body.status.Mode;
+
+                          setAppConfig(product, softwareVersion, mode);
+
+                          // reset
+                          ensemble.storage.showHybridAccessWarning = false;
+
+                        onComplete:
+                          invokeAPI:
+                            name: getCurrentUser
+                            onResponse: |
+                              ensemble.stopTimer('timeoutTimer');
+                              ensemble.stopTimer('performanceChartsTimer');
+
+
+                              if (response.body.status.user == 'admin') {
+                                var appNav = ensemble.storage.appConfig["appNav"];
+                                ensemble.navigateScreen({
+                                  name: appNav,
+                                  inputs: {
+                                    selectedIndex: 0
+                                  },
+                                  options: {
+                                    replaceCurrentScreen: true
+                                  }
+                                });
+                              } else {
+                                ensemble.navigateScreen({
+                                  name: 'Login',
+                                  options: {
+                                    replaceCurrentScreen: true
+                                  }
+                                });
+                              }
+
+                            onError: |
+                              //@code
+                              ensemble.stopTimer('timeoutTimer');
+                              ensemble.stopTimer('performanceChartsTimer');
+                              ensemble.navigateScreen({
+                                name: 'Login',
+                                options: {
+                                  replaceCurrentScreen: true
+                                }
+                              });
+            onError:
+              navigateScreen:
+                name: GatewayNotFound
+  Column:
+    styles: { padding: 16, backgroundColor: 0xffeaeaea, mainAxis: center }
+    children:
+      - Row:
+          id: loadingState
+          styles:
+            crossAxis: center
+          children:
+            - Spacer
+            - Progress:
+                styles: { size: 50 }
+            - Spacer
+
+
+API:
+  getCurrentUser:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "HTTPService"
+      "method": "getCurrentUser"
+      "parameters": { }
+    onError:
+      navigateScreen:
+        name: Login
+        options: 
+          replaceCurrentScreen: true
+          
+  # master vs slave mode
+  getDeviceMode:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDeviceMode }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+#      'X-Context': '${ensemble.storage.get("contextId")}'
+#      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "MSS"
+      "method": "get"
+      "parameters": { }
+    onResponse: |
+      if (response.body.status != null && response.body.status.Mode != null)
+        ensemble.storage.deviceMode = response.body.status.Mode;
+    onError:
+      navigateScreen:
+        name: Login
+        options: 
+          replaceCurrentScreen: true
+
+  getDeviceInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDeviceInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "DeviceInfo"
+      "method": "get"
+      "parameters": ""
+    onResponse: |
+      ensemble.storage.getDeviceInfo = response.body.status;
+    onError:
+      navigateScreen:
+        name: Login
+        options: 
+          replaceCurrentScreen: true
+
+  getWANInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWANInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC"
+      "method": "getWANStatus"
+      "parameters": {}
+    onResponse: |
+      if (response.body.data.ConnectionState == "Connected" || response.body.data.ConnectionState == "Bound")
+        ensemble.storage.internetConnected = true;
+      else
+        ensemble.storage.internetConnected = false;
+      
+      ensemble.storage.BaseMACAddress = response.body.data.MACAddress;
+
+      if (response.body.data.RemoteGateway)
+        ensemble.storage.masterIp = response.body.data.RemoteGateway;
+        
+    onError:
+      navigateScreen:
+        name: Login
+        options: 
+          replaceCurrentScreen: true
+
+Global: |
+
+  function setAppConfig(product, softwareVersion, mode) {
+    var appNav = gatewayAppNav;
+    var deviceType;
+    var deviceTypeLabel;
+    var deviceImage;
+    var deviceIcon;
+  
+
+    if (kpnDeviceTypes[product] != null) {
+      appNav = kpnDeviceTypes[product].appNav;
+      deviceType = kpnDeviceTypes[product].deviceType;
+      deviceTypeLabel = kpnDeviceTypes[product].deviceTypeLabel;
+      deviceImage = kpnDeviceTypes[product].deviceImage;
+      deviceIcon = kpnDeviceTypes[product].deviceIcon;
+    }
+
+    // SW2 and SW1 can be Slave or Master
+    // when Master, use the full functionality
+    if (product == "WE620242s" && mode == "Master")
+      appNav = standaloneExtenderNav;
+
+    if (product == "WE410443B-99s" && mode == "Master")
+      appNav = standaloneExtenderNav;
+  
+    ensemble.storage.set('appConfig',{
+      "deviceType": deviceType,
+      "softwareVersion": softwareVersion,
+      "appNav": appNav,
+      "deviceTypeLabel": deviceTypeLabel,
+      "deviceImage": deviceImage,
+      "deviceIcon": deviceIcon
+    });
+  }

@@ -1,0 +1,74 @@
+ViewGroup:
+  Sidebar:
+    reloadView: true
+    styles:
+      borderWidth: 1
+      borderColor: 0xFFD3D3D3
+      backgroundColor: 0xFFFFFFFF
+      itemDisplay: sideBySide
+      itemPadding: 0 40 10 10
+    items:
+      - label: r@kpn.nav.dashboard
+        icon:
+          name: 0xe94f
+          library: kpnUI
+        page: Home
+        selected: "${selectedIndex == 0 ? true : false}"
+      - label: r@kpn.nav.internet_link
+        icon:
+          name: 0xe953
+          library: kpnUI
+        page: Internet verbinding
+        selected: "${selectedIndex == 1 ? true : false}"
+      - label: r@kpn.nav.wifi
+        icon:
+          name: 0xe9be
+          library: kpnUI
+        page: WiFi
+        selected: "${selectedIndex == 2 ? true : false}"
+      - label: r@kpn.nav.local_network
+        icon:
+          name: 0xe98b
+          library: kpnUI
+        page: LokaalNetwerk
+        selected: "${selectedIndex == 3 ? true : false}"
+      - label: r@kpn.nav.security
+        icon:
+          name: 0xe999
+          library: kpnUI
+        page: Security
+        selected: "${selectedIndex == 4 ? true : false}"
+      - label: r@kpn.nav.phone
+        icon:
+          name: 0xe97f
+          library: kpnUI
+        page: Telefoon
+        selected: "${selectedIndex == 5 ? true : false}"
+      - label: r@kpn.nav.modem_settings
+        icon:
+          name: 0xe9d4
+          library: kpnUI
+        page: Modem instellingen
+        selected: "${selectedIndex == 6 ? true : false}"
+    footer:
+      Column:
+        children:
+          - Spacer
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Row:
+              onTap:
+                navigateModalScreen:
+                  name: Feedback
+              styles: { margin: 16, gap: 8, crossAxis: center }
+              children:
+                - Icon:
+                    name: 0xe91c
+                    library: kpnUI
+                - Text:
+                    text: r@kpn.nav.feedback
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Image:
+              styles: { width: 250 }
+              source: kpn-sidebar-footer.svg

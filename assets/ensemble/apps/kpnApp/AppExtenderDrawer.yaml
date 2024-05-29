@@ -1,0 +1,52 @@
+ViewGroup:
+  Drawer:
+    styles:
+      borderColor: 0xFFD3D3D3
+      backgroundColor: 0xFFFFFFFF
+    items:
+      - label: r@kpn.nav.dashboard
+        icon:
+          name: 0xe94f
+          library: kpnUI
+        page: HomeExtender
+        selected: "${selectedIndex == 0 ? true : false}"
+      - label: r@kpn.nav.internet_link
+        icon:
+          name: 0xe953
+          library: kpnUI
+        page: InternetVerbindingExtender
+        selected: "${selectedIndex == 1 ? true : false}"
+      - label: r@kpn.nav.wifi
+        icon:
+          name: 0xe9be
+          library: kpnUI
+        page: WiFi
+        selected: "${selectedIndex == 2 ? true : false}"
+      - label: r@kpn.nav.modem_settings
+        icon:
+          name: 0xe9d4
+          library: kpnUI
+        page: Modem instellingen
+        selected: "${selectedIndex == 6 ? true : false}"
+    footer:
+      Column:
+        children:
+          - Spacer
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Row:
+              onTap:
+                navigateModalScreen:
+                  name: Feedback
+              styles: { margin: 16, gap: 8, crossAxis: center }
+              children:
+                - Icon:
+                    name: 0xe91c
+                    library: kpnUI
+                - Text:
+                    text: r@kpn.nav.feedback
+          - Divider:
+              styles: { margin: 4 0, color: 0xFFCCCCCC, thickness: 1 }
+          - Image:
+              styles: { width: 250 }
+              source: kpn-sidebar-footer.svg

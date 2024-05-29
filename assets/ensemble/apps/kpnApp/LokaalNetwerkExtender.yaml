@@ -1,0 +1,4662 @@
+Import:
+  - common
+  
+View:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - invokeAPI:
+            name: getDevicesSchedule
+        - invokeAPI:
+            name: getTopology
+        - invokeAPI:
+            name: getTopologyGuest
+        - invokeAPI:
+            name: getSSWs
+        - invokeAPI:
+            name: getWifiStatus
+
+  styles:
+    scrollableView: true
+    backgroundColor: 0xFFEAEAEA
+    
+  body:
+    Column:
+      styles:
+        fontSize: 16
+      children:
+        -  PageHeader:
+            inputs:
+              title: r@kpn.nav.local_network
+              showConnectionWarning: ${ensemble.storage.internetConnected == false}
+              showSlaveDeviceWarning: ${ isMaster() == false }
+        - LoadingContainer:
+            isLoading: ${getSSWs.body == null}
+            useShimmer: false
+            loadingWidget: 
+              Row:
+                styles:
+                  crossAxis: center
+                  mainAxisSize: max
+                  height: ${device.height - 160}
+                children:
+                  - Spacer
+                  - Progress:
+                      styles: { size: 50 }
+                  - Spacer
+            widget:
+              Conditional:
+                conditions:
+                  - if: ${isMaster()}
+                    Column:
+                      children:
+                        - TabBar:
+                            styles: { tabPadding: 0 16, color: 0xFF009900, tabBackgroundColor: 0xFFFFFFFF, tabFontWeight: bold, activeTabColor: 0xFF009900, indicatorColor: 0xFF009900, indicatorThickness: 4 }
+                            selectedIndex: ${tabIndex}
+                            items:
+                              - label: r@kpn.local_network.topology
+                                body: Topology
+
+                              - label: r@kpn.local_network.connected_devices
+                                body: ConnectedDevices
+
+                              - label: r@kpn.local_network.ethernet_ports
+                                body: Ethernet
+
+                  - else:
+                    Column:
+                      children:
+                        - TabBar:
+                            styles: { tabPadding: 0 16, color: 0xFF009900, tabBackgroundColor: 0xFFFFFFFF, tabFontWeight: bold, activeTabColor: 0xFF009900, indicatorColor: 0xFF009900, indicatorThickness: 4 }
+                            items:
+                              - label: r@kpn.local_network.ethernet_ports
+                                body: Ethernet
+LoadingToast:
+  Column:
+    styles: { backgroundColor: 0xFFDAF0DA, borderRadius: 4 , width: 100, height: 100, crossAxis: center, mainAxis: center}
+    children:
+      - Progress:
+          id: progressIndicator
+          display: circular
+          countdown: 5
+          styles: { color: 0xFF009900, thickness: 2 }
+          onCountdownComplete:
+            invokeAPI:
+              name: getDevicesSchedule
+              onResponse:
+                invokeAPI:
+                  name: getTopology
+                  onResponse:
+                    invokeAPI:
+                      name: getTopologyGuest
+
+
+Topology:
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 16
+          children:
+
+            # header
+            - Row:
+                styles:
+                  gap: 24
+                  crossAxis: center
+                children:
+                  - ContentTitle:
+                      inputs:
+                        title: r@kpn.local_network.topology
+                  - Conditional:
+                      conditions:
+                        - if: ${device.width > mobileBreakPoint}
+                          TopologyLegend:
+                  # reload button
+                  - Spacer
+                  - Row:
+                      visible: false
+                      id: reloadingChartIndicator
+                      styles: { gap: , crossAxis: center }
+                      children:
+                        - Progress:
+                            styles:
+                              size: 24
+                        - Text:
+                            text: r@kpn.reloading
+                            styles:
+                              padding: 0 8
+
+                  - Button:
+                      label: r@kpn.reload
+                      onTap:
+                        executeCode:
+                          body: |
+                            reloadingChartIndicator.visible = true;
+                          onComplete:
+                            executeActionGroup:
+                              actions:
+                                - invokeAPI:
+                                    name: getStaticLeases
+                                - invokeAPI:
+                                    name: getDevicesSchedule
+                                - invokeAPI:
+                                    name: getTopology
+                                - invokeAPI:
+                                    name: getTopologyGuest
+                                - invokeAPI:
+                                    name: getSSWs
+                                - invokeAPI:
+                                    name: getWifiStatus
+                                    onResponse: |
+                                      reloadingChartIndicator.visible = false;
+            - Divider
+            # diagram
+            - FittedRow:
+                styles:
+                  childrenFits:
+                    - auto
+                    - auto
+                    - 1
+                    - auto
+                children:
+
+                  # main gateway
+                  - Conditional:
+                      conditions:
+                        - if: ${device.width > mobileBreakPoint}
+                          Stack:
+                            styles:
+                              alignChildren: topRight
+                            children:
+
+                              - Image:
+                                  source: topology_side.png
+                                  styles:
+                                    width: 150
+                                    margin: 50 0 0 0
+                              - Column:
+                                  styles:
+                                    crossAxis: center
+                                    width: 155
+                                    padding: 24 0
+                                  children:
+                                    - Text:
+                                        text: ${ensemble.storage.appConfig["deviceTypeLabel"]}
+                                        selectable: false
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                                            fontSize: 18
+                                            color: 0xFF009900
+                                    - Text:
+                                        text: ${ensemble.storage.deviceInfo.ExternalIPAddress}
+                                        selectable: false
+                                        styles:
+                                          textStyle:
+                                            color: 0xFF939393
+                                            fontWeight: bold
+                                    - Stack:
+                                        styles:
+                                          alignChildren: topRight
+                                        children:
+                                          - Icon:
+                                              library: kpnSI
+                                              name: ${ensemble.storage.appConfig["deviceIcon"]}
+                                              styles:
+                                                color: white
+                                                size: 90
+                                                padding: 40 16 16 16
+                                          - Icon:
+                                              name: "${ getWifiStatus.body.status.Status ? 0xE9BE : 0xE9BD }"
+                                              library: kpnUI
+                                              id: mainWifiIcon
+                                              styles:
+                                                padding: 24 0 0 16
+                                                color: white
+                                                size: 32
+                                    - Spacer:
+                                        styles:
+                                          size: 16
+                                    - Row:
+                                        styles:
+                                          gap: 2
+                                          mainAxis: center
+                                          width: 155
+                                        children:
+                                          - Text:
+                                              text: ${ensemble.storage.extenderCount}
+                                              selectable: false
+                                              styles:
+                                                textStyle:
+                                                  fontWeight: bold
+                                          - Text:
+                                              text: "${ensemble.storage.extenderCount == 1 ? 'r@kpn.extender_count_single' : 'r@kpn.extender_count_multiple'}"
+                                              selectable: false
+                                              styles:
+                                                textStyle:
+                                                  fontWeight: bold
+                                    - Text:
+                                        text: "${ensemble.storage.totalActiveDeviceCount} ${ensemble.storage.totalActiveDeviceCount == 1 ? 'r@kpn.device_count_single' : 'r@kpn.device_count_multiple'}"
+                                        selectable: false
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                        
+                        
+                  - Shape:
+                      styles:
+                        backgroundColor: 0xFF2B9A01
+                        width: 6
+                        height: ${ calculateTopologyHeight(getTopology.body.activeExtenders, getTopologyGuest.body.activeExtenders, getSSWs.body.inactiveExtenders ) }
+                        borderRadius: 6
+                  # network map
+                  - Column:
+                      children:
+                        - Extenders:
+                            inputs:
+                              extenders: ${getTopology.body.activeExtenders.concat(getTopologyGuest.body.activeExtenders)}
+                        - Extenders:
+                            inputs:
+                              extenders: ${getSSWs.body.inactiveExtenders}
+                        - Spacer:
+                            styles:
+                              size: 12
+                        - Homeplugs:
+                            inputs:
+                              homeplugs: ${getTopology.body.activeHomeplugs}
+                              parent: gateway
+                        - Spacer:
+                            styles:
+                              size: 12
+                        - DeviceList:
+                            inputs:
+                              devices: ${getTopology.body.activeDirectDevices.concat(getTopologyGuest.body.activeDirectDevices)}
+                              displayLeftBorder: false
+
+
+TopologyLegend:
+  body:
+    Row:
+      children:
+        - Column:
+            children:
+              - Image:
+                  source: line-green-solid.png
+                  styles:
+                    width: 30
+                    height: 2
+                    fit: cover
+                    margin: 8 0
+              - Image:
+                  source: line-orange-solid.png
+                  styles:
+                    width: 30
+                    height: 2
+                    fit: cover
+                    margin: 8 0
+        - Spacer:
+            styles:
+              size: 8
+        - Column:
+            children:
+              - Text:
+                  text: 1 Gbit ethernet verbonden
+                  styles:
+                    textStyle:
+                      fontSize: 12
+              - Text:
+                  text: 10/100 Mbit ethernet verbonden
+                  styles:
+                    textStyle:
+                      fontSize: 12
+        - Spacer:
+            styles:
+              size: 24
+        - Column:
+            children:
+              - Image:
+                  source: line-green-dashed.png
+                  styles:
+                    width: 30
+                    height: 2
+                    fit: cover
+                    margin: 8 0
+              - Image:
+                  source: line-orange-dashed.png
+                  styles:
+                    width: 30
+                    height: 2
+                    fit: cover
+                    margin: 8 0
+        - Spacer:
+            styles:
+              size: 8
+        - Column:
+            children:
+              - Text:
+                  text: 5 Ghz draadloos verbonden
+                  styles:
+                    textStyle:
+                      fontSize: 12
+              - Text:
+                  text: 2.4 Ghz draadloos verbonden
+                  styles:
+                    textStyle:
+                      fontSize: 12
+        - Spacer:
+            styles:
+              size: 24
+        - Column:
+            styles:
+              gap: 8
+              crossAxis: center
+            children:
+              - Icon:
+                  name: 0xe978
+                  library: kpnUI
+                  styles:
+                    size: 18
+              - Image:
+                  source: line-power-solid.png
+                  styles:
+                    width: 30
+                    height: 4
+                    fit: cover
+                    margin: 2 0
+        - Column:
+            children:
+              - Text:
+                  text: netwerkswitch
+                  styles:
+                    textStyle:
+                      fontSize: 12
+              - Text:
+                  text: via 230v stroomnet verbonden
+                  styles:
+                    textStyle:
+                      fontSize: 12
+
+
+Extenders:
+  inputs:
+    - extenders
+  body:
+    Column:
+      item-template:
+        data: ${extenders}
+        name: e
+        template:
+          Extender:
+            inputs:
+              extender: ${e}
+
+
+Homeplugs:
+  inputs:
+    - homeplugs
+    - parent
+  body:
+    Column:
+      item-template:
+        data: ${homeplugs}
+        name: h
+        template:
+          Homeplug:
+            inputs:
+              homeplug: ${h}
+              parent: ${parent}
+
+
+Extender:
+  inputs:
+    - extender
+  onLoad: |
+    extenderConnection.source = getTopologyLine(extender.connectionDetails, extender.switchConnected);
+    
+    // calculate the left border height
+    var extenderLeftBorderTopLine = 0;
+    
+    if (extender.activeDirectDevices) {
+      // height added per device
+      extenderLeftBorderTopLine = (extender.activeDirectDevices.length - 1) * 44;
+      if (extender.activeDirectDevices.length > 5)
+        extenderLeftBorderTopLine = 184;
+    }
+    
+    extenderLeftBorderTop.height = extenderLeftBorderTopLine;
+
+    var extenderLeftBorderBottomLine = 0;
+    if (extender.activeExtenders) {
+      extender.activeExtenders.map(function (ex) {
+        if (ex.activeDirectDevices.length > 0) {
+          if (ex.activeDirectDevices.length > 5)
+            extenderLeftBorderBottomLine = extenderLeftBorderBottomLine + 200;
+          else
+            extenderLeftBorderBottomLine = extenderLeftBorderBottomLine + ((ex.activeDirectDevices.length - 1) * 44);
+        }
+        else
+          extenderLeftBorderBottomLine = extenderLeftBorderBottomLine + 100;
+      });
+    }
+      
+    if (extender.activeExtenders && extender.activeExtenders.length > 0)
+      extenderLeftBorderBottom.height = extenderLeftBorderBottomLine;
+    
+  body:
+    Column:
+      styles:
+        margin: 8 0
+      children:
+        - FittedRow:
+            styles:
+              childrenFits:
+                - auto
+                - 1
+            children:
+              - Column:
+                  children:
+                    - Row:
+                        styles:
+                          crossAxis: center
+                        children:
+                          - Image:
+                              id: extenderConnection
+                              styles:
+                                margin: 62 0 0 0
+                                height: 2
+                                width: 80
+                                fit: fitWidth
+                          - Column:
+                              testId: topologyExtender
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    SlaveDeviceDetails:
+                                      inputs:
+                                        mac: ${extender.Key}
+                                        iconColor: "${ extender.Active == false ? 'grey' : extender.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                              styles:
+                                crossAxis: center
+                                width: 120
+                                height: 123
+                              children:
+                                - Text:
+                                    text: ${extender.Name}
+                                    selectable: false
+                                    styles:
+                                      overflow: ellipsis
+                                      maxLines: 1
+                                      textStyle:
+                                        color: 0xFF0077CC
+                                        fontWeight: bold
+                                        fontSize: 12
+                                
+                                # active device count or offline
+                                - Conditional:
+                                    conditions:
+                                      - if: ${extender.activeDirectDevices.length == 1}
+                                        Text:
+                                          text: ${extender.activeDirectDevices.length} r@kpn.device_count_single
+                                          selectable: false
+                                          styles:
+                                            textStyle:
+                                              color: 0xFF939393
+                                              fontWeight: w500
+                                              fontSize: 12
+                                      - elseif: ${extender.activeDirectDevices.length > 1 || extender.activeDirectDevices.length == 0}
+                                        Text:
+                                          text: ${extender.activeDirectDevices.length} r@kpn.device_count_multiple
+                                          selectable: false
+                                          styles:
+                                            textStyle:
+                                              color: 0xFF939393
+                                              fontWeight: w500
+                                              fontSize: 12
+                                      - elseif: ${extender.Active == false}
+                                        Text:
+                                          text: r@kpn.login.extenders.extender_noaccessible
+                                          selectable: false
+                                          styles:
+                                            textStyle:
+                                              color: 0xFF939393
+                                              fontWeight: w500
+                                              fontSize: 12
+                                - Icon:
+                                    name: ${getDeviceIcon(extender.SSW.ModelName)}
+                                    library: kpnSI
+                                    styles:
+                                      size: 72
+                                      color: "${ extender.Active == false ? 'grey' : extender.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                
+                          - Image:
+                              visible: ${extender.Active == true && extender.activeDirectDevices.length > 1}
+                              source: line-green-solid.png
+                              styles:
+                                margin: 62 0 0 0
+                                height: 2
+                                width: 40
+                                fit: fitWidth
+                    - Image:
+                        id: extenderLeftBorderTop
+                        source: line-vertical.png
+                        visible: ${extender.Active == true && extender.activeExtenders.length > 0}
+                        styles:
+                          width: 2
+                          fit: cover
+                          margin: 0 0 0 140
+
+              - Conditional:
+                  conditions:
+                    - if: ${extender.Active == true && extender.activeDirectDevices.length > 0}
+                      DeviceList:
+                        inputs:
+                          devices: ${extender.activeDirectDevices}
+                          displayLeftBorder: true
+
+        - Conditional:
+            conditions:
+              - if: ${extender.activeExtenders.length > 0 && extender.Active == true}
+                FittedRow:
+                  styles:
+                    childrenFits:
+                      - auto
+                      - 1
+                  children:
+                    - Image:
+                        id: extenderLeftBorderBottom
+                        source: line-vertical.png
+                        styles:
+                          margin: 0 0 0 140
+                          width: 2
+                          fit: cover
+                          height: 0
+                    - Extenders:
+                        inputs:
+                          extenders: ${extender.activeExtenders}
+
+
+Homeplug:
+  inputs:
+    - homeplug
+  onLoad: |
+    var extenderLeftBorderBottomLine = 0;
+    if (homeplug.activeExtenders) 
+      extenderLeftBorderBottomLine = extenderLeftBorderBottomLine + (homeplug.activeExtenders.length * 120);
+    
+    // calculate the left border height
+    var extenderLeftBorderTopLine = 0;
+    
+    if (homeplug.activeDirectDevices) {
+      // height added per device
+      extenderLeftBorderTopLine = (homeplug.activeDirectDevices.length - 1) * 44;
+      if (homeplug.activeDirectDevices.length > 5)
+        extenderLeftBorderTopLine = 184;
+    }
+    
+    extenderLeftBorderTop.height = extenderLeftBorderTopLine;
+    if (homeplug.activeExtenders && homeplug.activeExtenders.length > 0)
+      extenderLeftBorderBottom.height = 95;
+    
+  body:
+    Column:
+      children:
+        - FittedRow:
+            styles:
+              childrenFits:
+                - auto
+                - 1
+            children:
+              - Column:
+                  children:
+                    - Row:
+                        styles:
+                          crossAxis: center
+                        children:
+                          - Image:
+                              id: extenderConnection
+                              source: '${parent == "plug" ? "line-power-solid.png" : getTopologyLine(homeplug.connectionDetails, homeplug.switchConnected) }'
+                              styles:
+                                margin: '${parent == "plug" ? 4 : 8} 0 0 0'
+                                height: '${parent == "plug" ? 4 : 2}'
+                                width: 80
+                                fit: fitWidth
+                          - Row:
+                              testId: topologyHomeplug
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    HomePlugDeviceDetails:
+                                      inputs:
+                                        mac: ${homeplug.Key}
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                              styles:
+                                crossAxis: center
+                                height: 48
+                              children:
+                                - Icon:
+                                    library: kpnSI
+                                    name: 0xE93F
+                                    styles:
+                                      size: 32
+                                      padding: 8
+                                      backgroundColor: 0xFFF3F3F3
+                                      borderRadius: 100
+                                - Text:
+                                    text: ${homeplug.Name}
+                                    styles:
+                                      margin: 0 8
+                                      textStyle:
+                                        overflow: ellipsis
+                                        color: 0xFF0077CC
+                                        fontWeight: w500
+                                        fontSize: 12
+                                        width: 150
+                          - Image:
+                              visible: ${homeplug.Active == true && homeplug.activeDirectDevices.length + homeplug.activeHomeplugs.length > 1}
+                              source: line-power-solid.png
+                              styles:
+                                margin: 8 0 0 0
+                                height: 4
+                                width: 40
+                                fit: fitWidth
+              - Column:
+                  children:
+                    - Conditional:
+                        conditions:
+                          - if: ${homeplug.Active == true && homeplug.activeDirectDevices.length > 0}
+                            DeviceList:
+                              inputs:
+                                devices: ${homeplug.activeDirectDevices}
+                                displayLeftBorder: true
+                                parentIsPlug: true
+
+                    - Conditional:
+                        conditions:
+                          - if: ${homeplug.activeHomeplugs.length > 0 && homeplug.Active == true}
+                            Homeplugs:
+                              inputs:
+                                homeplugs: ${homeplug.activeHomeplugs}
+                                parent: plug
+
+        - Conditional:
+            conditions:
+              - if: ${homeplug.activeExtenders.length > 0 && homeplug.Active == true}
+                FittedRow:
+                  styles:
+                    childrenFits:
+                      - auto
+                      - 1
+                  children:
+                    - Image:
+                        id: extenderLeftBorderBottom
+                        source: line-vertical.png
+                        styles:
+                          margin: 0 0 0 125
+                          width: 2
+                          fit: cover
+                          height: 0
+                    - Extenders:
+                        inputs:
+                          extenders: ${extender.activeExtenders}
+
+
+DeviceList:
+  inputs:
+    - devices
+    - displayLeftBorder
+    - parentIsPlug
+  onLoad: |
+    var h = devices.length * 44 - 44;
+    if (devices.length > 4)
+        h = 178;
+    leftBorder.height = h;
+  body:
+    FittedRow:
+      margin: "${ parentIsPlug ? 0 : (displayLeftBorder == true ? '62' : '8')} 0 0 0"
+      crossAxis: center
+      styles:
+        childrenFits:
+          - auto
+          - 1
+      children:
+        - Image:
+            id: leftBorder
+            visible: ${displayLeftBorder && devices.length > 1}
+            source: line-vertical.png
+            styles:
+              width: 2
+              fit: fitHeight
+        
+        - Conditional:
+            conditions:
+              - if: ${devices.length < 5}
+                Column:
+                  item-template:
+                    data: ${devices}
+                    name: d
+                    template:
+                      DeviceItem:
+                        inputs:
+                          device: ${d}
+
+              - else:
+                Column:
+                  children:
+                    - Column:
+                        item-template:
+                          # show max 4 devices
+                          data: ${[devices[0],devices[1],devices[2],devices[3]]}
+                          name: d
+                          template:
+                            DeviceItem:
+                              inputs:
+                                device: ${d}
+
+                    # show x more when more than 4 devices
+                    - Row:
+                        styles:
+                          height: 44
+                          padding: 2 0
+                          gap: 8
+                          crossAxis: center
+                        
+                        testId: topologyShowAllDevices
+                        onTap:
+                          navigateScreen:
+                            name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                            inputs:
+                              selectedIndex: 3
+                              tabIndex: 1
+                        children:
+                          - Image:
+                              source: line-green-solid.png
+                              styles:
+                                width: 80
+                          - Text:
+                              text: ${devices.length - 4} meer apparaten
+                              selectable: false
+                              styles:
+                                margin: 0 8
+                                textStyle:
+                                  color: 0xFF0077CC
+                                  fontWeight: w500
+
+
+DeviceItem:
+  inputs:
+    - device
+  onLoad: |
+    deviceConnection.source = getTopologyLine(device.connectionDetails, device.switchConnected);
+
+  body:
+    FittedRow:
+      testId: topologyDevice
+      styles:
+        height: 44
+        padding: 2 0
+        crossAxis: center
+        childrenFits:
+          - auto
+          - auto
+          - 1
+      onTap:
+        showDialog:
+          widget:
+            ClientDeviceDetails:
+              inputs:
+                mac: ${device.Key}
+          options:
+            maxWidth: 700
+            style: none
+          onDialogDismiss:
+            invokeAPI:
+              name: getTopology
+      children:
+        - Image:
+            id: deviceConnection
+            styles:
+              width: 80
+        - Icon:
+            library: kpnUI
+            name: ${getDeviceIcon(device.DeviceType)}
+            styles:
+              size: 22
+              padding: 8
+              backgroundColor: 0xFFF3F3F3
+              color: 0xFF535353
+              borderRadius: 100
+        - Text:
+            text: ${device.Name}
+            selectable: false
+            styles:
+              margin: 0 8
+              textStyle:
+                color: 0xFF0077CC
+                fontWeight: w500
+
+
+ConnectedDevices:
+  onLoad:
+    invokeAPI:
+      name: getDeviceSelf
+      onResponse:
+        invokeAPI:
+          name: getInactiveDevices
+
+  Column:
+    styles:
+      padding: 16
+      gap: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 16
+          children:
+            - Flex:
+                styles: { mainAxis: spaceBetween, gap: 10 }
+                direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                children:
+                  - ContentTitle:
+                      inputs:
+                        title: r@kpn.local_network.connected_devices
+                  - Row:
+                      styles: { crossAxis: center }
+                      children:
+                        - Row:
+                            visible: false
+                            id: reloadingChartIndicator
+                            styles: { gap: , crossAxis: center }
+                            children:
+                              - Progress:
+                                  styles:
+                                    size: 24
+                              - Text:
+                                  text: r@kpn.reloading
+                                  styles:
+                                    padding: 0 8
+
+                        - Button:
+                            label: r@kpn.reload
+                            onTap:
+                              executeCode:
+                                body: |
+                                  //@code
+                                  reloadingChartIndicator.visible = true;
+                                onComplete:
+                                  invokeAPI:
+                                    name: getSSWs
+                                    onResponse:
+                                      invokeAPI:
+                                        name: getTopology
+                                        onResponse:
+                                          invokeAPI:
+                                            name: getTopologyGuest
+                                            onResponse:
+                                              invokeAPI:
+                                                name: getInactiveDevices
+                                                onResponse: |
+                                                  //@code
+                                                  reloadingChartIndicator.visible = false;
+
+
+            - Row:
+                styles: { gap: 12, crossAxis: center }
+                children:
+                  - Column:
+                      styles: { backgroundColor: 0xFF009900, width: 48, height: 48, borderRadius: 60, mainAxis: center, crossAxis: center }
+                      children:
+                        - Icon:
+                            name: ${ensemble.storage.appConfig["deviceIcon"]}
+                            library: kpnSI
+                            styles: { size: 36, color: white }
+                  - Column:
+                      styles: { gap: 2 }
+                      children:
+                        - Text:
+                            text: ${getDeviceSelf.body.status[0].Name}
+                            styles:
+                              textStyle:
+                                fontWeight: bold
+                                color: 0xFF009900
+                        - Text:
+                            text: ${ensemble.storage.appConfig["deviceTypeLabel"]}
+                            styles:
+                              textStyle:
+                                color: grey
+
+            - Text:
+                text: "${getTopology.body.activeDirectDevices.length} ${getTopology.body.activeDirectDevices.length == 1 ? 'r@kpn.device_count_single' : 'r@kpn.device_count_multiple'}"
+                styles:
+                  padding: 0 0 0 60
+                  textStyle:
+                    fontSize: 12
+                    fontWeight: bold
+
+            - Column:
+                styles: { padding: 0 0 0 60 }
+                children:
+                  - DataGrid:
+                      styles:
+                        headingText: { font: heading, fontSize: 14, color: grey }
+                      borderColor: white
+                      horizontalMargin: 0
+                      headingRowHeight: 32
+                      columnSpacing: 24
+                      border:
+                        horizontalInside:
+                          color: 0xFFD3D3D3
+                      DataColumns:
+                        - label: ' '
+                          type: text
+                        - label: r@kpn.device
+                          type: r@kpn.device
+                          sortable: true
+                          sortKey: NameSortable
+                        - label: r@kpn.mac_address
+                          type: text
+                          sortable: true
+                          sortKey: Key
+                        - label: r@kpn.ip4_address
+                          type: text
+                          sortable: true
+                          sortKey: SortableIp
+                        - label: r@kpn.local_network.ip_address_source
+                          type: text
+                          sortable: true
+                          sortKey: IPAddressSourceLabel
+                        - label: r@kpn.verbinding_type
+                          type: text
+                          sortable: true
+                          sortKey: typeLabel
+                        - label: r@kpn.speed
+                          type: text
+                          sortable: true
+                          sortKey: downloadUploadSpeed
+                        - label: r@kpn.network_name
+                          type: text
+                          sortable: true
+                          sortKey: networklabel
+                        - label: r@kpn.filter
+                          type: text
+                          sortable: true
+                          sortKey: filter
+                      children:
+                        # display indicator while loading
+                        - DataRow:
+                            visible: "${getTopology.body.activeDirectDevices == null ? true : false }"
+                            children:
+                              - Progress:
+                                  styles: { size: 32 }
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+                              - Text:
+                                  text: ' '
+
+                      item-template:
+                        data: ${getTopology.body.activeDirectDevices.concat(getTopologyGuest.body.activeDirectDevices)}
+                        name: device
+                        template:
+                          DataRow:
+                            children:
+                              - Icon:
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles: { color: 0xFF0077CC }
+                                  testId: connectedDevicesItem
+                                  onTap:
+                                    showDialog:
+                                      widget:
+                                        ClientDeviceDetails:
+                                          inputs:
+                                            mac: ${device.Key}
+                                      options:
+                                        maxWidth: 700
+                                        style: none
+                              - Row:
+                                  styles: { width: 200, gap: 8, crossAxis: center }
+                                  children:
+                                    - Icon:
+                                        name: ${getDeviceIcon(device.DeviceType)}
+                                        library: kpnUI
+                                        styles: { size: 24 }
+                                    - Text:
+                                        text: ${device.Name}
+                                        selectable: true
+                                        styles:
+                                          expanded: true
+                                          textStyle:
+                                            overflow: ellipsis
+                              - Text:
+                                  text: ${device.Key}
+                              - Row:
+                                  styles: { width: 120, crossAxis: center }
+                                  children:
+                                    - Text:
+                                        selectable: true
+                                        text: "${isIpv4(device.IPAddress) == true ? device.IPAddress : '-'}"
+                              - Text:
+                                  text: ${device.IPAddressSourceLabel}
+                                  selectable: true
+                              - Row:
+                                  styles: { crossAxis: center, gap: 4 }
+                                  children:
+                                    - Icon:
+                                        name: "${ device.connectionDetails.type == 'Ethernet' ? 0xe978 : 0xe9be }"
+                                        library: kpnUI
+                                    - Text:
+                                        selectable: true
+                                        text: "${device.connectionDetails.type != 'Ethernet' ? getWifiStandard(device.OperatingStandard, false) : device.connectionDetails.typeLabel}"
+
+                              - Text:
+                                  text: "${ device.connectionDetails.type == 'Ethernet' ? ensemble.storage.ethPorts[device.InterfaceName].CurrentBitRateFormatted : device.downloadUploadSpeed }"
+                                  styles: { width: 150 }
+                                  selectable: true
+                              - Text:
+                                  text: "${device.connectionDetails.networklabel} ${device.switchConnected ? ' / Switch' : ''}"
+                                  styles: { width: 150 }
+                                  selectable: true
+                              # filter
+                              - Text:
+                                  text: "${ getDevicesSchedule.body.disabledDevices.indexOf(device.Key) > -1 ? 'Ja' : '-' }"
+                                  selectable: true
+
+
+            - Spacer:
+                styles: { size: 16 }
+
+            # active extenders
+            - Column:
+                item-template:
+                  data: ${getTopology.body.activeExtenders.concat(getTopologyGuest.body.activeExtenders)}
+                  name: extender
+                  template:
+                    Column:
+                      children:
+                        - Row:
+                            styles: { gap: 12 }
+                            children:
+                              - Icon:
+                                  styles:
+                                    backgroundColor: "${ extender.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                    color: white
+                                    size: 36
+                                    padding: 6
+                                    borderRadius: 48
+                                  name: ${getDeviceIcon(extender.SSW.ModelName)}
+                                  library: kpnSI
+                              - Column:
+                                  styles: { gap: 2, padding: 2 0 }
+                                  children:
+                                    - Text:
+                                        text: ${extender.Name}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                                            color: 0xFF009900
+                                    - Text:
+                                        text: ${getDeviceCommercialName(extender.SSW.ModelName)}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            color: grey
+                              - Icon:
+                                  testId: slaveDeviceItem
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles: { color: 0xFF0077CC }
+                                  onTap:
+                                    showDialog:
+                                      widget:
+                                        SlaveDeviceDetails:
+                                          inputs:
+                                            mac: ${extender.Key}
+                                            iconColor: "${ extender.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                      options:
+                                        maxWidth: 700
+                                        style: none
+                        - ExtendersConnectedDevices:
+                            inputs:
+                              extender: ${extender}
+
+            # inactive extenders
+            - Column:
+                item-template:
+                  data: ${getSSWs.body.inactiveExtenders}
+                  name: inactiveExtender
+                  template:
+                    Column:
+                      children:
+                        - Row:
+                            styles: 
+                              gap: 12
+                              margin: 16 0
+                            children:
+                              - Icon:
+                                  styles:
+                                    backgroundColor: grey
+                                    color: white
+                                    size: 36
+                                    padding: 6
+                                    borderRadius: 48
+                                  name: ${getDeviceIcon(inactiveExtender.SSW.ModelName)}
+                                  library: kpnSI
+                              - Column:
+                                  styles: { gap: 2, padding: 2 0 }
+                                  children:
+                                    - Text:
+                                        text: ${inactiveExtender.Name}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                                            color: 0xFF009900
+                                    - Text:
+                                        text: ${getDeviceCommercialName(inactiveExtender.SSW.ModelName)}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            color: grey
+                              - Icon:
+                                  testId: inactiveSlaveDeviceItem
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles: { color: 0xFF0077CC }
+                                  onTap:
+                                    showDialog:
+                                      widget:
+                                        SlaveDeviceDetails:
+                                          inputs:
+                                            mac: ${inactiveExtender.Key}
+                                            iconColor: grey
+                                      options:
+                                        maxWidth: 700
+                                        style: none
+
+            # plugs
+            - Column:
+                item-template:
+                  data: ${getTopology.body.activeHomeplugs}
+                  name: plug
+                  template:
+                    Column:
+                      children:
+                        - Row:
+                            styles: { gap: 12 }
+                            children:
+                              - Icon:
+                                  styles:
+                                    backgroundColor: 0xFF009900
+                                    color: white
+                                    size: 36
+                                    padding: 6
+                                    borderRadius: 48
+                                  name: 0xE93F
+                                  library: kpnSI
+                              - Column:
+                                  styles: { gap: 2, padding: 2 0 }
+                                  children:
+                                    - Text:
+                                        text: ${plug.Name}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                                            color: 0xFF009900
+                              - Icon:
+                                  testId: plugDeviceItem
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles: { color: 0xFF0077CC }
+                                  onTap:
+                                    showDialog:
+                                      widget:
+                                        HomePlugDeviceDetails:
+                                          inputs:
+                                            mac: ${plug.Key}
+                                            iconColor: 0xFF009900
+                                      options:
+                                        maxWidth: 700
+                                        style: none
+                        - HomeplugConnectedDevices:
+                            inputs:
+                              homeplug: ${plug}
+
+
+
+      # inactive devices
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [ 0, 0 ]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - Flex:
+                styles: { mainAxis: spaceBetween, gap: 10 }
+                direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                children:
+                  - ContentTitle:
+                      inputs:
+                        title: r@kpn.local_network.connected_devices_inactive
+                  - Button:
+                      id: clearALlBtn
+                      label: Verwijder alles
+                      onTap:
+                        showDialog:
+                          widget: DeleteAllInactiveDevices
+
+            - DataGrid:
+                styles:
+                  headingText: { font: heading, fontSize: 16, color: grey }
+                borderColor: white
+                horizontalMargin: 0
+                headingRowHeight: 32
+                columnSpacing: 24
+                border:
+                  horizontalInside:
+                    color: 0xFFE3E3E3
+                DataColumns:
+                  - label: r@kpn.device
+                    type: text
+                    sortable: true
+                    sortKey: NameSortable
+                  - label: r@kpn.mac_address
+                    type: text
+                    sortable: true
+                    sortKey: Key
+                  - label: r@kpn.local_network.last_connection
+                    type: text
+                    sortable: true
+                    sortKey: LastConnection
+                  - label: ' '
+                    type: text
+                item-template:
+                  data: ${getInactiveDevices.body.status}
+                  name: device
+                  template:
+                    DataRow:
+                      children:
+                        - Row:
+                            styles: { width: 300, crossAxis: center }
+                            children:
+                              - Text:
+                                  text: ${device.Name}
+                                  selectable: true
+                                  styles: { color: grey }
+                        - Text:
+                            text: ${device.Key}
+                            selectable: true
+                            styles: { color: grey }
+                        - Text:
+                            text: ${device.LastConnection}
+                            selectable: true
+                            styles: { color: grey }
+                        - Row:
+                            styles: { width: 200, mainAxis: end }
+                            children:
+                              - Text:
+                                  id: removingDeviceStatus
+                                  styles: { color: grey }
+                              - Icon:
+                                  id: inactiveDeviceActions
+                                  name: 0xe92a
+                                  library: kpnUI
+                                  visible: ${ensemble.storage.appConfig["deviceType"] != "sw2" }
+                                  styles: { color: 0xFFE52E2E }
+                                  testId: connectedDevicesInactiveItem
+                                  onTap:
+                                    executeCode:
+                                      body: |
+                                        //@code
+                                        inactiveDeviceActions.visible = false;
+                                        removingDeviceStatus.text = "r@kpn.local_network.removing_device";
+                                      onComplete:
+                                        invokeAPI:
+                                          name: removeDevice
+                                          inputs:
+                                            mac: ${device.Key}
+                                          onResponse:
+                                            invokeAPI:
+                                              name: getInactiveDevices
+
+                # display indicator while loading
+                children:
+                  - DataRow:
+                      visible: "${getInactiveDevices.body == null ? true : false }"
+                      children:
+                        - Progress:
+                            styles: { size: 32 }
+                        - Text:
+                            text: ' '
+                        - Text:
+                            text: ' '
+                        - Text:
+                            text: ' '
+                  - DataRow:
+                      visible: "${getInactiveDevices.body.status.length == 0 ? true : false }"
+                      children:
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: '-'
+                        - Text:
+                            text: ' '
+
+            - Row:
+                children:
+                  - Spacer:
+                      styles: { size: 40 }
+
+
+ExtendersConnectedDevices:
+  inputs:
+    - extender
+  body:
+    Column:
+      styles:
+        # padding: 16 0
+      children:
+        - Column:
+            styles:
+              padding: 16 0 32 60
+            children:
+              # device count
+              - Text:
+                  text: "${extender.activeDirectDevices.length} ${extender.activeDirectDevices.length == 1 ? 'r@kpn.device_count_single' : 'r@kpn.device_count_multiple'}"
+                  styles:
+                    padding: 0 0 8 0
+                    textStyle:
+                      fontSize: 12
+                      fontWeight: bold
+
+              # DataGrid of connected devices
+              - DataGrid:
+                  visible: ${extender.activeDirectDevices.length > 0}
+                  styles:
+                    headingText: { font: heading, fontSize: 14, color: grey }
+                  borderColor: white
+                  horizontalMargin: 0
+                  headingRowHeight: 32
+                  columnSpacing: 24
+                  border:
+                    horizontalInside:
+                      color: 0xFFD3D3D3
+                  DataColumns:
+                    - label: ' '
+                      type: text
+                    - label: r@kpn.device
+                      type: r@kpn.device
+                      sortable: true
+                      sortKey: NameSortable
+                    - label: r@kpn.mac_address
+                      type: text
+                      sortable: true
+                      sortKey: Key
+                    - label: r@kpn.ip4_address
+                      type: text
+                      sortable: true
+                      sortKey: SortableIp
+                    - label: r@kpn.local_network.ip_address_source
+                      type: text
+                      sortable: true
+                      sortKey: IPAddressSourceLabel
+                    - label: r@kpn.verbinding_type
+                      type: text
+                      sortable: true
+                      sortKey: typeLabel
+                    - label: r@kpn.speed
+                      type: text
+                      sortable: true
+                      sortKey: downloadUploadSpeed
+                    - label: r@kpn.network_name
+                      type: text
+                      sortable: true
+                      sortKey: networklabel
+                    - label: r@kpn.filter
+                      type: text
+                      sortable: true
+                      sortKey: filter
+
+                  item-template:
+                    data: ${extender.activeDirectDevices}
+                    name: child
+                    template:
+                      DataRow:
+                        children:
+                          - Icon:
+                              name: 0xe931
+                              library: kpnUI
+                              styles: { color: 0xFF0077CC }
+                              testId: connectedDevicesExtenderItem
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    ClientDeviceDetails:
+                                      inputs:
+                                        mac: ${child.Key}
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                          - Row:
+                              styles: { width: 200, gap: 8, crossAxis: center }
+                              children:
+                                - Icon:
+                                    name: ${getDeviceIcon(child.DeviceType)}
+                                    library: kpnUI
+                                    styles: { size: 24 }
+                                - Text:
+                                    text: ${child.Name}
+                                    selectable: true
+                                    styles:
+                                      expanded: true
+                                      textStyle:
+                                        overflow: ellipsis
+                          - Text:
+                              text: ${child.Key}
+                          - Row:
+                              styles: { width: 120, crossAxis: center }
+                              children:
+                                - Text:
+                                    selectable: true
+                                    text: "${isIpv4(child.IPAddress) == true ? child.IPAddress : '-'}"
+                          - Text:
+                              text: ${child.IPAddressSourceLabel}
+                              selectable: true
+
+                          - Row:
+                              styles: { crossAxis: center, gap: 4 }
+                              children:
+                                - Icon:
+                                    name: "${ child.connectionDetails.type == 'Ethernet' ? 0xe978 : 0xe9be }"
+                                    library: kpnUI
+                                - Text:
+                                    text: "${child.connectionDetails.type != 'Ethernet' ? getWifiStandard(child.OperatingStandard, false) : child.connectionDetails.typeLabel}"
+                                    selectable: true
+
+                          - Text:
+                              text: "${ child.connectionDetails.type == 'Ethernet' ? ensemble.storage.ethPorts[child.InterfaceName].CurrentBitRateFormatted : child.downloadUploadSpeed }"
+                              styles: { width: 150 }
+                              selectable: true
+
+                          - Text:
+                              text: "${ child.connectionDetails.networklabel }"
+                              styles: { width: 150 }
+                              selectable: true
+
+                          # filter
+                          - Text:
+                              text: "${ getDevicesSchedule.body.disabledDevices.indexOf(child.Key) > -1 ? 'Ja' : '-' }"
+
+        - Column:
+            item-template:
+              data: ${extender.activeExtenders}
+              name: extenderChild
+              template:
+                Column:
+                  styles: { gap: 12, padding: 0 0 24 0 }
+                  children:
+                    - Row:
+                        styles: { gap: 12 }
+                        children:
+                              - Icon:
+                                  styles:
+                                    backgroundColor: "${ extenderChild.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                    color: white
+                                    size: 36
+                                    padding: 6
+                                    borderRadius: 48
+                                  name: ${getDeviceIcon(extenderChild.SSW.ModelName)}
+                                  library: kpnSI
+                              - Column:
+                                  styles: { gap: 2, padding: 2 0 }
+                                  children:
+                                    - Text:
+                                        text: ${extenderChild.Name}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            fontWeight: bold
+                                            color: 0xFF009900
+                                    - Text:
+                                        text: ${getDeviceCommercialName(extenderChild.SSW.ModelName)}
+                                        selectable: true
+                                        styles:
+                                          textStyle:
+                                            color: grey
+                              - Icon:
+                                  name: 0xe931
+                                  library: kpnUI
+                                  styles: { color: 0xFF0077CC }
+                                  testId: connectedDevicesExtender
+                                  onTap:
+                                    showDialog:
+                                      widget:
+                                        SlaveDeviceDetails:
+                                          inputs:
+                                            mac: ${extenderChild.Key}
+                                            iconColor: "${ extenderChild.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                      options:
+                                        maxWidth: 700
+                                        style: none
+                    - ExtendersConnectedDevices:
+                        inputs:
+                          extender: ${extenderChild}
+
+
+HomeplugConnectedDevices:
+  inputs:
+    - homeplug
+  body:
+    Column:
+      styles:
+        # padding: 16 0
+      children:
+        - Column:
+            styles:
+              padding: 16 0 32 60
+            children:
+              # device count
+              - Text:
+                  text: "${homeplug.activeDirectDevices.length} ${homeplug.activeDirectDevices.length == 1 ? 'r@kpn.device_count_single' : 'r@kpn.device_count_multiple'}"
+                  styles:
+                    padding: 0 0 8 0
+                    textStyle:
+                      fontSize: 12
+                      fontWeight: bold
+
+              # DataGrid of connected devices
+              - DataGrid:
+                  visible: ${homeplug.activeDirectDevices.length > 0}
+                  styles:
+                    headingText: { font: heading, fontSize: 14, color: grey }
+                  borderColor: white
+                  horizontalMargin: 0
+                  headingRowHeight: 32
+                  columnSpacing: 24
+                  border:
+                    horizontalInside:
+                      color: 0xFFD3D3D3
+                  DataColumns:
+                    - label: ' '
+                      type: text
+                    - label: r@kpn.device
+                      type: r@kpn.device
+                      sortable: true
+                      sortKey: NameSortable
+                    - label: r@kpn.mac_address
+                      type: text
+                      sortable: true
+                      sortKey: Key
+                    - label: r@kpn.ip4_address
+                      type: text
+                      sortable: true
+                      sortKey: SortableIp
+                    - label: r@kpn.local_network.ip_address_source
+                      type: text
+                      sortable: true
+                      sortKey: IPAddressSourceLabel
+                    - label: r@kpn.verbinding_type
+                      type: text
+                      sortable: true
+                      sortKey: typeLabel
+                    - label: r@kpn.speed
+                      type: text
+                      sortable: true
+                      sortKey: downloadUploadSpeed
+                    - label: r@kpn.network_name
+                      type: text
+                      sortable: true
+                      sortKey: networklabel
+                    - label: r@kpn.filter
+                      type: text
+                      sortable: true
+                      sortKey: filter
+
+                  item-template:
+                    data: ${homeplug.activeDirectDevices}
+                    name: child
+                    template:
+                      DataRow:
+                        children:
+                          - Icon:
+                              name: 0xe931
+                              library: kpnUI
+                              styles: { color: 0xFF0077CC }
+                              testId: connectedDevicesExtenderItem
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    ClientDeviceDetails:
+                                      inputs:
+                                        mac: ${child.Key}
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                          - Row:
+                              styles: { width: 200, gap: 8, crossAxis: center }
+                              children:
+                                - Icon:
+                                    name: ${getDeviceIcon(child.DeviceType)}
+                                    library: kpnUI
+                                    styles: { size: 24 }
+                                - Text:
+                                    text: ${child.Name}
+                                    selectable: true
+                                    styles:
+                                      expanded: true
+                                      textStyle:
+                                        overflow: ellipsis
+                          - Text:
+                              text: ${child.Key}
+                          - Row:
+                              styles: { width: 120, crossAxis: center }
+                              children:
+                                - Text:
+                                    selectable: true
+                                    text: "${isIpv4(child.IPAddress) == true ? child.IPAddress : '-'}"
+                          - Text:
+                              text: ${child.IPAddressSourceLabel}
+                              selectable: true
+
+                          - Row:
+                              styles: { crossAxis: center, gap: 4 }
+                              children:
+                                - Icon:
+                                    name: "${ child.connectionDetails.type == 'Ethernet' ? 0xe978 : 0xe9be }"
+                                    library: kpnUI
+                                - Text:
+                                    text: "${child.connectionDetails.type != 'Ethernet' ? getWifiStandard(child.OperatingStandard. false) : child.connectionDetails.typeLabel}"
+                                    selectable: true
+
+                          - Text:
+                              text: "${ child.connectionDetails.type == 'Ethernet' ? ensemble.storage.ethPorts[child.InterfaceName].CurrentBitRateFormatted : child.downloadUploadSpeed }"
+                              styles: { width: 150 }
+                              selectable: true
+
+                          - Text:
+                              text: "${ child.connectionDetails.networklabel }"
+                              styles: { width: 150 }
+                              selectable: true
+
+                          # filter
+                          - Text:
+                              text: "${ getDevicesSchedule.body.disabledDevices.indexOf(child.Key) > -1 ? 'Ja' : '-' }"
+        
+        # extenders
+        - Column:
+            item-template:
+              data: ${homeplug.activeExtenders}
+              name: extenderChild
+              template:
+                Column:
+                  styles: { gap: 12, padding: 0 0 24 0 }
+                  children:
+                    - Row:
+                        styles: { gap: 12 }
+                        children:
+                          - Icon:
+                              styles:
+                                backgroundColor: "${ extenderChild.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                color: white
+                                size: 36
+                                padding: 6
+                                borderRadius: 48
+                              name: ${getDeviceIcon(extenderChild.SSW.ModelName)}
+                              library: kpnSI
+                          - Column:
+                              styles: { gap: 2, padding: 2 0 }
+                              children:
+                                - Text:
+                                    text: ${extenderChild.Name}
+                                    selectable: true
+                                    styles:
+                                      textStyle:
+                                        fontWeight: bold
+                                        color: 0xFF009900
+                                - Text:
+                                    text: ${getDeviceCommercialName(extenderChild.SSW.ModelName)}
+                                    selectable: true
+                                    styles:
+                                      textStyle:
+                                        color: grey
+                          - Icon:
+                              name: 0xe931
+                              library: kpnUI
+                              styles: { color: 0xFF0077CC }
+                              testId: connectedDevicesExtender
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    SlaveDeviceDetails:
+                                      inputs:
+                                        mac: ${extenderChild.Key}
+                                        iconColor: "${ extenderChild.SSW.State == 'Synced' ? 0xFF009900 : 0xFFE52E2E }"
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                    - ExtendersConnectedDevices:
+                        inputs:
+                          extender: ${extenderChild}
+
+        # plugs
+        - Column:
+            item-template:
+              data: ${homeplug.activeHomeplugs}
+              name: plug
+              template:
+                Column:
+                  children:
+                    - Row:
+                        styles: { gap: 12 }
+                        children:
+                          - Icon:
+                              styles:
+                                backgroundColor: 0xFF009900
+                                color: white
+                                size: 36
+                                padding: 6
+                                borderRadius: 48
+                              name: 0xE93F
+                              library: kpnSI
+                          - Column:
+                              styles: { gap: 2, padding: 2 0 }
+                              children:
+                                - Text:
+                                    text: ${plug.Name}
+                                    selectable: true
+                                    styles:
+                                      textStyle:
+                                        fontWeight: bold
+                                        color: 0xFF009900
+                          - Icon:
+                              testId: plugDeviceItem
+                              name: 0xe931
+                              library: kpnUI
+                              styles: { color: 0xFF0077CC }
+                              onTap:
+                                showDialog:
+                                  widget:
+                                    HomePlugDeviceDetails:
+                                      inputs:
+                                        mac: ${plug.Key}
+                                        iconColor: 0xFF009900
+                                  options:
+                                    maxWidth: 700
+                                    style: none
+                    - HomeplugConnectedDevices:
+                        inputs:
+                          homeplug: ${plug}
+
+
+DeleteAllInactiveDevices:
+  body:
+    Column:
+      styles: { width: 420, height: 100, backgroundColor: white }
+      children:
+        - Column:
+            styles: { mainAxis: center }
+            children:
+              - Row:
+                  visible: false
+                  id: progressIndicator
+                  styles:
+                    crossAxis: center
+                    gap: 16
+                  children:
+                    - Progress:
+                        styles: { color: 0xFF009900, thickness: 2 }
+                    - Text:
+                        id: deviceName
+
+              - Text:
+                  id: confirmationText
+                  text: r@kpn.local_network.confirm_removing_all_devices
+              - Text:
+                  id: error
+              - Row:
+                  id: confirmForm
+                  styles: { crossAxis: center, mainAxis: end, gap: 24, visibilityTransitionDuration: .3 }
+                  children:
+                    - Button:
+                        styles:
+                          outline: true
+                          labelStyle:
+                            color: 0xFF0077CC
+                        label: r@kpn.cancel
+                        onTap: closeAllDialogs
+                    - Button:
+                        label: r@kpn.confirm
+                        onTap:
+                          executeCode:
+                            body: |
+                              //@code
+                              confirmForm.visible = false;
+                              confirmationText.visible = false;
+                              progressIndicator.visible = true;
+                            onComplete:
+                              invokeAPI:
+                                name: getInactiveDevicesList
+                                onResponse:
+                                  startTimer:
+                                    options:
+                                      repeat: true
+                                      repeatInterval: 1
+                                      maxNumberOfTimes: ${getInactiveDevicesList.body.status.length}
+                                      startAfter: 0
+                                    onTimer:
+                                      executeCode:
+                                        body: |
+                                          //@code
+                                          if (getInactiveDeviceIndex() < getInactiveDevicesList.body.status.length) {
+                                            deviceName.text = "Apparaat verwijderen " + getInactiveDevicesList.body.status[getInactiveDeviceIndex()].Name;
+                                            ensemble.invokeAPI("removeDevice", { "mac": getInactiveDevicesList.body.status[getInactiveDeviceIndex()].Key });
+                                            incrementInactiveDeviceIndex();
+                                          }
+                                    onTimerComplete:
+                                      invokeAPI:
+                                        name: getInactiveDevices
+                                        onResponse:
+                                          closeAllDialogs
+
+
+ClientDeviceDetails:
+  inputs:
+    - mac
+  onLoad:
+    invokeAPI:
+      name: getDeviceDetails
+      inputs:
+        mac: ${mac}
+      onResponse:
+        executeCode:
+          body: |
+            deviceIcon.name = getDeviceIcon(getDeviceDetails.body.status.DeviceType);
+          onComplete:
+            invokeAPI:
+              name: getDeviceSchedule
+              inputs:
+                mac: ${mac}
+              onResponse: |
+                if (getDeviceSchedule.body.data.scheduleInfo.override == 'Disable') {
+                  deviceScheduleDropdown.value = 'Block';
+                  scheduleWrapper.visible = false;
+                } else if (getDeviceSchedule.body.data.scheduleInfo.override == 'Enable') {
+                  deviceScheduleDropdown.value = 'Allow';
+                  scheduleWrapper.visible = false;
+                } else if (getDeviceSchedule.body.data.scheduleInfo.override == '' && getDeviceSchedule.body.data.scheduleInfo.schedule.length == 0) {
+                  deviceScheduleDropdown.value = 'Allow';
+                  scheduleWrapper.visible = false;
+                } else if (getDeviceSchedule.body.data.scheduleInfo.override == '') {
+                  deviceScheduleDropdown.value = 'Schedule';
+                  getDeviceSchedule.body.data.scheduleInfo.schedule.map(function(range) {
+                    deviceScheduler.addSelectedRange(range.begin, range.end);
+                  });
+                  deviceScheduler.refresh();
+                }
+  Column:
+    styles:
+      backgroundColor: white
+    children:
+
+      - Row:
+          styles: { mainAxis: spaceBetween, padding: 16 24 }
+          children:
+            - GreenTitle:
+                inputs:
+                  title: ${getDeviceDetails.body.status.Name}
+            - Icon:
+                library: kpnUI
+                name: 0xe993
+                styles: { size: 24, color: grey }
+                onTap: closeAllDialogs
+
+      - Column:
+          styles: { gap: 16, padding: 24, scrollable: true }
+          children:
+            - FittedRow:
+                styles: { gap: 40, childrenFits: [auto, 2]  }
+                children:
+                  - Icon:
+                      name: 0xe972
+                      id: deviceIcon
+                      library: kpnUI
+                      styles: { size: 64, color: white, backgroundColor: 0xFF00AAFF, padding: 32, borderRadius: 100 }
+                  - Form:
+                      styles:
+                        labelPosition: '${device.width > 768 ? "start" : "top"}'
+                        gap: 16
+                      children:
+                        - TextInput:
+                            id: deviceNameInput
+                            label: r@kpn.device_name
+                            value: ${getDeviceDetails.body.status.Name}
+                        - Dropdown:
+                            label: r@kpn.icon
+                            id: deviceIconDropdown
+                            items: [
+                              { value: 'Desktop', label: 'Desktop', 'icon': {'name': 0xe912, 'library': 'kpnUI'}},
+                              { value: 'Mobile', label: 'Smartphone', 'icon': {'name': 0xe973, 'library': 'kpnUI'}},
+                              { value: 'Tablet', label: 'Tablet', 'icon': {'name': 0xe9aa, 'library': 'kpnUI'}},
+                              { value: 'Laptop', label: 'Laptop', 'icon': {'name': 0xe95f, 'library': 'kpnUI'}},
+                              { value: 'Computer', label: 'Computer', 'icon': {'name': 0xe95f, 'library': 'kpnUI'}},
+                              { value: 'Notebook', label: 'Notebook', 'icon': {'name': 0xe97d, 'library': 'kpnUI'}},
+                              { value: 'Game Console', label: 'Game Console', 'icon': {'name': 0xe9a4, 'library': 'kpnUI'}},
+                              { value: 'Smoke Detector', label: 'Smoke Detector', 'icon': {'name': 0xe941, 'library': 'kpnUI'}},
+                              { value: 'Google OnHub', label: 'Google OnHub', 'icon': {'name': 0xe922, 'library': 'kpnUI'}},
+                              { value: 'Apple TV', label: 'Apple TV', 'icon': {'name': 0xe9a9, 'library': 'kpnUI'}},
+                              { value: 'Set-top Box', label: 'Set-top Box', 'icon': {'name': 0xe9b3, 'library': 'kpnUI'}},
+                              { value: 'Camera', label: 'Camera', 'icon': {'name': 0xe917, 'library': 'kpnUI'}},
+                              { value: 'TV', label: 'Smart TV', 'icon': {'name': 0xe9af, 'library': 'kpnUI'}},
+                              { value: 'HiFi', label: 'HiFi', 'icon': {'name': 0xe90c, 'library': 'kpnUI'}},
+                              { value: 'Phone', label: 'Phone', 'icon': {'name': 0xe980, 'library': 'kpnUI'}},
+                              { value: 'USB key', label: 'USB key', 'icon': {'name': 0xe985, 'library': 'kpnUI'}},
+                              { value: 'Printer', label: 'Printer', 'icon': {'name': 0xe96a, 'library': 'kpnUI'}},
+                              { value: 'Smart bulb', label: 'Smart bulb', 'icon': {'name': 0xe910, 'library': 'kpnUI'}},
+                              { value: 'Smart Plug', label: 'Smart Plug', 'icon': {'name': 0xe987, 'library': 'kpnUI'}},
+                              { value: 'Door Sensor', label: 'Door Sensor', 'icon': {'name': 0xe98b, 'library': 'kpnUI'}},
+                              { value: 'Lock', label: 'Lock', 'icon': {'name': 0xe966, 'library': 'kpnUI'}},
+                              { value: 'Flood Sensor', label: 'Flood Sensor', 'icon': {'name': 0xe938, 'library': 'kpnUI'}},
+                              { value: 'Smoke Sensor', label: 'Firewall', 'icon': {'name': 0xe941, 'library': 'kpnUI'}},
+                              { value: 'Thermostat', label: 'Thermostat', 'icon': {'name': 0xe986, 'library': 'kpnUI'}},
+                              { value: 'Switch', label: 'Switch', 'icon': {'name': 0xe976, 'library': 'kpnUI'}},
+                              { value: 'Light Switch', label: 'Light Switch', 'icon': {'name': 0xe9db, 'library': 'kpnUI'}},
+                              { value: 'WiFiExtender', label: 'Nas', 'icon': {'name': 0xe9be, 'library': 'kpnUI'}},
+                              { value: 'Motion Sensor', label: 'Motion Sensor', 'icon': {'name': 0xe987, 'library': 'kpnUI'}},
+                              { value: 'Window Sensor', label: 'Window Sensor', 'icon': {'name': 0xe9c5, 'library': 'kpnUI'}},
+                              { value: 'Wi-Fi Access Point', label: 'Wi-Fi Access Point', 'icon': {'name': 0xe9be, 'library': 'kpnUI'}},
+                              { value: 'Dimmer light', label: 'Dimmer light', 'icon': {'name': 0xe9da, 'library': 'kpnUI'}},
+                              { value: 'Fan', label: 'Fan', 'icon': {'name': 0xe96e, 'library': 'kpnUI'}},
+                              { value: 'Acces Point', label: 'Metering Device', 'icon': {'name': 0xe9be, 'library': 'kpnUI'}},
+                              { value: 'Domestic Robot', label: 'Domestic Robot', 'icon': {'name': 0xe996, 'library': 'kpnUI'}},
+                              { value: 'Extender Wi-Fi Plus', label: 'Car', 'icon': {'name': 0xe918, 'library': 'kpnUI'}},
+                              { value: 'Generic Repeater', label: 'Ethernet Switch', 'icon': {'name': 0xe978, 'library': 'kpnUI'}},
+                              { value: 'InternetGatewayDevice', label: 'Wifi Hub', 'icon': {'name': 0xe9d4, 'library': 'kpnUI'}}
+                            ]
+                            value: ${getDeviceDetails.body.status.DeviceType}
+                            onChange: |
+                              //@code
+                              deviceIcon.name = getDeviceIcon(this.value);
+                        - Dropdown:
+                            id: deviceScheduleDropdown
+                            label: Ouderlijk toezicht
+                            items: [
+                              { "value": "Allow", "label": "Always allow" },
+                              { "value": "Block", "label": "Always block" },
+                              { "value": "Schedule", "label": "Schedule" }
+                            ]
+                            onChange: |
+                              //@code
+                              if (this.value == 'Schedule')
+                                scheduleWrapper.visible = true;
+                              else
+                                scheduleWrapper.visible = false;
+
+            # schedule
+            - Column:
+                id: scheduleWrapper
+                styles: 
+                  gap: 8
+                  padding: 0 0 0 110
+                children:
+                  - Row:
+                      styles: { margin: 0 0 0 25 }
+                      children:
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 0 } ] }
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 4 } ] }
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 8 } ] }
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 12 } ] }
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 16 } ] }
+                        - Row: { styles: { width: 84 }, children: [ Text: { text: 20 } ] }
+                  - WeeklyScheduler:
+                      id: deviceScheduler
+                      slotInMinutes: 30
+                      slotWidth: 8
+                      slotHeight: 16
+                      dayLabels: [ 'M','D','W','D','V','Z','Z' ]
+                      selectedColor: blue
+                      unselectedColor: green
+                      paddingBetweenDays: 8
+                      gapBetweenSlots: 2
+                      dayLabelBoxWidth: 25
+                      dayLabelBoxHeight: 18
+                      displayDayLabels: true
+                      dayLabelStyles: { fontWeight: bold, color: 0xFF444444, fontSize: 14 }
+                      verticalDividerIndices: [ 4,8,12,16,20,24 ]
+                      verticalDividerLabels: [ '4h','8h','12h','16h','20h','24h' ]
+                      gapToLeaveForDivider: 8
+              
+            # submit buttons
+            - Row:
+                styles:
+                  crossAxis: center
+                  mainAxis: end
+                  gap: 20
+                  padding: 16 0 0 0
+                children:
+                  - Button:
+                      id: restore
+                      label: r@kpn.restore
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap:
+                        invokeAPI:
+                          name: getDeviceDetails
+                          inputs:
+                            mac: ${ensemble.storage.selectedDeviceKey}
+                          onResponse:
+                            executeCode:
+                              body: |
+                                //@code
+                                deviceIcon.icon = getDeviceIcon(getDeviceDetails.body.status.DeviceType);
+                              onComplete:
+                                invokeAPI:
+                                  name: getDeviceSchedule
+                                  inputs:
+                                    mac: ${ensemble.storage.selectedDeviceKey}
+                                  onResponse: |
+                                    //@code
+                                    if (getDeviceSchedule.body.data.scheduleInfo.override == 'Disable')
+                                      deviceScheduleDropdown.value = 'Block';
+                                    else if (getDeviceSchedule.body.data.scheduleInfo.override == 'Enable')
+                                      deviceScheduleDropdown.value = 'Allow';
+                                    else if (getDeviceSchedule.body.data.scheduleInfo.override == '') {
+                                      deviceScheduleDropdown.value = 'Schedule';
+                                      scheduleWrapper.visible = true;
+                                      getDeviceSchedule.body.data.scheduleInfo.schedule.map(function(range) {
+                                        deviceScheduler.addSelectedRange(range.begin, range.end);
+                                      });
+                                      deviceScheduler.refresh();
+                                    }
+
+                  - Button:
+                      label: r@kpn.apply
+                      onTap:
+                        invokeAPI:
+                          name: setDeviceSchedule
+                          inputs:
+                            mac: ${getDeviceDetails.body.status.Key}
+                            schedule: ${[]}
+                          onResponse:
+                            executeCode:
+                              body: |
+                                //@code
+                                ensemble.invokeAPI('setDeviceName',{
+                                  'name': deviceNameInput.value,
+                                  'mac': getDeviceDetails.body.status.Key
+                                });
+                                
+                                ensemble.invokeAPI('setDeviceType',{
+                                  'type': deviceIconDropdown.value,
+                                  'mac': getDeviceDetails.body.status.Key
+                                });
+                                
+                                if (deviceScheduleDropdown.value == 'Allow')
+                                  ensemble.invokeAPI('toggleDeviceSchedule',{
+                                    'mac': getDeviceDetails.body.status.Key,
+                                    'status': 'Enable'
+                                  });
+                                else if (deviceScheduleDropdown.value == 'Block')
+                                  ensemble.invokeAPI('toggleDeviceSchedule',{
+                                    'mac': getDeviceDetails.body.status.Key,
+                                    'status': 'Disable'
+                                  });
+                                else if (deviceScheduleDropdown.value == 'Schedule') {
+                                  var selectedRanges = deviceScheduler.getSelectedRanges();
+                                  var schedule = [];
+                                  selectedRanges.map(function(range) {
+                                    schedule.push({
+                                      "state": "Disable",
+                                      "begin": range.startTime,
+                                      "end": range.endTime
+                                    });
+                                  });
+                                
+                                  ensemble.invokeAPI('setDeviceSchedule',{
+                                    'mac': getDeviceDetails.body.status.Key,
+                                    'schedule': schedule
+                                  });
+                                }
+                              onComplete:
+                                executeCode:
+                                  body: |
+                                    //@code
+                                    var widget = "LoadingToast";
+                                    var styles = {
+                                      padding: 0
+                                    };
+                                    var options = {
+                                      type: 'custom',
+                                      duration: 5,
+                                      dismissible: false,
+                                      alignment: 'center'
+                                    };
+                                    showToast(widget, styles, options);
+                                  onComplete: closeAllDialogs
+
+      - Divider
+      - Column:
+          styles: { gap: 8, padding: 24, backgroundColor: 0xFFF3F3F3 }
+          children:
+            # last connection
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.last_connection
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.LastConnection}
+                      selectable: true
+            - Divider
+
+            # Connection type
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.connection_type
+                      selectable: true
+                  - Conditional:
+                      conditions:
+                        - if: "${getDeviceDetails.body.status.connectionDetails.type == 'Ethernet'}"
+                          Text:
+                            text: ${getDeviceDetails.body.status.connectionDetails.type} - ${getDeviceDetails.body.status.connectionDetails.networklabel}
+                            selectable: true
+                        - elseif: "${getDeviceDetails.body.status.connectionDetails.type == 'WiFi'}"
+                          Text:
+                            text: ${getDeviceDetails.body.status.connectionDetails.type} ${getDeviceDetails.body.status.OperatingFrequencyBand} - ${getDeviceDetails.body.status.connectionDetails.networklabel}
+                            selectable: true
+                        - else:
+                          Text:
+                            text: '-'
+            - Divider
+
+            # bit rate
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.bitrate
+                      selectable: true
+                  - Text:
+                      text: "${ getDeviceDetails.body.status.connectionDetails.type == 'Ethernet' ? ensemble.storage.portSpeed[getDeviceDetails.body.status.InterfaceName] : getDeviceDetails.body.status.downloadUploadSpeed }"
+                      selectable: true
+            - Divider
+
+            # MAC address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.mac_address
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.Key}
+                      selectable: true
+            - Divider
+
+            # MAC address randomized
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.mac_address_randomized
+                      selectable: true
+                  - Text:
+                      text: "${getDeviceDetails.body.status.macRandomized == true ? 'r@kpn.local_network.mac_address_randomized_yes' : 'r@kpn.local_network.mac_address_randomized_no'}"
+                      selectable: true
+            - Divider
+
+            # IPv4 address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.ip4_address
+                      selectable: true
+                  - Column:
+                      item-template:
+                        data: ${getDeviceDetails.body.status.IPv4Address}
+                        name: i
+                        template:
+                          Text:
+                            visible: '${i.Status == "reachable" ? true : false}'
+                            text: ${i.Address}
+                            selectable: true
+            - Divider
+            # IPv6 address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.ip6_address
+                      selectable: true
+                  - Column:
+                      item-template:
+                        data: ${getDeviceDetails.body.status.IPv6Address}
+                        name: i
+                        template:
+                          Text:
+                            visible: '${i.Status == "reachable" ? true : false}'
+                            text: ${i.Address}
+                            selectable: true
+            - Divider
+
+            # IP address source
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.ip_address_source
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.IPAddressSourceLabel}
+                      selectable: true
+            - Divider
+
+            # Manufacturer
+            # display a dash if empty
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.manufacturer
+                      selectable: true
+                  - Text:
+                      text: "${getDeviceDetails.body.status.BDD.Manufacturer == '' ? '-' : getDeviceDetails.body.status.BDD.Manufacturer}"
+                      selectable: true
+            - Spacer:
+                styles: { size: 8 }
+
+
+SlaveDeviceDetails:
+  inputs:
+    - mac
+    - iconColor
+  onLoad:
+    invokeAPI:
+      name: getDeviceDetails
+      inputs:
+        mac: ${mac}
+      onResponse:
+        invokeAPI:
+          name: getSswLed
+          inputs:
+            mac: ${mac}
+
+  Column:
+    styles:
+      backgroundColor: white
+    children:
+
+      - Row:
+          styles: { mainAxis: spaceBetween, padding: 16 24 }
+          children:
+            - GreenTitle:
+                inputs:
+                  title: ${getDeviceDetails.body.status.Name}
+            - Icon:
+                library: kpnUI
+                name: 0xe993
+                styles: { size: 24, color: grey }
+                onTap: closeAllDialogs
+
+      - Column:
+          styles: { gap: 16, padding: 24 24 0 24, scrollable: true }
+          children:
+            - FittedRow:
+                styles: { gap: 40, childrenFits: [auto, 2]  }
+                children:
+                  - Icon:
+                      name: ${getDeviceIcon(getDeviceDetails.body.status.SSW.ModelName)}
+                      library: kpnSI
+                      styles:
+                        size: 80
+                        color: white
+                        backgroundColor: ${iconColor}
+                        padding: 20
+                        borderRadius: 100
+                  - Form:
+                      styles:
+                        labelPosition: '${device.width > 768 ? "start" : "top"}'
+                        gap: 16
+                      children:
+                        - TextInput:
+                            id: deviceNameInput
+                            label: r@kpn.device_name
+                            value: ${getDeviceDetails.body.status.Name}
+                        - Dropdown:
+                            id: slaveDeviceLed
+                            label: r@kpn.led
+                            value: ${getSswLed.body.status.Root.Brightness}
+                            styles:
+                              variant: box
+                            items:
+                              - { "label": "r@kpn.led_on", "value": 255 }
+                              - { "label": "r@kpn.led_dimmed", "value": 12 }
+                              - { "label": "r@kpn.led_off", "value": 0 }
+                        - TextInput:
+                            label: r@kpn.icon
+                            enabled: false
+                            value: ${getDeviceDetails.body.status.DeviceType}
+
+            # submit buttons
+            - Row:
+                styles: { mainAxis: end, crossAxis: center, gap: 24 }
+                children:
+                  - Button:
+                      id: restore
+                      label: r@kpn.restore
+                      styles:
+                        outline: true
+                        labelStyle:
+                          color: 0xFF0077CC
+                      onTap:
+                        invokeAPI:
+                          name: getSswLed
+                          inputs:
+                            mac: ${ensemble.storage.selectedDeviceKey}
+                          onResponse:
+                            invokeAPI:
+                              name: getDeviceDetails
+                              inputs:
+                                mac: ${ensemble.storage.selectedDeviceKey}
+                              onResponse:
+                                executeCode:
+                                  body: |
+                                    //@code
+                                    deviceIcon.icon = getDeviceIcon(getDeviceDetails.body.status.DeviceType);
+
+                  - Button:
+                      label: r@kpn.apply
+                      onTap:
+                        invokeAPI:
+                          name: setDeviceName
+                          inputs:
+                            name: ${deviceNameInput.value}
+                            mac: ${getDeviceDetails.body.status.Key}
+                          onResponse:
+                            executeCode:
+                              body: |
+                                //@code
+                                
+                                // SET LED
+                                ensemble.invokeAPI("setSswLed",{
+                                  "mac": getDeviceDetails.body.status.Key, 
+                                  "brightness": slaveDeviceLed.value
+                                });
+                                
+                                var widget = "LoadingToast";
+                                var styles = {
+                                  padding: 0
+                                };
+                                var options = {
+                                  type: 'custom',
+                                  duration: 5,
+                                  dismissible: false,
+                                  alignment: 'center'
+                                };
+                                showToast(widget, styles, options);
+                              onComplete:
+                                closeAllDialogs
+
+            - Divider
+
+            # State
+            - Conditional:
+                conditions:
+                  - if: "${(getDeviceDetails.body.status.SSW.State == 'Synced' || getDeviceDetails.body.status.Active == false) ? false : true}"
+                    Column:
+                      styles:
+                        backgroundColor: 0xFFFBDFDF
+                        borderRadius: 8
+                      children:
+                        - Divider:
+                            styles:
+                              thickness: 5
+                              color: 0xFFE52E2E
+                        - Row:
+                            styles:
+                              gap: 8
+                              padding: 8 16 8 16
+                            children:
+                              - Icon:
+                                  name: error_outline
+                                  styles:
+                                    size: 20
+                                    color: 0xFFE52E2E
+                              - Text:
+                                  text: r@kpn.local_network.unsynced_extender_warning
+                                  styles:
+                                    overflow: wrap
+                                    expanded: true
+                  - else:
+                    Spacer:
+                      styles:
+                        size: 1
+            - Row:
+                styles:
+                  mainAxis: end
+                  crossAxis: center
+                  padding: 0 0 16 0
+                children:
+                  - Text:
+                      text: r@kpn.status
+                      styles:
+                        width: 170
+                  - Text:
+                      text: ${getDeviceDetails.body.status.SSW.State}
+                      styles:
+                        width: 175
+                  - Button:
+                      visible: "${getDeviceDetails.body.status.SSW.State == 'Discovered' ? false : true}"
+                      label: r@kpn.unpair
+                      onTap:
+                        showDialog:
+                          widget: UnPairRepeaterConfirmation
+
+      - Divider
+      - Column:
+          styles: { gap: 8, padding: 24, backgroundColor: 0xFFF3F3F3 }
+          children:
+
+            # last connection
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.last_connection
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.LastConnection}
+                      selectable: true
+            - Divider
+
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.link_time Koppel
+                      selectable: true
+                  - Text:
+                      text: ${convertUtcToGmtPlus1(getDeviceDetails.body.status.SSW.PairingTime)}
+                      selectable: true
+            - Divider
+
+            # Connection type
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.connection_type
+                      selectable: true
+                  - Conditional:
+                      conditions:
+                        - if: "${getDeviceDetails.body.status.connectionDetails.type == 'Ethernet'}"
+                          Text:
+                            selectable: true
+                            text: ${getDeviceDetails.body.status.connectionDetails.type} - ${getDeviceDetails.body.status.connectionDetails.networklabel}
+                        - elseif: "${getDeviceDetails.body.status.connectionDetails.type == 'WiFi'}"
+                          Text:
+                            selectable: true
+                            text: ${getDeviceDetails.body.status.connectionDetails.type} ${getDeviceDetails.body.status.OperatingFrequencyBand} - ${getDeviceDetails.body.status.connectionDetails.networklabel}
+                        - else:
+                          Text:
+                            text: '-'
+            - Divider
+
+            # bit rate
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.bitrate
+                      selectable: true
+                  - Text:
+                      text: "${ getDeviceDetails.body.status.connectionDetails.type == 'Ethernet' ? ensemble.storage.portSpeed[getDeviceDetails.body.status.InterfaceName] : getDeviceDetails.body.status.downloadUploadSpeed }"
+                      selectable: true
+            - Divider
+
+            # MAC address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.mac_address
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.Key}
+                      selectable: true
+            - Divider
+
+            # MAC address randomized
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.mac_address_randomized
+                      selectable: true
+                  - Text:
+                      text: "${getDeviceDetails.body.status.macRandomized == true ? 'r@kpn.local_network.mac_address_randomized_yes' : 'r@kpn.local_network.mac_address_randomized_no'}"
+                      selectable: true
+            - Divider
+
+            # IPv4 address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.ip4_address
+                      selectable: true
+                  - Column:
+                      item-template:
+                        data: ${getDeviceDetails.body.status.IPv4Address}
+                        name: i
+                        template:
+                          Text:
+                            visible: '${i.Status == "reachable" ? true : false}'
+                            text: ${i.Address}
+                            selectable: true
+            - Divider
+            # IPv6 address
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.ip6_address
+                      selectable: true
+                  - Column:
+                      item-template:
+                        data: ${getDeviceDetails.body.status.IPv6Address}
+                        name: i
+                        template:
+                          Text:
+                            visible: '${i.Status == "reachable" ? true : false}'
+                            text: ${i.Address}
+                            selectable: true
+            - Divider
+
+            # IP address source
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.local_network.ip_address_source
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.IPAddressSourceLabel}
+                      selectable: true
+            - Divider
+
+            # Manufacturer
+            # display a dash if empty
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.manufacturer
+                      selectable: true
+                  - Text:
+                      text: "${getDeviceDetails.body.status.SSW.Manufacturer == '' ? '-' : getDeviceDetails.body.status.SSW.Manufacturer}"
+                      selectable: true
+            - Divider
+
+            # SW version
+            - FittedRow:
+                children:
+                  - Text:
+                      text: r@kpn.software_version
+                      selectable: true
+                  - Text:
+                      text: ${getDeviceDetails.body.status.SSW.SoftwareVersion}
+                      selectable: true
+            
+            - Spacer:
+                styles: { size: 8 }
+
+UnPairRepeaterConfirmation:
+  body:
+    Column:
+      styles:
+        gap: 16
+      children:
+        - Text:
+            text: r@kpn.local_network.confirm_unpairing_repeater
+
+        - Button:
+            label: r@kpn.unpair
+            onTap:
+              executeCode:
+                body: |
+                  //@code
+                  clearAccessPoints();
+                onComplete:
+                  invokeAPI:
+                    name: unPairExtender
+                    inputs:
+                      mac: ${getDeviceDetails.body.status.Key}
+                    onResponse:
+                      executeCode:
+                        body: |
+                          //@code
+                          if (getDeviceDetails.body.status.Active == false) {
+                            ensemble.invokeAPI("removeDevice", { "mac": getDeviceDetails.body.status.Key });
+                          }
+                          
+                          ensemble.invokeAPI('getPairedDevices');
+                          ensemble.invokeAPI('getActiveDevices');
+                          ensemble.invokeAPI('getInactivePairedDevices');
+                        onComplete: closeAllDialogs
+
+
+PortTableHeader:
+  inputs:
+    - port
+    - status
+  body:
+    Column:
+      styles:
+        height: 58
+      children:
+        - Row:
+            styles:
+              gap: 4
+              crossAxis: center
+              padding: 0 16
+            children:
+              - Icon:
+                  name: 0xe923
+                  library: kpnUI
+                  styles:
+                    size: 18
+                    color: '${ status == true ? 0xFF39FF14 : 0xFFD3D3D3}'
+              - Text: 
+                  text: r@kpn.port ${port}
+                  styles:
+                    textStyle:
+                      fontWeight: bold
+                      color: '${ status == true ? 0xFF535353 : 0xFF939393}'
+
+
+
+PortTableSentReceivedText:
+  body:
+    Row:
+      styles:
+        padding: 0 16
+        height: 24
+      children:
+        - Text:
+            text: r@kpn.internet_link.received
+            styles: 
+              textStyle:
+                fontWeight: bold
+                fontSize: 14
+                color: 0xFF939393
+        - Text:
+            text: / r@kpn.internet_link.sent
+            styles:
+              textStyle:
+                fontSize: 14
+                color: 0xFF939393
+
+SentReceivedText:
+  inputs:
+    - first
+    - second
+  body:
+    Row:
+      styles:
+        padding: 0 16
+        height: 24
+      children:
+        - Markdown:
+            text: |-
+              **${first}** / ${second}
+                            
+
+Ethernet:
+  onLoad: |
+    //@code
+    ensemble.invokeAPI('getPort1Params');
+    ensemble.invokeAPI('getPort1Usage');
+    ensemble.invokeAPI('getPort2Params');
+    ensemble.invokeAPI('getPort2Usage');
+
+
+  Column:
+    styles:
+      padding: 16
+    children:
+      - Column:
+          styles:
+            backgroundColor: 0xFFFFFFFF
+            shadowColor: 0xFFDEDEDE
+            shadowRadius: 3
+            shadowOffset: [0, 0]
+            borderRadius: 10
+            padding: 16
+            gap: 12
+          children:
+            - ContentTitle:
+                inputs:
+                  title: r@kpn.local_network.ethernet_ports
+            - Text:
+                text: r@kpn.local_network.ethernet_ports_description
+                  
+            # Ports table
+            - FittedRow:
+                styles:
+                  childrenFits: [auto,1,1,1,1]
+                  margin: 16 0
+                children:
+
+                  # column 1 - labels
+                  - Column:
+                      styles:
+                        gap: 10
+                        padding: 12 0
+                        width: 200
+                      children:
+                        - Spacer:
+                            styles:
+                              size: 58
+                        - Divider
+                        - Text:
+                            text: r@kpn.status
+                        - Divider
+                        - Text:
+                            text: r@kpn.local_network.duplex
+                            styles:
+                              height: 58
+                              padding: 16 0
+                        - Divider
+                        - Text:
+                            text: r@kpn.local_network.link_speed
+                            styles:
+                              height: 58
+                              padding: 16 0
+                        - Divider
+                        - Text:
+                            text: r@kpn.local_network.max_bitrate
+                        - Divider
+                        - Text:
+                            text: r@kpn.local_network.current_bitrate
+                        - Divider
+                        - Spacer:
+                            styles:
+                              size: 24
+                        - Divider
+                        - Text:
+                            text: r@kpn.internet_link.data
+                            styles:
+                              height: 24
+                        - Divider
+                        - Text:
+                            text: r@kpn.internet_link.packages
+                            styles:
+                              height: 24
+                        - Divider
+                        - Text:
+                            text: r@kpn.internet_link.errors
+                            styles:
+                              height: 24
+                        - Divider
+                        - Text:
+                            text: r@kpn.internet_link.lost_packages
+                            styles:
+                              height: 24
+                        - Divider
+                        - Text:
+                            text: r@kpn.internet_link.multicast_packages
+
+                  # column 2 - port 1 - ETH0
+                  - Column:
+                      styles:
+                        gap: 10
+                        padding: 12 0
+                      children:
+                        - PortTableHeader:
+                            inputs:
+                              port: 1
+                              status: ${ensemble.storage.ethPorts["ETH0"].Active}
+                        - Divider
+                        - Text:
+                            text: '${ensemble.storage.ethPorts["ETH0"].Active == true ? "r@kpn.active" : "r@kpn.inactive"}'
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - Row:
+                            styles:
+                              padding: 8 16
+                              height: 58
+                            children:
+                              - Dropdown:
+                                  value: ${getPort1Params.body.data.DuplexModeEnabled}
+                                  items: ["Auto", "Half", "Full"]
+                                  styles:
+                                    expanded: true
+                                  onChange:
+                                    invokeAPI:
+                                      name: setDuplexMode
+                                      inputs: 
+                                        port: eth0
+                                        mode: ${this.value}
+                        - Divider
+                        - Row:
+                            styles:
+                              padding: 8 16
+                              height: 58
+                            children:
+                              - Dropdown:
+                                  value: ${getPort1Params.body.data.MaxBitRateEnabled}
+                                  items: 
+                                    - { "value": -1, "label": "Auto" }
+                                    - { "value": 10, "label": "10 MB" }
+                                    - { "value": 100, "label": "100 MB" }
+                                    - { "value": 1000, "label": "1 GB" }
+                                    - { "value": 2500, "label": "2.5 MB" }
+                                    - { "value": 10000, "label": "10 MB" }
+                                  styles:
+                                    expanded: true
+                        - Divider
+                        - Text:
+                            text: ${formatSpeed(getPort1Params.body.data.MaxBitRateSupported)}
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - Text:
+                            text: ${formatSpeed(getPort1Params.body.data.CurrentBitRate)}
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - PortTableSentReceivedText
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort1Usage.body.status.TxBytesFormatted}
+                              second: ${getPort1Usage.body.status.RxBytesFormatted}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort1Usage.body.status.TxPackets}
+                              second: ${getPort1Usage.body.status.RxPackets}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort1Usage.body.status.TxErrors}
+                              second: ${getPort1Usage.body.status.RxErrors}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort1Usage.body.status.TxDropped}
+                              second: ${getPort1Usage.body.status.RxDropped}
+                        - Divider
+                        - Text:
+                            text: ${getPort1Usage.body.status.Multicast}
+                            styles:
+                              padding: 0 16
+
+                  # column 3 - port 2 - ETH1
+                  - Column:
+                      styles:
+                        gap: 10
+                        padding: 12 0
+                      children:
+                        - PortTableHeader:
+                            inputs:
+                              port: 2
+                              status: ${ensemble.storage.ethPorts["ETH1"].Active}
+                        - Divider
+                        - Text:
+                            text: '${ensemble.storage.ethPorts["ETH1"].Active == true ? "r@kpn.active" : "r@kpn.inactive"}'
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - Row:
+                            styles:
+                              padding: 8 16
+                              height: 58
+                            children:
+                              - Dropdown:
+                                  value: ${getPort2Params.body.data.DuplexModeEnabled}
+                                  items: ["Auto", "Half", "Full"]
+                                  styles:
+                                    expanded: true
+                                  onChange:
+                                    invokeAPI:
+                                      name: setDuplexMode
+                                      inputs: 
+                                        port: eth0
+                                        mode: ${this.value}
+                        - Divider
+                        - Row:
+                            styles:
+                              padding: 8 16
+                              height: 58
+                            children:
+                              - Dropdown:
+                                  value: ${getPort2Params.body.data.MaxBitRateEnabled}
+                                  items: 
+                                    - { "value": -1, "label": "Auto" }
+                                    - { "value": 10, "label": "10 MB" }
+                                    - { "value": 100, "label": "100 MB" }
+                                    - { "value": 1000, "label": "1 GB" }
+                                    - { "value": 2500, "label": "2.5 MB" }
+                                    - { "value": 10000, "label": "10 MB" }
+                                  styles:
+                                    expanded: true
+                        - Divider
+                        - Text:
+                            text: ${formatSpeed(getPort2Params.body.data.MaxBitRateSupported)}
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - Text:
+                            text: ${formatSpeed(getPort2Params.body.data.CurrentBitRate)}
+                            styles:
+                              padding: 0 16
+                        - Divider
+                        - PortTableSentReceivedText
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort2Usage.body.status.TxBytesFormatted}
+                              second: ${getPort2Usage.body.status.RxBytesFormatted}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort2Usage.body.status.TxPackets}
+                              second: ${getPort2Usage.body.status.RxPackets}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort2Usage.body.status.TxErrors}
+                              second: ${getPort2Usage.body.status.RxErrors}
+                        - Divider
+                        - SentReceivedText:
+                            inputs:
+                              first: ${getPort2Usage.body.status.TxDropped}
+                              second: ${getPort2Usage.body.status.RxDropped}
+                        - Divider
+                        - Text:
+                            text: ${getPort2Usage.body.status.Multicast}
+                            styles:
+                              padding: 0 16
+
+
+            - Spacer:
+                styles:
+                  size: 8
+            - Divider
+            # - STPProtocol
+
+                  
+STPProtocol:
+  onLoad:
+    invokeAPI:
+      name: getSTPStatus
+  body:
+    Column:
+      children:
+        - GreenSubtitle:
+            inputs:
+              title: r@kpn.local_network.stp_protocol
+        - Switch:
+            id: stpProtocolSwitch
+            trailingText: r@kpn.local_network.stp_protocol_switch
+            value: ${getSTPStatus.body.status.STPEnable}
+            onChange:
+              invokeAPI:
+                name: setSTPStatus
+                onResponse:
+                  showToast:
+                    widget: SuccessToast
+                    styles:
+                      padding: 0
+                    options:
+                      type: custom
+                      duration: 15
+                      dismissible: true
+                      alignment: center
+                onError:
+                  showToast:
+                    message: r@kpn.error
+                    options:
+                      dismissible: true
+                      type: error
+                      duration: 15
+                      alignment: center
+
+API:
+  getWANInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC"
+      "method": "getWANStatus"
+      "parameters": { }
+
+  getDeviceSelf:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": "self && wan && hgw"
+      }
+
+  getInactiveDevicesList:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression": "not interface and not self and not voice and .Active==false"
+
+  getInactiveDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression": "not interface and not self and not voice and .Active==false"
+    onResponse: |
+      //@code
+      
+      var filteredDevices = [];
+
+      response.body.status.map(function(d) {
+        // exclude alternative macs
+        if (ensemble.storage.alternative_devices_macs.includes(d.Key) == false) {
+          // reformat last seen
+          d.LastConnection = convertUtcToGmtPlus1(d.LastConnection);
+          filteredDevices.push(d);
+        }
+      });
+
+      response.body.status = filteredDevices;
+
+
+  getAllDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": "not interface and not self and not voice"
+      }
+
+  getPairedDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": "not interface and not self and ssw and .Active==true",
+        "flags": "full_links"
+      }
+    onResponse: |
+      //@code
+      var apKeys = [];
+      var aps = [];
+      response.body.status.map(function(d) {
+        apKeys.push(d.Key);
+        if (d.ULinks.length > 0) {
+          if (d.ULinks[0].Type == 'wifi')  {
+            d.connectionDetails = getDeviceConnectionDetails(d.ULinks[0], d.InterfaceName);
+            d.downloadUploadSpeed = getWifiSpeed(d.MaxDownlinkRateReached,d.MaxUplinkRateReached);
+          } else if (d.ULinks[0].Type == 'ethernet')  {
+            d.connectionDetails = getDeviceConnectionDetails(d.ULinks[0], d.InterfaceName);
+          } else {
+            var upperLinkDevices = [];
+            upperLinkDevices = response.body.status.ethernet.filter(function(u) {
+              if (u.Key == d.ULinks[0].Key)
+                return true;
+              else
+                return false;
+            });
+            if (upperLinkDevices.length > 0) {
+              if (upperLinkDevices[0].ULinks.length > 0 )
+                d.connectionDetails = getDeviceConnectionDetails(upperLinkDevices[0].ULinks[0], '');
+            }
+          }
+          
+          // create an empty array to be populated with child devices
+          d.children = [];
+        }
+        aps.push(d);
+      });
+      
+      setAccessPointsKeys(apKeys);
+      setAccessPoints(aps);
+
+  getInactivePairedDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": "not interface and not self and ssw and .Active==false",
+        "flags": "full_links"
+      }
+
+  getActiveDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": {
+          "wifi": "not interface and not self and wifi and .Active==true",
+          "ethernet": "not interface and not self and eth and .Active==true"
+        },
+        "flags": "full_links"
+      }
+    onResponse: |
+      //@code
+      var allDevices = response.body.status.wifi.concat(response.body.status.ethernet);
+      
+      var apKeys = getAccessPointsKeys();
+      var aps = getAccessPoints();
+      var directDevices = [];
+      
+      aps.map(function(ap) { ap.children = []; });
+      
+      // regex to validate devices connected to repeater
+      // example of expected format: _C4:E5:32:13:C7:BA_vap2g0priv
+      var regex = /^_[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}_[^_]+$/;
+      
+      // get ghost devices mac to exclude
+      var ghostDevices = [];
+      allDevices.map(function(d) {
+        if (d.Alternative != null) {
+          if (d.Alternative.length > 0) {
+            var ghostDeviceMac = getGhostDeviceMac(d.Alternative[0]);
+            ghostDevices.push(ghostDeviceMac);
+          }
+        }
+      });
+      
+      allDevices.map(function(d) {
+        // filter out ghost devices
+        if (ghostDevices.indexOf(d.Key) == -1 && d.ULinks.length > 0) {
+      
+          if (d.ULinks[0].Type == 'wifi') 
+            d.downloadUploadSpeed = getWifiSpeed(d.MaxDownlinkRateReached,d.MaxUplinkRateReached);
+      
+          // clean the key in case device is connected to a repeater
+          if (regex.test(d.ULinks[0].Key) == true)
+            var processedKey = d.ULinks[0].Key.split('_')[2];
+          else
+            var processedKey = d.ULinks[0].Key;
+
+          var processedULink = {
+            "Key": processedKey,
+            "Type": d.ULinks[0].Type
+          }
+          d.connectionDetails = getDeviceConnectionDetails(processedULink, d.InterfaceName);
+      
+          // reformat last seen
+          d.LastConnection = convertUtcToGmtPlus1(d.LastConnection);
+
+          // convert IP to integer for sorting
+          d.SortableIp = ipToInteger(d.IPAddress);
+      
+          // set source label
+          if (d.IPAddressSource == 'Static') {
+            d.IPAddressSourceLabel = 'r@kpn.local_network.ip_type_static';
+          } else {
+            d.IPAddressSourceLabel = '-';
+          }
+      
+          if (regex.test(d.ULinks[0].Key) == true) {
+            var pdKey = d.ULinks[0].Key.split('_')[1];
+            var parentIndex = apKeys.indexOf(pdKey);
+            if (parentIndex > -1)
+              aps[parentIndex].children.push(d);
+            else
+              directDevices.push(d);
+          } else if (accessPointsKeys.contains(d.Key)) {
+            // do nothing as the access point is already added to the accessPoints array
+          } else {
+            directDevices.push(d);
+          }
+        }
+      });
+      
+      setAccessPoints(aps);
+      response.body.directDevices = directDevices;
+      response.body.accessPoints = aps;
+      response.body.allDevices = allDevices;
+      
+  setWifiStatus:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+        "Status": "${status}"
+
+  toggleInterface:
+    inputs: [interface, status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.${interface}"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+
+  setGuestWifiStatus:
+    inputs: [ status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Guest"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+
+  getIpv6Status:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NetMaster"
+      "method": "get"
+      "parameters": ""
+
+  setIpv6Status:
+    inputs: [ type ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NetMaster"
+      "method": "set"
+      "parameters":
+        "EnableIPv6": 1
+        "IPv6PrefixMode": "${type}"
+
+  getDevicesSchedule:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "getCompleteSchedules"
+      "parameters": {
+        "type": "ToD"
+      }
+    onResponse: |
+      //@code
+      
+      var disabledDevices = [];
+      response.body.data.scheduleInfo.map(function(s) {
+      
+        // always blocked
+        if (s.override == "Disable") 
+          disabledDevices.push(s.ID);
+      
+        // blocked during certain hours
+        if (s.override == "" && s.schedule.length > 0) {
+          s.schedule.map(function(sItem) {
+            if (sItem.state == "Disable")
+              disabledDevices.push(s.ID);
+          });
+        }
+      });
+
+      // dedupe
+      disabledDevices = disabledDevices.unique();
+      response.body.disabledDevices = disabledDevices;
+
+
+  removeDevice:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "destroyDevice"
+      "parameters": {
+        "key": "${mac}"
+      }
+      
+
+  removeAlInactiveDevices:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "destroyDevice"
+      "parameters": {
+        "key": "${mac}"
+      }
+
+  getDeviceDetails:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}"
+      "method": "get"
+      "parameters": { "flags": "full_links" }
+    onResponse: |
+      //@code
+      var ULink = response.body.status.ULinks[0];
+      
+      var connectionDetails = {
+        'type': '-',
+        'typeLabel': '-',
+        'networklabel': '-',
+        'speed': '-'
+      }
+      
+      connectionDetails = getDeviceConnectionDetails(ULink, response.body.status.InterfaceName);
+      
+      if (ULink.Type == 'wifi')
+        response.body.status.downloadUploadSpeed = getWifiSpeed(response.body.status.MaxDownlinkRateReached,response.body.status.MaxUplinkRateReached);
+
+      // set connection type      
+      response.body.status.connectionDetails = connectionDetails;
+      
+      // set randomized mac true/false
+      response.body.status.macRandomized = isMacRandomized(response.body.status.Key);
+      
+      // reformat last seen
+      response.body.status.LastConnection = convertUtcToGmtPlus1(response.body.status.LastConnection);
+
+
+      // set source label
+      if (response.body.status.IPAddressSource == 'Static') {
+        response.body.status.IPAddressSourceLabel = 'r@kpn.local_network.ip_type_static';
+      } else {
+        response.body.status.IPAddressSourceLabel = '-';
+      }
+
+  setDeviceName:
+    inputs: [mac, name]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}"
+      "method": "setName"
+      "parameters": {
+        "name": "${name}"
+      }
+
+  setDeviceType:
+    inputs: [mac, type]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}"
+      "method": "setType"
+      "parameters": {
+        "type": "${type}"
+      }
+
+  getDeviceSchedule:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "getSchedule"
+      "parameters": {
+        "type": "ToD",
+        "ID": "${mac}"
+      }
+
+  toggleDeviceSchedule:
+    inputs: [ mac, status ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "overrideSchedule"
+      "parameters": {
+        "type": "ToD",
+        "ID": "${mac}",
+        "override": "${status}"
+      }
+
+  setDeviceSchedule:
+    inputs: [ mac, schedule ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "addSchedule"
+      "parameters": {
+        "type": "ToD",
+        "info": {
+          "base": "Weekly",
+          "def": "Enable",
+          "ID": "${mac}",
+          "schedule": "${schedule}",
+          "enable": true,
+          "override": ""
+        }
+      }
+
+  # required calls before setting the device schedule
+  configureMSTFalse:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "configureMST"
+      "parameters":
+        "enable": false
+
+  configureMST:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "configureMST"
+      "parameters": {}
+
+  listMST:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "listMST"
+      "parameters": {}
+
+  setMST:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "setMST"
+      "parameters":
+        "allowedTime": { }
+        "enable": false
+        "id": "5R6zriT6TsKb2NY"
+        "subject": "MAC:E8:93:63:00:1D:21"
+
+  unPairExtender:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "SAHPairing"
+      "method": "unpair"
+      "parameters":
+        "CN": "${mac}"
+
+  # ethernet ports usage
+  getAllPortParams:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters":
+        "mibs": "eth"
+
+  getPort1Params:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.ETH0"
+      "method": "getMIBs"
+      "parameters": {}
+    onResponse: |
+      var ethObj = response.body.status.eth;
+      response.body.data = {};
+      for (key in ethObj) {
+        response.body.data.LLIntf = key;
+        response.body.data.CurrentBitRate = ethObj[key].CurrentBitRate;
+        response.body.data.MaxBitRateSupported = ethObj[key].MaxBitRateSupported;
+        response.body.data.MaxBitRateEnabled = ethObj[key].MaxBitRateEnabled;
+        response.body.data.CurrentDuplexMode = ethObj[key].CurrentDuplexMode;
+        response.body.data.DuplexModeEnabled = ethObj[key].DuplexModeEnabled;
+      }
+
+  getPort1Usage:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.ETH0"
+      "method": "getNetDevStats"
+      "parameters": {}
+    onResponse: |
+      var RxBytesFormatted = formatBytes(response.body.status.RxBytes);
+      response.body.status.RxBytesFormatted = RxBytesFormatted;
+
+      var TxBytesFormatted = formatBytes(response.body.status.TxBytes);
+      response.body.status.TxBytesFormatted = TxBytesFormatted;
+
+
+  getPort2Params:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.ETH1"
+      "method": "getMIBs"
+      "parameters": {}
+    onResponse: |
+      var ethObj = response.body.status.eth;
+      response.body.data = {};
+      for (key in ethObj) {
+        response.body.data.LLIntf = key;
+        response.body.data.CurrentBitRate = ethObj[key].CurrentBitRate;
+        response.body.data.MaxBitRateSupported = ethObj[key].MaxBitRateSupported;
+        response.body.data.MaxBitRateEnabled = ethObj[key].MaxBitRateEnabled;
+        response.body.data.CurrentDuplexMode = ethObj[key].CurrentDuplexMode;
+        response.body.data.DuplexModeEnabled = ethObj[key].DuplexModeEnabled;
+      }
+
+  getPort2Usage:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.ETH1"
+      "method": "getNetDevStats"
+      "parameters": {}
+    onResponse: |
+      //@code
+      var RxBytesFormatted = formatBytes(response.body.status.RxBytes);
+      response.body.status.RxBytesFormatted = RxBytesFormatted;
+
+      var TxBytesFormatted = formatBytes(response.body.status.TxBytes);
+      response.body.status.TxBytesFormatted = TxBytesFormatted;
+
+  setSTPStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.bridge"
+      "method": "set"
+      "parameters":
+        "STPEnable": '${stpProtocolSwitch.value}'
+
+  getSTPStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.bridge"
+      "method": "get"
+      "parameters": {}
+
+  getSswLed:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}.SSW"
+      "method": "execAPI"
+      "parameters":
+        "service": "LEDs.LED"
+        "method": "get"
+
+  setSswLed:
+    inputs: [ mac, brightness ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}.SSW"
+      "method": "execAPI"
+      "parameters":
+        "service": "LEDs.LED.Root"
+        "method": "set"
+        "parameters":
+          "Brightness": "${brightness}"
+
+
+  getTopology:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.lan"
+      "method": "topology"
+      "parameters":
+        "expression": "not logical"
+        "flags": "no_recurse|no_actions"
+    onResponse: |
+      var processedDevices = processParentInterfaces(response.body.status[0]);
+      response.body.activeDirectDevices = processedDevices.activeDirectDevices;
+      response.body.activeExtenders = processedDevices.activeExtenders;
+      response.body.inactiveExtenders = processedDevices.inactiveExtenders;
+
+
+  getTopologyGuest:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.guest"
+      "method": "topology"
+      "parameters":
+        "expression": "not logical"
+        "flags": "no_recurse|no_actions"
+    onResponse: |
+      var processedDevices = processParentInterfaces(response.body.status[0]);
+      response.body.activeDirectDevices = processedDevices.activeDirectDevices;
+      response.body.activeExtenders = processedDevices.activeExtenders;
+      response.body.inactiveExtenders = processedDevices.inactiveExtenders;
+
+
+
+  getSSWs:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression": "not interface and not self and ssw"
+        "flags": "alternatives"
+    onResponse: |
+      ensemble.storage.extenderCount = response.body.status.length;
+      ensemble.storage.alternative_devices_macs = [];
+      response.body.status.map(function (d) {
+        if (d.Alternative == null ) {
+          ensemble.debug("No alternative mac");
+        } else {
+          d.Alternative.map(function(a) {
+            ensemble.storage.alternative_devices_macs.push(a.Key);
+          });
+        }
+      });
+
+  setDuplexMode:
+    inputs: [port, mode]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.${port}"
+      "method": "set"
+      "parameters":
+        "DuplexModeEnabled": "${mode}"
+    onResponse:
+      showToast:
+        widget: SuccessToast
+        styles:
+          padding: 0
+        options:
+          type: custom
+          duration: 15
+          dismissable: true
+          alignment: center
+    onError:
+      showToast:
+        message: r@kpn.error
+        options:
+          dismissable: true
+          type: error
+          duration: 15
+          alignment: center
+
+
+  removeIntf:
+    inputs: [port, intf]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NetMaster.LAN.default.Bridge.${intf}"
+      "method": "removeIntf"
+      "parameters":
+        "Intf": "${port}"
+
+  addIntf:
+    inputs: [port, intf]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NetMaster.LAN.default.Bridge.${intf}"
+      "method": "addIntf"
+      "parameters":
+        "Intf": "${port}"
+    onResponse:
+      showToast:
+        widget: SuccessToast
+        styles:
+          padding: 0
+        options:
+          type: custom
+          duration: 15
+          dismissable: true
+          alignment: center
+    onError:
+      showToast:
+        message: r@kpn.error
+        options:
+          dismissable: true
+          type: error
+          duration: 15
+          alignment: center
+
+
+
+Global: |
+  //@code
+  
+  // store MAC address of paired Access points
+  var accessPointsKeys = [];
+  
+  // store device details of paired Access points
+  // as we get devices, populate each access point with its children
+  var accessPoints = [];
+  
+  // use index when deleting devices on a timer
+  var inactiveDeviceIndex = 0;
+  
+  function clearAccessPoints() {
+    accessPointsKeys = [];
+    accessPoints = [];
+  }
+
+  function setAccessPointsKeys (arr) {
+    accessPointsKeys = arr;
+  }
+  
+  function getAccessPointsKeys () {
+    return(accessPointsKeys);
+  }
+  
+  function setAccessPoints (arr) {
+    accessPoints = arr;
+  }
+  
+  function getAccessPoints () {
+    return(accessPoints);
+  }
+  
+  function incrementInactiveDeviceIndex () {
+    inactiveDeviceIndex = inactiveDeviceIndex + 1;
+  }
+  
+  function getInactiveDeviceIndex () {
+    return (inactiveDeviceIndex);
+  }
+  
+  var deviceTypes = {
+    'default': {
+      'icon': 0xe987
+    },
+    'Mobile': {
+      'icon': 0xe973
+    },
+    'Phone': {
+      'icon': 0xe980
+    },
+    'Desktop': {
+      'icon': 0xe912
+    },
+    'Computer': {
+      'icon': 0xe95f
+    },
+    'Laptop': {
+      'icon': 0xe95f
+    },
+    'Tablet': {
+      'icon': 0xe9aa
+    },
+    'Notebook': {
+      'icon': 0xe97d
+    },
+    'Google OnHub': {
+      'icon': 0xe922
+    },
+    'Apple TV': {
+      'icon': 0xe9a9
+    },
+    'Set-top Box': {
+      'icon': 0xe9b3
+    },
+    'Camera': {
+      'icon': 0xe917
+    },
+    'TV': {
+      'icon': 0xe9af
+    },
+    'HiFi': {
+      'icon': 0xe90c
+    },
+    'Game Console': {
+      'icon': 0xe9a4
+    },
+    'Smart bulb': {
+      'icon': 0xe910
+    },
+    'Smart Plug': {
+      'icon': 0xe987
+    },
+    'Smoke Detector': {
+      'icon': 0xe941
+    },
+    'Smoke Sensor': {
+      'icon': 0xe941
+    },
+    'Door Sensor': {
+      'icon': 0xe98b
+    },
+    'Lock': {
+      'icon': 0xe966
+    },
+    'Flood Sensor': {
+      'icon': 0xe938
+    },
+    'Thermostat': {
+      'icon': 0xe986
+    },
+    'Switch': {
+      'icon': 0xe976
+    },
+    'Light Switch': {
+      'icon': 0xe9db
+    },
+    'Fan': {
+      'icon': 0xe96e
+    },
+    'USB key': {
+      'icon': 0xe985
+    },
+    'Kpn Repeater SW': {
+      'icon': 0xe903
+    },
+    'Kpn Repeater SW2': {
+      'icon': 0xe903
+    },
+    'Kpn Repeater EW': {
+      'icon': 0xe902
+    },
+    'WiFiExtender': {
+      'icon': 0xe9be
+    },
+    'Wi-Fi Access Point': {
+      'icon': 0xe9be
+    },
+    'Extender Wi-Fi Plus': {
+      'icon': 0xe918
+    },
+    'Acces Point': {
+      'icon': 0xe9be
+    },
+    'Generic Repeater': {
+      'icon': 0xe978
+    },
+    'Dimmer light': {
+      'icon': 0xe9da
+    },
+    'Window Sensor': {
+      'icon': 0xe9c5
+    },
+    'Domestic Robot': {
+      'icon': 0xe996
+    },
+    'Smart / IOT 1': {
+      'icon': 0xe94f
+    },
+    'Smart / IOT 2 (Cloud)': {
+      'icon': 0xe927
+    },
+    'Smart / IOT  categorie 3': {
+      'icon': 0xe9c8
+    },
+    'InternetGatewayDevice': {
+      'icon': 0xe9be
+    },
+    'Printer': {
+      'icon': 0xe96a
+    }
+  };
+
+  
+  function getDeviceConnectionDetails (ULink, InterfaceName) {
+    var connectionDetails = {
+      'type': '-',
+      'typeLabel': '-',
+      'networklabel': '-'
+    }
+
+    if (ULink != null && InterfaceName != null) {
+      if (ULink.Type == "ethernet") {
+        var portNumber = reformatEthernetPort(ULink.Key);
+        connectionDetails = {
+          'type': 'Ethernet',
+          'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+          'networklabel': portNumber
+        }
+      } else if (ULink.Type == "wifi") {
+        connectionDetails = {
+          'type': 'WiFi',
+          'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+          'networklabel': ensemble.storage.get(ULink.Key)
+        }
+      } else if (ULink.Type == "HNID") {
+        var portNumber = reformatEthernetPort(InterfaceName);
+        connectionDetails = {
+          'type': 'Ethernet',
+          'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+          'networklabel': portNumber + ' / Switch'
+        }
+      }
+    }
+
+    return (connectionDetails);
+  }
+
+  function reformatEthernetPort (interface) {
+    var ethPort = '';
+    if (interface == 'eth0')
+      ethPort = 'Ethernet 1'
+    else if (interface == 'eth1')
+      ethPort = 'Ethernet 2'
+    else if (interface == 'ETH2')
+      ethPort = 'Ethernet 3'
+    else if (interface == 'ETH3')
+      ethPort = 'Ethernet 4'
+
+    return (ethPort);
+  }
+  
+  function isMacRandomized (mac) {
+    // if second character of mac is either of [2,6,A,E], it is randomized
+    var randomizedMacIndicator = ['2','6','A','E'];
+    var secondCharOfMac = mac.substring(1,2);
+  
+    if (randomizedMacIndicator.indexOf(secondCharOfMac) > -1)
+      return true;
+    else
+      return false;
+  }
+  
+  function getDeviceIcon (type) {
+    if (deviceTypes[type] == null)
+      return deviceTypes['default'].icon;
+    else
+      return deviceTypes[type].icon;
+  }
+  
+  function formatBytes(bytes) {
+    if (bytes == null)
+      return "0";
+
+    if (bytes == 0)
+      return "0";
+
+    var converstionToGB = 1073741824;
+    var GB = 0;
+    if (bytes > 0) {
+      GB = Math.round(bytes / converstionToGB * 100) / 100;
+      return GB + ' GB';
+    }
+  }
+  
+  function isIpv4 (ip) {
+    var regex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    if (ip != null)
+      return (regex.test(ip));
+    else
+      return false;
+  }
+  
+  
+  function getWifiSpeed(download,upload) {
+    var d = '0';
+    if (download>1000000)
+      d = Math.round(download / 1000000) + ' Gbps';
+    else if (download>0)
+      d = Math.round(download / 1000) + ' Mbps';
+  
+    var u = '0';
+    if (upload>1000000)
+      u = Math.round(upload / 1000000) + ' Gbps';
+    else if (upload>0)
+      u = Math.round(upload / 1000) + ' Mbps';
+  
+    return (d + ' / ' + u);
+  }
+  
+  function getWifiDownloadSpeed(download) {
+    var d = '0';
+  
+    if (download>1000000)
+      d = Math.round(download / 1000000) + ' Gbps';
+    else if (download>0)
+      d = Math.round(download / 1000) + ' Mbps';
+  
+    return (d);
+  }
+  
+  function getPortSpeed(speed) {
+    var s = "-";
+    
+    if (speed != null) {
+      if (speed >= 1000)
+        s = (speed / 1000) + ' Gbps';
+      else if (speed >= 0)
+        s = speed + ' Mbps';
+      else
+        s = '0 Mbps';
+
+    }
+
+    return (s);
+  }
+  
+  
+  function getGhostDeviceMac(inputMac) {
+
+    // get last two characters
+    var lastTwo = inputMac.substring(15,17);
+    var lastTwoNum = parseInt(lastTwo, 16);
+
+    // adjust to get the ghost device last two
+    var ghostDeviceLastTwo = lastTwoNum - 7;
+    ghostDeviceLastTwoNum = ghostDeviceLastTwo.toString(16);
+
+    // ghost device full mac
+    var ghostDeviceMac = inputMac.substring(0,14) + ':' + ghostDeviceLastTwoNum.toUpperCase();
+
+    return(ghostDeviceMac);
+  }
+
+  var kpnDeviceTypes = {
+    "F5359s": {
+      "deviceTypeLabel": "r@kpn.login.F5359s",
+      "deviceIcon": 0xe9cc
+    },
+    "WE620242s": {
+      "deviceTypeLabel": "r@kpn.login.WE620242s",
+      "deviceIcon": 0xe903
+    },
+    "Box_V14": {
+      "deviceTypeLabel": "r@kpn.login.Box_V14",
+      "deviceIcon": 0xe9cc
+    },
+    "WE420223-99s": {
+      "deviceTypeLabel": "r@kpn.login.Experia",
+      "deviceIcon": 0xe902
+    }
+  };
+  
+  function getDeviceCommercialName (productClass) {
+    if (kpnDeviceTypes[productClass] != null) {
+      return (kpnDeviceTypes[productClass].deviceTypeLabel);
+    } else {
+      return "-";
+    }
+  }
+  
+  function getDeviceIcon (productClass) {
+    if (kpnDeviceTypes[productClass] != null) {
+      return (kpnDeviceTypes[productClass].deviceIcon);
+    } else {
+      return "";
+    }
+  }
+
+  function showToast (widget, styles, options) {
+    var payload = {
+      widget: widget,
+      styles: styles,
+      options: options
+    };
+    ensemble.showToast(payload);
+  }
+  
+  
+  var interfaceTypes = {
+    'ETH0': {
+      'type': 'Ethernet',
+      'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+      'networklabel': 'Ethernet 1',
+      'speed': '1 Gbit/s'
+    },
+    'ETH1': {
+      'type': 'Ethernet',
+      'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+      'networklabel': 'Ethernet 2',
+      'speed': '1 Gbit/s'
+    },
+    'ETH2': {
+      'type': 'Ethernet',
+      'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+      'networklabel': 'Ethernet 3',
+      'speed': '1 Gbit/s'
+    },
+    'ETH3': {
+      'type': 'Ethernet',
+      'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+      'networklabel': 'Ethernet 4',
+      'speed': '1 Gbit/s'
+    },
+    'vap2g0priv': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap2g0priv'),
+      'speed': '2,4 GHz'
+    },
+    'vap5g0priv': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap5g0priv'),
+      'speed': '5 GHz'
+    },
+    'vap2g0guest': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap2g0guest'),
+      'speed': '2,4 GHz'
+    },
+    'vap5g0guest': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap5g0guest'),
+      'speed': '5 GHz'
+    },
+    'vap2g0ext': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap2g0ext'),
+      'speed': '2,4 GHz'
+    },
+    'vap5g0ext': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap5g0ext'),
+      'speed': '5 GHz'
+    },
+    'vap2g0Ext': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap2g0ext'),
+      'speed': '2,4 GHz'
+    },
+    'vap5g0Ext': {
+      'type': 'WiFi',
+      'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+      'networklabel': ensemble.storage.get('vap5g0ext'),
+      'speed': '5 GHz'
+    }
+  };
+  
+  function updateDeviceDetails(d, interface) {
+    d.connectionDetails = interfaceTypes[interface];
+
+    if (d.connectionDetails != null)
+      if (d.connectionDetails.type == 'WiFi')
+        d.downloadUploadSpeed = getWifiSpeed(d.MaxDownlinkRateReached,d.MaxUplinkRateReached);
+
+
+    // reformat last seen
+    d.LastConnection = convertUtcToGmtPlus1(d.LastConnection);
+
+    // convert IP to integer for sorting
+    d.SortableIp = ipToInteger(d.IPAddress);
+
+    // set source label
+    if (d.IPAddressSource == 'Static') {
+      d.IPAddressSourceLabel = 'r@kpn.local_network.ip_type_static';
+    } else {
+      d.IPAddressSourceLabel = '-';
+    }
+
+    return (d);
+  }
+
+
+  function getTopologyLine(connectionDetails, isSwitchConnected) {
+    // ethernet
+    if (connectionDetails.type == "Ethernet") {
+      if (connectionDetails.speed == "1 Gbit/s" && isSwitchConnected)
+        return("switch-line-green-solid.png");
+      else if(connectionDetails.speed == "1 Gbit/s")
+        return("line-green-solid.png");
+      else
+        return("line-orange-solid.png");
+    }
+
+    // wifi
+    else if (connectionDetails.type == "WiFi") {
+      if (connectionDetails.speed == "5 GHz")
+         return("line-green-dashed.png");
+      else
+        return("line-orange-dashed.png");
+    }
+
+    // no details
+    else
+      return("line-grey.png");
+
+  }
+
+
+  // process list of interfaces to extract devices and extenders
+  // return an object with following keys
+  //// activeDirectDevices
+  //// activeExtenders
+  //// inactiveExtenders
+  function processParentInterfaces (interfaces) {
+
+    var activeDirectDevices = [];
+    var activeExtenders = [];
+    var inactiveExtenders = [];
+    if ( interfaces != null && interfaces.Children != null) {
+      interfaces.Children.map(function (i) {
+        if (i.Children != null) {
+          i.Children.map(function (d) {
+      
+            // exclude alternative macs
+            if (ensemble.storage.alternative_devices_macs.includes(d.Key) == false) {
+              d = updateDeviceDetails(d, i.Name);
+        
+              var tagsArray = d.Tags.split(' ');
+        
+              // paired ssw
+              if (tagsArray.includes('ssw') && d.Active == true) {
+                var sswChildren = processParentInterfaces(d);
+                d.activeDirectDevices = sswChildren.activeDirectDevices;
+                d.activeExtenders = sswChildren.activeExtenders;
+                d.inactiveExtenders = sswChildren.inactiveExtenders;
+                activeExtenders.push(d);
+              }
+        
+              else if (tagsArray.includes('ssw') && d.Active == false) {
+                inactiveExtenders.push(d);
+              }
+        
+              // hnid
+              else if (tagsArray.includes('hnid') && d.Active == true) {
+                var switchChildren = processSwitch(d);
+                activeDirectDevices = activeDirectDevices.concat(switchChildren.activeDirectDevices);
+                activeExtenders = activeExtenders.concat(switchChildren.activeExtenders);
+                inactiveExtenders = inactiveExtenders.concat(switchChildren.inactiveExtenders);
+              }
+
+              else if (d.Active == true) {
+                activeDirectDevices.push(d);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    return ({
+      "activeDirectDevices": activeDirectDevices,
+      "activeExtenders": activeExtenders,
+      "inactiveExtenders": inactiveExtenders
+    });
+  }
+
+
+  // process list a switch, which unlike the master or slave extenders do not have interfaces
+  // return an object with following keys
+  //// activeDirectDevices
+  //// activeExtenders
+  //// inactiveExtenders
+  function processSwitch (s) {
+    var activeDirectDevices = [];
+    var activeExtenders = [];
+    var inactiveExtenders = [];
+
+    if ( s != null ) {
+      if ( s.Children ) {
+        s.Children.map(function (d) {
+        
+          // exclude alternative macs
+          if (ensemble.storage.alternative_devices_macs.includes(d.Key) == false) {
+            d = updateDeviceDetails(d, s.InterfaceName);
+            d.switchConnected = true;
+
+            var tagsArray = d.Tags.split(' ');
+      
+            // paired ssw
+            if (tagsArray.includes('ssw') && d.Active == true) {
+              activeExtenders.push(d);
+            }
+      
+            else if (tagsArray.includes('ssw') && d.Active == false) {
+              inactiveExtenders.push(d);
+            }
+      
+            // hnid
+            else if (tagsArray.includes('hnid') && d.Active == true) {
+              var switchChildren = processSwitch(d);
+              activeDirectDevices = activeDirectDevices.concat(switchChildren.activeDirectDevices);
+              activeExtenders = activeExtenders.concat(switchChildren.activeExtenders);
+              inactiveExtenders = inactiveExtenders.concat(switchChildren.inactiveExtenders);
+            }
+      
+            else if (d.Active == true) {
+              activeDirectDevices.push(d);
+            }
+          }
+        });  
+      }
+
+    }
+
+    return ({
+      "activeDirectDevices": activeDirectDevices,
+      "activeExtenders": activeExtenders,
+      "inactiveExtenders": inactiveExtenders
+    });
+  }
+
+
+  function getSubnetMaskDropdownList () {
+    var list = [
+      { "label": "0 (0.0.0.0)", "value": "0.0.0.0" },
+      { "label": "1 (128.0.0.0)", "value": "128.0.0.0" },
+      { "label": "2 (192.0.0.0)", "value": "192.0.0.0" },
+      { "label": "3 (224.0.0.0)", "value": "224.0.0.0" },
+      { "label": "4 (240.0.0.0)", "value": "240.0.0.0" },
+      { "label": "5 (248.0.0.0)", "value": "248.0.0.0" },
+      { "label": "6 (252.0.0.0)", "value": "252.0.0.0" },
+      { "label": "7 (254.0.0.0)", "value": "254.0.0.0" },
+      { "label": "8 (255.0.0.0)", "value": "255.0.0.0" },
+      { "label": "9 (255.128.0.0)", "value": "255.128.0.0" },
+      { "label": "10 (255.192.0.0)", "value": "255.192.0.0" },
+      { "label": "11 (255.224.0.0)", "value": "255.224.0.0" },
+      { "label": "12 (255.240.0.0)", "value": "255.240.0.0" },
+      { "label": "13 (255.248.0.0)", "value": "255.248.0.0" },
+      { "label": "14 (255.252.0.0)", "value": "255.252.0.0" },
+      { "label": "15 (255.254.0.0)", "value": "255.254.0.0" },
+      { "label": "16 (255.255.0.0)", "value": "255.255.0.0" },
+      { "label": "17 (255.255.128.0)", "value": "255.255.128.0" },
+      { "label": "18 (255.255.192.0)", "value": "255.255.192.0" },
+      { "label": "19 (255.255.224.0)", "value": "255.255.224.0" },
+      { "label": "20 (255.255.240.0)", "value": "255.255.240.0" },
+      { "label": "21 (255.255.248.0)", "value": "255.255.248.0" },
+      { "label": "22 (255.255.252.0)", "value": "255.255.252.0" },
+      { "label": "23 (255.255.254.0)", "value": "255.255.254.0" },
+      { "label": "24 (255.255.255.0)", "value": "255.255.255.0" },
+      { "label": "25 (255.255.255.128)", "value": "255.255.255.128" },
+      { "label": "26 (255.255.255.192)", "value": "255.255.255.192" },
+      { "label": "27 (255.255.255.224)", "value": "255.255.255.224" },
+      { "label": "28 (255.255.255.240)", "value": "255.255.255.240" },
+      { "label": "29 (255.255.255.248)", "value": "255.255.255.248" },
+      { "label": "30 (255.255.255.252)", "value": "255.255.255.252" },
+      { "label": "31 (255.255.255.254)", "value": "255.255.255.254" },
+      { "label": "32 (255.255.255.255)", "value": "255.255.255.255" }
+    ];
+    return list;
+  }
+
+  function getSubnetMaskBit (mask) {
+    var options = {
+      "0.0.0.0": 0,
+      "128.0.0.0": 1,
+      "192.0.0.0": 2,
+      "224.0.0.0": 3,
+      "240.0.0.0": 4,
+      "248.0.0.0": 5,
+      "252.0.0.0": 6,
+      "254.0.0.0": 7,
+      "255.0.0.0": 8,
+      "255.128.0.0": 9,
+      "255.192.0.0": 10,
+      "255.224.0.0": 11,
+      "255.240.0.0": 12,
+      "255.248.0.0": 13,
+      "255.252.0.0": 14,
+      "255.254.0.0": 15,
+      "255.255.0.0": 16,
+      "255.255.128.0": 17,
+      "255.255.192.0": 18,
+      "255.255.224.0": 19,
+      "255.255.240.0": 20,
+      "255.255.248.0": 21,
+      "255.255.252.0": 22,
+      "255.255.254.0": 23,
+      "255.255.255.0": 24,
+      "255.255.255.128": 25,
+      "255.255.255.192": 26,
+      "255.255.255.224": 27,
+      "255.255.255.240": 28,
+      "255.255.255.248": 29,
+      "255.255.255.252": 30,
+      "255.255.255.254": 31,
+      "255.255.255.255": 32
+    };
+    return options[mask];
+  }

@@ -1,0 +1,52 @@
+Import:
+  - mockData
+
+View:
+  onLoad:
+    invokeAPI:
+      name: releaseContext
+      onResponse:
+        executeCode:
+          body: |
+            //@code
+            ensemble.storage.set('contextId', null);
+            ensemble.storage.set('appConfig', null);
+          onComplete:
+            navigateScreen:
+              name: Landing
+
+
+  Column:
+    styles: { padding: 16, backgroundColor: 0xffeaeaea, mainAxis: center }
+    children:
+      - Row:
+          id: loadingState
+          styles:
+            crossAxis: center
+            gap: 16
+          children:
+            - Spacer
+            - Progress:
+                styles: { size: 50 }
+            - Text:
+                text: Logging out...
+            - Spacer
+
+
+API:
+  releaseContext:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_releaseContext }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah-Logout ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "sah.Device.Information"
+      "method": "releaseContext"
+      "parameters": {
+        "applicationName": "webui"
+      }

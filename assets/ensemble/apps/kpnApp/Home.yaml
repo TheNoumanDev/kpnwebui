@@ -1,0 +1,2834 @@
+Import:
+  - common
+  - mockData
+
+View:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - invokeAPI:
+            name: getHybridAccessStatus
+        - invokeAPI:
+            name: getExtenders
+        - invokeAPI:
+            name: getTopology
+        - startTimer:
+            id: timeoutTimer
+            options:
+              isGlobal: true  # global timer. Will only ever have 1 running
+              repeat: true
+              repeatInterval: 15  # repeat every 15 seconds
+            onTimer:
+              invokeAPI:
+                name: getCurrentUser
+                onResponse: |-
+                  //@code
+                  if (response.body.status.user != 'admin') {
+                    // stop the timer and log out
+                    ensemble.stopTimer('timeoutTimer');
+                    ensemble.navigateScreen({
+                      'name': 'Logout',
+                      'options': {
+                        'clearAllScreens': true
+                      }
+                    });
+                  }
+
+  styles:
+    scrollableView: true
+    backgroundColor: 0xFFEAEAEA
+    showNavigation: flase
+      
+    
+  Column:
+    styles:
+      fontSize: 16
+    children:
+      - PageHeader:
+          inputs:
+            title: r@kpn.nav.dashboard
+            showConnectionWarning: ${ensemble.storage.internetConnected == false}
+            showSlaveDeviceWarning: ${ isMaster() == false }
+      - Column:
+          styles:
+            backgroundColor: 0xffeaeaea
+            padding: 16
+          children:
+            - Flex:
+                id: myFlex
+                styles:
+                  gap: 16
+                  direction: '${device.width > 768 ? "horizontal" : "vertical"}'
+                children:
+                  - Column:
+                      styles:
+                        gap: 16
+                        expanded: '${myFlex.direction == "horizontal" ? true : false}'
+
+                      children:
+                        # wifi card
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 8 24
+
+                            children:
+                              - Wifi
+
+                        # Connected devices card
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - ConnectedDevices
+
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24
+                            children:
+                              - Backup_4g
+                  # Column 2
+                  - Column:
+                      styles:
+                        gap: 16
+                        expanded: '${myFlex.direction == "horizontal" ? true : false}'
+                      children:
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [ 0, 0 ]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - InternetConnection
+
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - IPTV
+
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - Phone
+                        
+                        - Conditional:
+                            conditions:
+                              - if: ${ getHybridAccessStatus.body.status.Enable }
+                                widget:
+                                  Column:
+                                    styles:
+                                      backgroundColor: white
+                                      shadowColor: 0xFFDEDEDE
+                                      shadowRadius: 1
+                                      shadowOffset: [0, 0]
+                                      borderRadius: 10
+                                      padding: 24 0 24 24
+                                    children:
+                                      - HybridAcess
+
+
+                  # modem
+                  - Column:
+                      styles:
+                        gap: 16
+                        expanded: '${myFlex.direction == "horizontal" ? true : false}'
+                      children:
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - Modem
+
+                        # filters
+                        - Column:
+                            styles:
+                              backgroundColor: white
+                              shadowColor: 0xFFDEDEDE
+                              shadowRadius: 1
+                              shadowOffset: [0, 0]
+                              borderRadius: 10
+                              padding: 24 0 24 24
+                            children:
+                              - ActiveFilters
+
+
+
+HybridAccessIcon:
+  inputs:
+    - color          
+  body:
+    Row:
+      styles:
+        gap: 6
+        crossAxis: end
+        padding: 4
+      children:
+        - Shape:
+            type: rectangle
+            styles:
+              width: 8
+              height: 20
+              borderRadius: 2 2 0 0
+              backgroundColor: ${color}
+        - Shape:
+            type: rectangle
+            styles:
+              width: 8
+              height: 30
+              borderRadius: 2 2 0 0
+              backgroundColor: ${color}
+        - Shape:
+            type: rectangle
+            styles:
+              width: 8
+              height: 40
+              borderRadius: 2 2 0 0
+              backgroundColor: ${color}
+        - Shape:
+            type: rectangle
+            styles:
+              width: 8
+              height: 50
+              borderRadius: 2 2 0 0
+              backgroundColor: ${color}
+
+
+HybridAccessIconBlinkingRed:
+  onLoad:
+    startTimer:
+      options:
+        repeat: true
+        maxNumberOfTimes: 300
+        repeatInterval: 1
+        startAfter: 0            
+      onTimer:
+        executeCode:
+          body: |
+            var d = new Date();
+            if (d.getSeconds() % 2 == 0) {
+              rectangle1.backgroundColor = 0xFFE52E2E;
+              rectangle2.backgroundColor = 0xFFE52E2E;
+              rectangle3.backgroundColor = 0xFFE52E2E;
+              rectangle4.backgroundColor = 0xFFE52E2E;
+            } else {
+              rectangle1.backgroundColor = 0xFFD3D3D3;
+              rectangle2.backgroundColor = 0xFFD3D3D3;
+              rectangle3.backgroundColor = 0xFFD3D3D3;
+              rectangle4.backgroundColor = 0xFFD3D3D3;
+
+            }      
+  body:
+    Row:
+      styles:
+        gap: 6
+        crossAxis: end
+        padding: 4
+      children:
+        - Shape:
+            id: rectangle1
+            type: rectangle
+            styles:
+              width: 8
+              height: 20
+              borderRadius: 2 2 0 0
+              backgroundColor: 0xFFE52E2E
+        - Shape:
+            id: rectangle2
+            type: rectangle
+            styles:
+              width: 8
+              height: 30
+              borderRadius: 2 2 0 0
+              backgroundColor: 0xFFE52E2E
+        - Shape:
+            id: rectangle3
+            type: rectangle
+            styles:
+              width: 8
+              height: 40
+              borderRadius: 2 2 0 0
+              backgroundColor: 0xFFE52E2E
+        - Shape:
+            id: rectangle4
+            type: rectangle
+            styles:
+              width: 8
+              height: 50
+              borderRadius: 2 2 0 0
+              backgroundColor: 0xFFE52E2E
+
+
+
+HybridAcess:
+  onLoad:
+    invokeAPI:
+      name: getDhcpSettings
+
+  body:
+    Column:
+      styles:
+        gap: 6
+      children:
+
+        - CardTitle:
+            inputs:
+              title: r@kpn.home.hybrid_access
+
+        
+        - Conditional:
+            conditions:
+
+              # deviating scenario
+              - if: '${ getHybridAccessStatus.body.status.Status != "DISABLED" &&  getDhcpSettings.body.deviatingFromDefaults }'
+                widget:
+                  FittedRow:
+                    styles:
+                      gap: 16
+                      padding: 0 16 0 0
+                      childrenFits:
+                        - auto
+                        - 1
+                    children:
+                      - HybridAccessIconBlinkingRed
+                      - Column:
+                          onTap:
+                            navigateScreen:
+                              name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                              inputs:
+                                selectedIndex: 3
+                                tabIndex: 2
+                          children:
+                            - Text:
+                                styles: { overflow: wrap }
+                                selectable: true
+                                text: r@kpn.home.hybrid_access_status_variant  
+                            - Text:
+                                text: r@kpn.home.hybrid_access_status_variant_link
+                                styles:
+                                  textStyle:
+                                    color: 0xFF00AAFF
+
+              - else:
+                widget:
+                  FittedRow:
+                    styles:
+                      gap: 16
+                      crossAxis: center
+                      padding: 0 16 0 0
+                      childrenFits:
+                        - auto
+                        - 1
+                    children:
+
+                      - HybridAccessIcon:
+                          inputs:
+                            color:  "${ getHybridAccessStatus.body.status.Status == 'DISABLED' ?  0xFF939393 :
+                                        ( getHybridAccessStatus.body.status.Status == 'DSL_DOWN' ? 0xFFFF9000 :
+                                        ( getHybridAccessStatus.body.status.Status == 'DSL_UP' ? 0xFF009900 : 
+                                        ( getHybridAccessStatus.body.status.Status == 'DISCONNECTED' ? 0xFFE52E2E :  
+                                        ( getHybridAccessStatus.body.status.Status == 'CONNECTED' ? 0xFFE52E2E : 'black' ))))
+                                      }"
+                      - Text:
+                          styles: { overflow: wrap }
+                          selectable: true
+                          text: "${ getHybridAccessStatus.body.status.Status == 'DISABLED' ?  'r@kpn.home.hybrid_access_status_disabled' :
+                                        ( getHybridAccessStatus.body.status.Status == 'DSL_DOWN' ? 'r@kpn.home.hybrid_access_status_dslDown' :
+                                        ( getHybridAccessStatus.body.status.Status == 'DSL_UP' ? 'r@kpn.home.hybrid_access_status_dslUp' :
+                                        ( getHybridAccessStatus.body.status.Status == 'DISCONNECTED' ? 'r@kpn.home.hybrid_access_status_disconnected' :  
+                                        ( getHybridAccessStatus.body.status.Status == 'CONNECTED' ? 'r@kpn.home.hybrid_access_status_dslDown' : '-' ))))
+                                      }" 
+
+Wifi:
+  onLoad:
+    invokeAPI:
+      name: getWifiStatus
+      onResponse:
+        invokeAPI:
+          name: getPrivWiFi
+          onResponse:
+            invokeAPI:
+              name: getGuestWiFiInfo
+              onResponse: |
+                //@code
+                ensemble.storage.set('mainWifi',getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID);
+                ensemble.storage.set('guestWifi',getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID);
+      
+                ensemble.storage.set('vap2g0priv',getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID);
+                ensemble.storage.set('vap5g0priv',getPrivWiFi.body.status.wlanvap.vap5g0priv.SSID);
+                ensemble.storage.set('vap2g0ext',getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID);
+                ensemble.storage.set('vap5g0ext',getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID);
+                ensemble.storage.set('vap2g0guest',getGuestWiFiInfo.body.status.wlanvap.vap2g0guest.SSID);
+                ensemble.storage.set('vap5g0guest',getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID);
+
+  body:
+    Column:
+      styles:
+        gap: 6
+      children:
+
+        - CardTitle:
+            inputs:
+              title: r@kpn.nav.wifi
+
+        - FittedRow:
+            styles:
+              gap: 16
+              crossAxis: center
+              padding: 0 16 0 0
+              childrenFits:
+                - auto
+                - 1
+                - auto
+            children:
+              - Icon:
+                  name: "${ getWifiStatus.body.status.Status ? 0xe9d6 : 0xe9d3 }"
+                  library: kpnSI
+                  id: mainWifiIcon
+                  styles:
+                    size: 80
+                    color:  "${ getWifiStatus.body.status.Status ? 0xFF009900 : 0xFF939393 }"
+              - Text:
+                  styles: { overflow: wrap }
+                  selectable: true
+                  text: "${ getWifiStatus.body.status.Status ? 'r@kpn.home.wifi_signal_on' : 'r@kpn.home.wifi_signal_off' }"
+              - Row:
+                  testId: wifiSwitch
+                  onTap: |
+                    if (wifiStatus.value) {
+                      wifiStatus.value = false;
+                      wifiStatusSwitchSpacer.size = 0;
+                      ensemble.invokeAPI("setWifiStatus", {
+                        "status": false
+                      });
+                      this.backgroundColor = 0xFFD3D3D3;
+                      wifiRadioIcon.backgroundColor = 'black';
+                    } else {
+                      wifiStatus.value = true;
+                      wifiStatusSwitchSpacer.size = 24;
+                      ensemble.invokeAPI("setWifiStatus", {
+                        "status": true 
+                      });
+                      this.backgroundColor = 0x44009900;
+                      wifiRadioIcon.backgroundColor = 'white';
+                    }
+
+                  styles:
+                    borderRadius: 100
+                    padding: 3
+                    width: 58
+                    height: 32
+                    backgroundColor: "${getWifiStatus.body.status.Status ? 0x44009900 : 0xFFD3D3D3}"
+
+                  children:
+                    - Spacer:
+                        id: wifiStatusSwitchSpacer
+                        styles:
+                          size: '${ getWifiStatus.body.status.Status ? 24 : 0 }'
+                          
+                    - Icon:
+                        id: wifiRadioIcon
+                        name: 0xe9be
+                        library: kpnUI
+                        styles:
+                          color: "${getWifiStatus.body.status.Status ? 'white' : 'black' }"
+                          size: 18
+                          borderRadius: 100
+                          padding: 4
+                          backgroundColor: "${getWifiStatus.body.status.Status ? 0xFF009900 : 'white'}"
+
+        # use a hidden switch to control enabled flag of the second form
+        - Column:
+            styles:
+              height: 0
+            children:
+              - Switch:
+                  testId: hiddenWifiSwitch
+                  id: wifiStatus
+                  label: r@kpn.wifi.radio_on_off
+                  value: ${getWifiStatus.body.status.Status}
+                  onChange: | 
+                    if (this.value) {
+                      ensemble.invokeAPI("setWifiStatus", {
+                        "status": false
+                      });
+                      wifiSwitch.backgroundColor = 0xFFD3D3D3;
+                      wifiRadioIcon.backgroundColor = 'black';
+                    } else {
+                      ensemble.invokeAPI("setWifiStatus", {
+                        "status": true 
+                      });
+                      wifiSwitch.backgroundColor = 0x44009900;
+                      wifiRadioIcon.backgroundColor = 'white';
+                    }
+        - WifiTypeDetails:
+              inputs:
+                title: r@kpn.home.main_wifi
+                status: "${ getPrivWiFi.body.status.wlanvap.vap2g0priv.VAPStatus == 'Up' ?  'r@kpn.home.wifi_active' : 'r@kpn.home.wifi_inactive'}"
+                ssid: ${getPrivWiFi.body.status.wlanvap.vap2g0priv.SSID}
+                color: "${ getPrivWiFi.body.status.wlanvap.vap2g0priv.VAPStatus == 'Up' ?  0xFF009900 : 0xFF939393 }"
+                icon: "${ getPrivWiFi.body.status.wlanvap.vap2g0priv.VAPStatus == 'Up' ?  0xe9be : 0xe9bd }"
+                wifiPageTabIndex: 0
+
+        - WifiTypeDetails:
+            inputs:
+              title: r@kpn.home.guest_wifi
+              status: "${ getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.VAPStatus == 'Up' ?  'r@kpn.home.wifi_active' : 'r@kpn.home.wifi_inactive'}"
+              ssid: ${getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.SSID}
+              color: "${ getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.VAPStatus == 'Up' ?  0xFF009900 : 0xFF939393 }"
+              icon: "${ getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.VAPStatus == 'Up' ?  0xe9be : 0xe9bd }"
+              wifiPageTabIndex: 1
+
+        - WifiTypeDetails:
+            inputs:
+              title: r@kpn.home.extra_2g_wifi
+              status: "${ getPrivWiFi.body.status.wlanvap.vap2g0ext.VAPStatus == 'Up' ?  'r@kpn.home.wifi_active' : 'r@kpn.home.wifi_inactive'}"
+              ssid: ${getPrivWiFi.body.status.wlanvap.vap2g0ext.SSID}
+              color: "${ getPrivWiFi.body.status.wlanvap.vap2g0ext.VAPStatus == 'Up' ?  0xFF009900 : 0xFF939393 }"
+              icon: "${ getPrivWiFi.body.status.wlanvap.vap2g0ext.VAPStatus == 'Up' ?  0xe9be : 0xe9bd }"
+              wifiPageTabIndex: 2
+              extraWifiTab: 0
+
+        - WifiTypeDetails:
+            inputs:
+              title: r@kpn.home.extra_5g_wifi
+              status: "${ getPrivWiFi.body.status.wlanvap.vap5g0ext.VAPStatus == 'Up' ?  'r@kpn.home.wifi_active' : 'r@kpn.home.wifi_inactive'}"
+              ssid: ${getPrivWiFi.body.status.wlanvap.vap5g0ext.SSID}
+              color: "${ getPrivWiFi.body.status.wlanvap.vap5g0ext.VAPStatus == 'Up' ?  0xFF009900 : 0xFF939393 }"
+              icon: "${ getPrivWiFi.body.status.wlanvap.vap5g0ext.VAPStatus == 'Up' ?  0xe9be : 0xe9bd }"
+              wifiPageTabIndex: 2
+              extraWifiTab: 1
+
+WifiTypeDetails:
+  inputs:
+    - title
+    - status
+    - ssid
+    - color
+    - icon
+    - wifiPageTabIndex
+    - extraWifiTab
+  Column:
+    children:
+      - Divider
+      - Row:
+          onTap:
+            navigateScreen:
+              name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+              inputs:
+                selectedIndex: 2
+                wifiPageTabIndex: ${wifiPageTabIndex}
+                extraWifiTab: ${extraWifiTab}
+          styles: 
+            gap: 8
+            padding: 12 8 12 0
+            crossAxis: center
+            backgroundColor: white
+          children:
+            - Icon:
+                name: ${icon}
+                library: kpnUI
+                id: guestWifiIcon
+                styles:
+                  size: 24
+                  color: ${color}
+            - Column:
+                styles: { gap: 2, expanded: true }
+                children:
+                  - Text:
+                      text: ${title}
+                      styles:
+                        textStyle:
+                          fontSize: 14
+                  - Text:
+                      text: ${ssid}
+                      selectable: true
+                      styles:
+                        textStyle:
+                          fontSize: 12
+                          fontWeight: w500
+                          color: ${color}
+                          overflow: ellipsis
+            - Text:
+                text: ${status}
+            - Icon:
+                name: 0xe920
+                library: kpnUI
+                styles: { size: 24, color: 0xFF939393 }
+
+InternetConnection:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - invokeAPI:
+            name: getInternetConnection
+            onResponse: |
+              // set last change field
+              var lastChange = getInternetConnection.body.path('$..LastChange',function (match) {match});
+              connectionLastChange.text = lastChange[0].prettyDuration();
+
+        - invokeAPI:
+            name: getHybridAccessStatus
+            onResponse:
+              invokeAPI:
+                name: getWANInfo
+                onResponse: |
+                  if (getWANInfo.body.data.ConnectionState == "Connected" ) {
+                    internetConnectionIcon.color = 0xFF009900;
+                    internetConnectionStatus.text = 'r@kpn.active';
+                  } else {
+                    internetConnectionIcon.color = 0xFFE52E2E;
+                  }
+          
+                  ensemble.storage.set('hgwIp', getWANInfo.body.data.IPAddress);
+
+                  // set connection type
+                  if (getHybridAccessStatus.body.status.Status == "DSL_UP") {
+                    connectionType.text = "r@kpn.home.interface_type_dsl_hybrid";
+                  } else {
+                    if (getWANInfo.body.data.LinkType == "ethernet")
+                      connectionType.text = "r@kpn.home.interface_type_ethernet";
+                    else
+                      connectionType.text = "r@kpn.home.interface_type_else";
+                  }
+
+        - invokeAPI:
+            name: getGlobalIPV6
+
+  Column:
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.nav.internet_link
+      - FittedRow:
+          styles: 
+            crossAxis: center
+            padding: 0 16 8 0
+            childrenFits:
+              - auto
+              - 1
+              - auto
+          children:
+            - Icon:
+                name: 0xe970
+                library: kpnSI
+                id: internetConnectionIcon
+                styles: { size: 80, color: 0xFFD3D3D3 }
+            - Text:
+                id: internetConnectionStatus
+                selectable: true
+                styles: { overflow: wrap, expanded: true  }
+                text: r@kpn.inactive
+            - Conditional:
+                conditions: 
+                  - if: ${ ensemble.storage.appConfig.deviceType == "v14" }
+                    Button:
+                      label: r@kpn.speed_test.button_label
+                      endingIcon:
+                        name: 0xE8E1
+                        library: kpnUI
+                        size: 20
+                        color: 0xFF0077CC
+                      gap: 8
+                      styles:
+                        backgroundColor: 0x100077CC
+                        borderColor: white
+                        borderRadius: 100
+                        borderWidth: 1
+                        padding: 16
+                        labelStyle:
+                          color: 0xFF0077CC
+                          fontWeight: w600
+                          fontSize: 13
+                      onTap:
+                        showDialog:
+                          widget: SpeedTestDialog
+                          options:
+                            style: none
+                            minHeight: 340
+                            minWidth: 350
+                            maxWidth: 700
+                  - else:
+                    Spacer:
+                      styles:
+                        size: 1
+
+      - Divider:
+          styles: { margin: 8 0 16 0 }
+      - EyebrowText:
+          inputs:
+            title: r@kpn.ip4_address
+      - Text:
+          text: ${getWANInfo.body.data.IPAddress}
+          selectable: true
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.ip6_address
+      - Text:
+          text: "${getWANInfo.body.data.IPv6Address == '' ? 'r@kpn.home.ipv6_disabled' : getWANInfo.body.data.IPv6Address}"
+          selectable: true
+          styles:
+            textStyle:
+              color: "${getGlobalIPV6.body.status == '' ? 'orange' : 'black'}"
+      
+      - Conditional:
+          conditions:
+            - if: ${getGlobalIPV6.body.status == '' && getWANInfo.body.data.IPv6Address != ''}
+              Text:
+                text: 'r@kpn.home.ipv6_no_connection'
+      
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.home.internet_last_change
+
+      - Text:
+         id: connectionLastChange
+         selectable: true
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.interface
+      - Text:
+          id: connectionType
+          text: "-"
+          selectable: true
+
+SpeedTestDialog:
+  onLoad:
+    executeCode:
+      body: |
+        ensemble.storage.runDownstreamSpeedTest = [];
+        ensemble.storage.runUpstreamSpeedTest = [];
+        ensemble.storage.startPing = [];
+        
+      onComplete:
+        invokeAPI:
+          name: startPing
+          inputs:
+            ipversion: "IPv4"
+            hostname: "34.141.213.235"
+          onResponse:
+            invokeAPI:
+              name: runDownstreamSpeedTest
+              onResponse:
+                invokeAPI:
+                  name: runUpstreamSpeedTest
+  body:
+    Column:
+      styles:
+        backgroundColor: white
+        padding: 0 0 24 0
+      children:
+        - Progress:
+            visible: ${ runDownstreamSpeedTest.isLoading && runUpstreamSpeedTest.isLoading }
+            display: linear
+            styles: { color: 0xFF009900, thickness: 8 }
+        - Column:
+            styles:
+              padding: 24
+            children:
+              - FittedRow:
+                  styles:
+                    childrenFits:
+                      - 1
+                      - auto
+                  children:
+                    - GreenTitle:
+                        inputs: 
+                          title: r@kpn.speed_test.dialog_title
+                    - CloseDialogIcon
+
+        - Column:
+            styles:
+              padding: 0 24 16 24
+              gap: 16
+            children:
+              - Row:
+                  styles:
+                    mainAxis: spaceBetween
+                  children:
+                    - Column:
+                        children:
+                          - LabelValueStacked:
+                              inputs:
+                                label: r@kpn.speed_test.latency
+                                value: '${startPing.isLoading ? "-" : startPing.body.status.averageResponseTime + " ms"}'
+                          - Conditional:
+                              conditions:
+                                - if: ${ensemble.storage.startPing.length > 0}
+                                  widget:
+                                    Row:
+                                      styles:
+                                        gap: 4
+                                        crossAxis: center
+                                        padding: 4 8
+                                        backgroundColor: 0xFFEDEDED
+                                        borderRadius: 4
+                                      children:
+                                        - Text:
+                                            text: r@kpn.speed_test.previous_tests
+                                            styles:
+                                              textStyle:
+                                                fontSize: 12
+                                      item-template:
+                                        data: ${ensemble.storage.startPing}
+                                        name: p
+                                        template:
+                                          Text:
+                                            styles:
+                                              textStyle:
+                                                fontSize: 12
+                                            text: ${p} ms | 
+
+                          
+                    - Button:
+                        id: retestButton
+                        label: r@kpn.speed_test.test_again
+                        onTap:
+                          executeCode:
+                            body: |
+                              // disable button
+                              retestButton.enabled = false;
+                              retestButton.label = "r@kpn.speed_test.testing";
+
+                              // capture previous result
+                              if (startPing.body.status != null && startPing.body.status.averageResponseTime != null) {
+                                var startPingHistory = ensemble.storage.startPing;
+                                startPingHistory.push(startPing.body.status.averageResponseTime);
+                                ensemble.storage.startPing = startPingHistory;
+                              }
+                              if (runDownstreamSpeedTest.body.status != null) {
+                                var runDownstreamSpeedTestHistory = ensemble.storage.runDownstreamSpeedTest;
+                                runDownstreamSpeedTestHistory.push(runDownstreamSpeedTest.body.status);
+                                ensemble.storage.runDownstreamSpeedTest = runDownstreamSpeedTestHistory;
+                              }
+                              if (runUpstreamSpeedTest.body.status != null) {
+                                var runUpstreamSpeedTestHistory = ensemble.storage.runUpstreamSpeedTest;
+                                runUpstreamSpeedTestHistory.push(runUpstreamSpeedTest.body.status);
+                                ensemble.storage.runUpstreamSpeedTest = runUpstreamSpeedTestHistory;
+                              }
+                            onComplete:
+                              invokeAPI:
+                                name: startPing
+                                inputs:
+                                  ipversion: "IPv4"
+                                  hostname: "34.141.213.235"
+                                onResponse:
+                                  invokeAPI:
+                                    name: runDownstreamSpeedTest
+                                    onResponse:
+                                      invokeAPI:
+                                        name: runUpstreamSpeedTest
+                                        onResponse: |
+                                          retestButton.enabled = true;
+                                          retestButton.label = "r@kpn.speed_test.test_again";
+
+              - Divider
+
+        - Flow:
+            styles:
+              padding: 0 24
+              gap: 32
+              lineGap: 16
+            children:
+              - SpeedTestResult:
+                  inputs:
+                    title: r@kpn.speed_test.downstream
+                    icon: 0xe92f
+                    isError: ${ runDownstreamSpeedTest.body.error != null }
+                    speed: ${ runDownstreamSpeedTest.body.status.throughput }
+                    latency: ${ runDownstreamSpeedTest.body.status.latency }
+                    rxbytes: ${ runDownstreamSpeedTest.body.status.rxbytes }
+                    duration: ${ runDownstreamSpeedTest.body.status.duration }
+                    RetrievedStartTS: ${ runDownstreamSpeedTest.body.status.RetrievedStartTS }
+                    RetrievedTS: ${ runDownstreamSpeedTest.body.status.RetrievedTS }
+                    previousResults: ${ ensemble.storage.runDownstreamSpeedTest }
+              
+              - SpeedTestResult:
+                  inputs:
+                    title: r@kpn.speed_test.upstream
+                    icon: 0xe9b2
+                    isError: ${ runUpstreamSpeedTest.body.error != null }
+                    speed: ${ runUpstreamSpeedTest.body.status.throughput }
+                    latency: ${ runUpstreamSpeedTest.body.status.latency }
+                    rxbytes: ${ runUpstreamSpeedTest.body.status.rxbytes }
+                    duration: ${ runUpstreamSpeedTest.body.status.duration }
+                    RetrievedStartTS: ${ runUpstreamSpeedTest.body.status.RetrievedStartTS }
+                    RetrievedTS: ${ runUpstreamSpeedTest.body.status.RetrievedTS }
+                    previousResults: ${ ensemble.storage.runUpstreamSpeedTest }
+
+
+SpeedTestResult:
+  inputs:
+    - title
+    - icon
+    - isError
+    - speed
+    - latency
+    - rxbytes
+    - duration
+    - RetrievedStartTS
+    - RetrievedTS
+    - previousResults
+  body:
+    Column:
+      styles:
+        width: 300
+        gap: 16
+      children:
+        - Row:
+            styles:
+              crossAxis: center
+              gap: 4
+            children:
+              - Text:
+                  text: ${title}
+                  styles:
+                    textStyle:
+                      fontFamily: 'kpnMetricSemiBold'
+                      fontSize: 20
+                      fontWeight: bold
+                      color: 0xFF009900
+              - Icon:
+                  name: ${icon}
+                  library: kpnUI
+                  styles:
+                    size: 22
+                    color: 0xFF009900
+        - Divider
+        - Conditional:
+            conditions:
+              - if: ${ isError }
+                Text:
+                  text: r@kpn.error
+              - else:
+                Column:
+                  styles:
+                    gap: 12
+                  children:
+                    - LabelValueStacked:
+                        inputs:
+                          label: r@kpn.speed_test.speed
+                          value: ${ (speed / 1000).toFixed(1) } Mbps
+                          largeValue: true
+                    - Conditional:
+                        conditions:
+                          - if: ${previousResults.length > 0}
+                            widget:
+                              Row:
+                                styles:
+                                  gap: 4
+                                  crossAxis: center
+                                  padding: 4 8
+                                  backgroundColor: 0xFFEDEDED
+                                  borderRadius: 4
+                                children:
+                                  - Text:
+                                      text: r@kpn.speed_test.previous_tests
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                item-template:
+                                  data: ${previousResults}
+                                  name: p
+                                  template:
+                                    Text:
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                      text: ${ (p.throughput / 1000).toFixed(1) } |
+                    - LabelValueStacked:
+                        inputs:
+                          label: r@kpn.speed_test.packet_size
+                          value: ${ (rxbytes / 1000000).toFixed(1) } MB
+                    - Conditional:
+                        conditions:
+                          - if: ${previousResults.length > 0}
+                            widget:
+                              Row:
+                                styles:
+                                  gap: 4
+                                  crossAxis: center
+                                  padding: 4 8
+                                  backgroundColor: 0xFFEDEDED
+                                  borderRadius: 4
+                                children:
+                                  - Text:
+                                      text: r@kpn.speed_test.previous_tests
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                item-template:
+                                  data: ${previousResults}
+                                  name: p
+                                  template:
+                                    Text:
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                      text: ${ (p.rxbytes / 1000000).toFixed(1) } |
+                    - LabelValueStacked:
+                        inputs:
+                          label: r@kpn.speed_test.duration
+                          value: ${ (duration / 1000).toFixed(1) } seconds
+                    - Conditional:
+                        conditions:
+                          - if: ${previousResults.length > 0}
+                            widget:
+                              Row:
+                                styles:
+                                  gap: 4
+                                  crossAxis: center
+                                  padding: 4 8
+                                  backgroundColor: 0xFFEDEDED
+                                  borderRadius: 4
+                                children:
+                                  - Text:
+                                      text: r@kpn.speed_test.previous_tests
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                item-template:
+                                  data: ${previousResults}
+                                  name: p
+                                  template:
+                                    Text:
+                                      styles:
+                                        textStyle:
+                                          fontSize: 12
+                                      text: ${ (p.duration / 1000).toFixed(1) } |
+                    - LabelValueStacked:
+                        inputs:
+                          label: r@kpn.speed_test.start_time
+                          value: ${ convertUtcToGmtPlus1(RetrievedStartTS) }
+
+
+Modem:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - invokeAPI:
+            name: getDeviceInfo
+        - invokeAPI:
+            name: getDeviceInfoHGW
+        - executeConditionalAction:
+            conditions:
+              - if: ${ ensemble.storage.appConfig.deviceType != "v10" }
+                action:
+                  invokeAPI:
+                    name: getLatestVersion
+  Column:
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.home.this_modem
+
+      - Row:
+          styles: { gap: 16, crossAxis: center, padding: 0 24 0 0 }
+          children:
+            - Icon:
+                name: ${ensemble.storage.appConfig["deviceIcon"]}
+                library: kpnSI
+                styles: { size: 80, color: 0xFF009900 }
+            - Text:
+                styles: { overflow: wrap, expanded: true  }
+                text: ${ensemble.storage.appConfig["deviceTypeLabel"]}
+                selectable: true
+      - Divider:
+          styles: { margin: 16 0 }
+      - EyebrowText:
+          inputs:
+            title: r@kpn.home.device_name
+      - Text:
+          text: ${getDeviceInfoHGW.body.status.Name}
+          selectable: true
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.operational
+      - Text:
+          text: ${getDeviceInfo.body.status.UpTime.prettyDuration()}
+          selectable: true
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.home.serial_number
+      - Text:
+          text: ${getDeviceInfo.body.status.SerialNumber}
+          selectable: true
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.home.firmware_version
+      - Text:
+          text: ${getDeviceInfo.body.status.SoftwareVersion}
+          selectable: true
+
+      - Conditional:
+          conditions:
+            - if: ${getLatestVersion.body != null && getLatestVersion.body.data.updateAvailable == true}
+              Column:
+                onTap:
+                  navigateScreen:
+                    name: ${ensemble.storage.appConfig["appNav"]}
+                    inputs:
+                      selectedIndex: 6
+                      tabIndex: 3
+                children:
+                  - Spacer:
+                      styles: { size: 8 }
+                  - Text:
+                      selectable: true
+                      styles:
+                        padding: 4 8
+                        margin: 0 12 0 0
+                        backgroundColor: 0xFFddebf7
+                        borderRadius: 4
+                        textStyle:
+                          fontSize: 14
+                          fontWeight: w600
+                          overflow: wrap
+                      text: r@kpn.home.available_upgrade_version ${getLatestVersion.body.data.newVersion}
+
+      - Spacer:
+          styles: { size: 16 }
+
+      - EyebrowText:
+          inputs:
+            title: r@kpn.mode
+      - Text:
+          text: ${ensemble.storage.deviceMode}
+          selectable: true
+
+# if USB is active, set the tv to grey
+IPTV:
+  onLoad:
+    invokeAPI:
+      name: getSTBs
+      onResponse:
+        invokeAPI:
+          name: getIPTV
+          onResponse: |
+            //@code
+            if (response.body.status.Status) {
+              activeTvDescription.visible = true;
+              tvIcon.color = 0xFF009900;
+              ensemble.invokeAPI("getIptvIp");
+            } else {
+              tvIcon.color = 0xFFE52E2E;
+            }
+  body:
+    Column:
+      styles: { gap: 8 }
+      children:
+        - CardTitle:
+            inputs:
+              title: r@kpn.home.iptv
+        - Row:
+            styles: { gap: 16, crossAxis: center, padding: 0 24 0 0 }
+            children:
+              - Icon:
+                  name: 0xe9c1
+                  library: kpnSI
+                  id: tvIcon
+                  styles: { size: 80, color: 0xFFD3D3D3 }
+              - Text:
+                  selectable: true
+                  styles: { overflow: wrap, expanded: true  }
+                  text: |-
+                    ${getIPTV.body.status.Status == true ? 'r@kpn.home.iptv_on' : 'r@kpn.home.iptv_off' } ${getIptvIp.body.status != null ? 'via ' + getIptvIp.body.status : '' }
+
+        # visible if TV is active
+        - Column:
+            styles: { gap: 16 }
+            visible: false
+            id: activeTvDescription
+            children:
+              - Divider
+              - EyebrowText:
+                  inputs:
+                    title: r@kpn.home.iptv_on_description
+
+        - Spacer:
+            styles:
+              size: 1
+        - Conditional:
+            conditions:
+              - if: ${getSTBs.body.status.length > 0}
+                Column:
+                  styles:
+                    margin: 8 0 0 0
+                    gap: 8
+                  children:
+                    - Text:
+                        selectable: true
+                        text: r@kpn.home.iptv_stb_exists_description
+                        styles:
+                          textStyle:
+                            fontSize: 14
+                            fontWeight: bold
+                    - Column:
+                        item-template:
+                          data: ${getSTBs.body.status}
+                          name: s
+                          template:
+                            FittedRow:
+                              styles:
+                                childrenFits:
+                                  - auto
+                                  - 1
+                                  - 1
+                                  - auto
+                                gap: 8
+                                fontSize: 12
+                                padding: 4 16 0 0
+                                crossAxis: center
+                              visible: '${s.ULinks && s.ULinks.length > 0 ? true : false}'
+                              children:
+                                - Icon:
+                                    name: 0xe9c1
+                                    library: kpnSI
+                                    styles:
+                                      size: 24
+                                - Text:
+                                    text: ${s.Name}
+                                    selectable: true
+                                    styles:
+                                      textStyle:
+                                        overflow: ellipsis
+                                - Text:
+                                    text: ${s.IPAddress}
+                                    selectable: true
+                                    styles:
+                                      textAlign: end
+                                      padding: 0 16
+                                - Icon:
+                                    name: "${s.ULinks[0].Type == 'wifi' ? 0xe9be : 0xe978}"
+                                    library: kpnUI
+                                    styles:
+                                      size: 24
+              - else:
+                Text:
+                  selectable: true
+                  text: r@kpn.home.iptv_stb_not_exists_description
+                  styles:
+                    textStyle:
+                      fontSize: 14
+                      fontWeight: bold
+
+Backup_4g:
+  onLoad:
+    invokeAPI:
+      name: getWWAN
+      onResponse: |
+        //@code
+        var status = response.body.status.ConnectionStatus;
+        
+        if (status == 'NotPresent') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_NotPresent';
+        } else if (status == 'Unconfigured') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_Unconfigured';
+          dongleIcon.color = 0xFFE52E2E;
+        } else if (status == 'Connecting') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_Connecting';
+          dongleIcon.color = 0xFF009900;
+        } else if (status == 'Connected') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_Connected';
+          dongleIcon.color = 0xFF009900;
+        } else if (status == 'PendingDisconnect') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_PendingDisconnect';
+          dongleIcon.color = 0xFF009900;
+        } else if (status == 'Disconnecting') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_Disconnecting';
+          dongleIcon.color = 0xFF009900;
+        } else if (status == 'Disconnected') {
+          dongleStatusDescription.text = 'r@kpn.home.4g_dongle_Disconnected';
+          dongleIcon.color = 0xFF939393;
+        }
+
+  Column:
+    styles: { gap: 8 }
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.home.4g_dongle
+      - Row:
+          styles: { gap: 16, crossAxis: center }
+          children:
+            - Icon:
+                name: 0xe9dc
+                library: kpnSI
+                id: dongleIcon
+                styles: { size: 80, color: 0xFFD3D3D3 }
+            - Text:
+                selectable: true
+                styles: { overflow: wrap, expanded: true  }
+                id: dongleStatusDescription
+
+Phone:
+  onLoad:
+    invokeAPI:
+      name: getPhone
+      onError: |
+        //@code
+        phoneStatusText.text = 'r@kpn.home.phone_description_error';
+        phoneIcon.color = 0xFFE52E2E;
+
+      onResponse: |
+        //@code
+  
+        // catch error
+        if (getPhone.body.error != null) {
+          phoneStatusText.text = 'r@kpn.home.phone_description_error';
+          phoneIcon.color = 0xFFE52E2E;
+        } 
+        
+        // phone service is up
+        else {
+          var phoneLines = [];
+          var activeLineExist = false;
+          var errorLineExist = false;
+          var disabledLineExist = false;
+          
+          response.body.status.map( function(p) {
+            if (p.enable == 'Enabled')
+              phoneLines.push(p.trunk_lines[0]);
+          
+            if (p.enable == 'Enabled' && p.trunk_lines[0].status == 'Up')
+              activeLineExist = true;
+            else if (p.enable == 'Enabled' && p.trunk_lines[0].status == 'Error')
+              errorLineExist = true;
+            else if (p.enable == 'Enabled' && p.trunk_lines[0].status == 'Disabled')
+              disabledLineExist = true;
+          });
+          
+          
+          // set icon color and status
+          
+          // error and no active, red icon
+          if (activeLineExist == false && errorLineExist == true ) {
+            phoneStatusText.text = 'r@kpn.home.phone_description_error';
+            phoneIcon.color = 0xFFE52E2E;
+          }
+          
+          // disabled and no active, grey icon
+          else if (activeLineExist == false && disabledLineExist == true ) {
+            phoneStatusText.text = 'r@kpn.home.phone_description_disabled';
+            phoneIcon.color = 0xFF939393;
+          }
+          
+          // active and error, orange icon
+          else if (activeLineExist == true && errorLineExist == true ) {
+            phoneIcon.color = 0xFFFF9000;
+            phoneStatusText.text = 'r@kpn.home.phone_description_active_and_error'; 
+          }
+          
+          // active, green icon
+          else if (activeLineExist == true ) {
+            phoneIcon.color = 0xFF009900;
+            phoneStatusText.text = 'r@kpn.home.phone_description_active';
+          }
+        
+          // no line
+          else {
+            phoneStatusText.text = 'r@kpn.home.phone_description_disabled';
+            phoneIcon.color = 0xFF939393;
+          }
+          
+          response.body.PhoneLines = phoneLines;
+        }
+
+  Column:
+    styles: { gap: 8 }
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.home.phone
+      - Row:
+          styles: { gap: 16, crossAxis: center, padding: 0 24 0 0 }
+          children:
+            - Icon:
+                name: 0xe997
+                library: kpnSI
+                id: phoneIcon
+                styles:
+                  size: 80
+                  color: 0xFFD3D3D3
+            - Text:
+                styles: { overflow: wrap, expanded: true  }
+                id: phoneStatusText
+
+      - Column:
+          item-template:
+            data: ${getPhone.body.PhoneLines}
+            name: p
+            template:
+              PhoneLineSection:
+                inputs:
+                  phone: ${p}
+
+PhoneLineSection:
+  inputs:
+    - phone
+  onLoad: |
+    //@code
+    if (phone.enable == 'Enabled' && phone.status == 'Up') {
+      phoneLineIcon.color = 0xFF009900;
+      phoneLineNumber.textStyle.color = 0xFF009900;
+      phoneLineStatus.text = 'r@kpn.home.phone_active';
+    }
+    else if (phone.enable == 'Enabled' && phone.status == 'Error') {
+      phoneLineIcon.color = 0xFFE52E2E;
+      phoneLineNumber.textStyle.color = 0xFFE52E2E;
+      phoneLineStatus.text = 'r@kpn.home.phone_error';
+    }
+    else if (phone.enable == 'Disabled' && phone.status == 'Disabled') {
+      phoneLineIcon.color = 0xFF939393;
+      phoneLineNumber.textStyle.color = 0xFF939393;
+      phoneLineStatus.text = 'r@kpn.home.phone_inactive';
+    }
+  Column:
+    children:
+      - Divider:
+          styles: { margin: 16 0 }
+      - Row:
+          onTap:
+            navigateScreen:
+              name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+              inputs:
+                selectedIndex: 5
+          styles: 
+            gap: 8
+            fontSize: 12
+            padding: 0 8 0 0
+            crossAxis: center
+          children:
+            - Icon:
+                id: phoneLineIcon
+                name: 0xe980
+                library: kpnUI
+                styles:
+                  size: 24
+                  color: 0xFF939393
+            - Spacer:
+                styles: { size: 1 }
+            - Column:
+                styles: { gap: 2 }
+                children:
+                  - Text:
+                      text: r@kpn.home.phoneline
+                      selectable: true
+                  - Text:
+                      id: phoneLineNumber
+                      text: ${phone.directoryNumber}
+                      selectable: true
+            - Spacer
+            - Text:
+                id: phoneLineStatus
+            - Icon:
+                name: 0xe920
+                library: kpnUI
+                styles: { size: 24, color: 0xFF939393 }
+
+ConnectedDevices:
+  onLoad:
+    invokeAPI:
+      name: getSSWs
+      onResponse:
+        invokeAPI:
+          name: getActiveDevices
+
+  Column:
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.local_network.connected_devices
+      - Row:
+          onTap:
+            navigateScreen:
+              name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+              inputs:
+                selectedIndex: 3
+          styles: { gap: 16, crossAxis: center, padding: 0 8 0 0 }
+          children:
+            - Icon:
+                name: 0xe987
+                library: kpnSI
+                styles: { size: 80, color: 0xFF009900 }
+            - Text:
+                id: totalDeviceCount
+                text: ${ getActiveDevices.body.devicesPerInterface['all'] } r@kpn.home.in_total
+                styles: { overflow: wrap, expanded: true }
+            - Icon:
+                name: 0xe920
+                library: kpnUI
+                styles: { size: 24, color: 0xFF939393 }
+      - Divider:
+          styles: { margin: 16 0 }
+      - Column:
+          children:
+            - Row:
+                styles: { gap: 8, padding: 0 24 0 0 }
+                children:
+                  - Column:
+                      children:
+                        - Text:
+                            text: r@kpn.home.wired
+                            selectable: true
+                        - EyebrowText:
+                            inputs:
+                              title: r@kpn.home.wired_description
+                  - Spacer
+                  - Text:
+                      text: ${getActiveDevices.body.devicesPerInterface['ethernet']}
+                      selectable: true
+                      styles: { color: 0xFF939393 }
+
+            # main wifi
+            - Column:
+                # visible: "${ getPrivWiFi.body.status.wlanvap.vap2g0priv.VAPStatus == 'Up' ? true : false }"
+                children:
+                  - Divider:
+                      styles: { margin: 16 0 }
+                  - Row:
+                      styles: { gap: 8, padding: 0 24 0 0 }
+                      children:
+                        - Column:
+                            children:
+                              - Text:
+                                  text: r@kpn.home.main_wifi
+                                  selectable: true
+                              - EyebrowText:
+                                  inputs:
+                                    title: r@kpn.home.main_wifi_description
+
+                        - Spacer
+                        - Text:
+                            text: ${getActiveDevices.body.devicesPerInterface['vap2g0priv'] + getActiveDevices.body.devicesPerInterface['vap5g0priv'] }
+                            styles: { color: 0xFF939393 }
+                            selectable: true
+
+            # guest wifi
+            - Column:
+                # visible: "${ getGuestWiFiInfo.body.status.wlanvap.vap5g0guest.VAPStatus == 'Up' ? true : false }"
+                children:
+                  - Divider:
+                      styles: { margin: 16 0 }
+                  - Row:
+                      styles: { gap: 8, padding: 0 24 0 0 }
+                      children:
+                        - Column:
+                            children:
+                              - Text:
+                                  text: r@kpn.home.guest_wifi
+                                  selectable: true
+                              - EyebrowText:
+                                  inputs:
+                                    title: r@kpn.home.guest_wifi_description
+                        - Spacer
+                        - Text:
+                            text: ${getActiveDevices.body.devicesPerInterface['vap2g0guest'] + getActiveDevices.body.devicesPerInterface['vap5g0guest'] }
+                            styles: { color: 0xFF939393 }
+                            selectable: true
+
+            # extra 2g wifi
+            - Column:
+                # visible: "${ getPrivWiFi.body.status.wlanvap.vap2g0ext.VAPStatus == 'Up' ? true : false }"
+                children:
+                  - Divider:
+                      styles: { margin: 16 0 }
+                  - Row:
+                      styles: { gap: 8, padding: 0 24 0 0 }
+                      children:
+                        - Column:
+                            styles: { expanded: true }
+                            children:
+                              - Text:
+                                  text: r@kpn.home.extra_2g_wifi
+                                  selectable: true
+                              - EyebrowText:
+                                  inputs:
+                                    title: r@kpn.home.extra_2g_wifi_description
+
+                        - Text:
+                            text: ${getActiveDevices.body.devicesPerInterface['vap2g0ext'] + getActiveDevices.body.devicesPerInterface['vap2g0Ext']}
+                            styles: { color: 0xFF939393 }
+                            selectable: true
+
+            # extra 5g wifi
+            - Column:
+                # visible: "${ getPrivWiFi.body.status.wlanvap.vap5g0ext.VAPStatus == 'Up' ? true : false }"
+                children:
+                  - Divider:
+                      styles: { margin: 16 0 }
+                  - Row:
+                      styles: { gap: 8, padding: 0 24 0 0 }
+                      children:
+                        - Column:
+                            styles: { expanded: true }
+                            children:
+                              - Text:
+                                  text: r@kpn.home.extra_5g_wifi
+                                  selectable: true
+                              - EyebrowText:
+                                  inputs:
+                                    title: r@kpn.home.extra_5g_wifi_description
+                        - Text:
+                            text: ${getActiveDevices.body.devicesPerInterface['vap5g0ext'] + getActiveDevices.body.devicesPerInterface['vap5g0Ext']}
+                            styles: { color: 0xFF939393 }
+                            selectable: true
+
+ActiveFilters:
+  onLoad:
+    executeActionGroup:
+      actions:
+        - invokeAPI:
+            name: getFirewallLevel
+            onResponse: |
+              if (getFirewallLevel.body.status == "Custom")
+                filtersIcon.color = 0xFF009900;
+        - invokeAPI:
+            name: getMacFiltering
+            onResponse: |
+              if (getMacFiltering.body.status.wlanvap.vap2g0priv.MACFiltering.Mode == "WhiteList")
+                filtersIcon.color = 0xFF009900;
+        - invokeAPI:
+            name: getIPv4Rules
+            onResponse: |
+              if (getIPv4Rules.body.CustomList.length > 0)
+                filtersIcon.color = 0xFF009900;
+        # parental controls
+        - executeCode:
+            body: |
+              ensemble.storage.devicesWithParentalControlCount = 0;
+            onComplete:
+              invokeAPI:
+                name: getDevicesSchedule
+                onResponse:
+                  invokeAPI:
+                    name: listMST
+                    onResponse: |
+                      if (ensemble.storage.devicesWithParentalControlCount > 0)
+                        filtersIcon.color = 0xFF009900;
+        - invokeAPI:
+            name: getDMZ
+            onResponse:
+              invokeAPI:
+                name: getIPv6OpenPorts
+                onResponse: |
+                  if (getIPv6OpenPorts.body.DmzList.length > 0 || getDMZ.body.status.webui != null)
+                    filtersIcon.color = 0xFF009900;
+
+                  // set status text
+                  if (getDMZ.body.status.webui == null && getIPv6OpenPorts.body.DmzList.length == 0) {
+                    dmzStatus.text = "r@kpn.inactive";
+                  } else {
+                    if (getDMZ.body.status.webui != null && getIPv6OpenPorts.body.DmzList.length == 0)
+                      dmzStatus.text = "IPv4 r@kpn.active";
+                    else if (getDMZ.body.status.webui == null && getIPv6OpenPorts.body.DmzList.length > 0)
+                      dmzStatus.text = "IPv6 r@kpn.active";
+                    else
+                      dmzStatus.text = "IPv4/IPv6 r@kpn.active";
+                  }
+
+
+  Column:
+    styles: { gap: 8 }
+    children:
+      - CardTitle:
+          inputs:
+            title: r@kpn.home.active_filters
+      - FittedRow:
+          styles:
+            childrenFits:
+              - auto
+              - auto
+              - 1
+            crossAxis: center
+            padding: 0 24 0 0
+          children:
+            - Icon:
+                id: filtersIcon
+                name: 0xe9a6
+                library: kpnSI
+                styles: { size: 80, color: 0xFF939393 }
+            - Spacer:
+                styles: { size: 16 }
+            - Text:
+                styles: { overflow: wrap  }
+                text: r@kpn.home.active_filters_description
+
+      # firewall level
+      - Column:
+          styles: { gap: 16 }
+          children:
+            - Divider
+            - Row:
+                onTap:
+                  navigateScreen:
+                    name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                    inputs:
+                      selectedIndex: 4
+                      securityTabIndex: 0
+                styles: { gap: 8, padding: 0 8 8 0 }
+                children:
+                  - Text:
+                      text: r@kpn.home.firewall_level
+                  - Spacer
+                  - Text:
+                      text: "${getFirewallLevel.body.status == 'Custom' ? 'r@kpn.security.firewall_level_custom' : getFirewallLevel.body.status}"
+                      styles: { textStyle: { color: 0xFF939393 } }
+                  - Icon:
+                      name: 0xe920
+                      library: kpnUI
+                      styles: { size: 24, color: 0xFF939393 }
+
+      # mac filtering
+      - Column:
+          styles: { gap: 16 }
+          children:
+            - Divider
+            - Row:
+                onTap:
+                  navigateScreen:
+                    name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                    inputs:
+                      selectedIndex: 4
+                      securityTabIndex: 1
+                styles: { gap: 8, padding: 0 8 8 0 }
+                children:
+                  - Text:
+                      text: r@kpn.security.device_blocking
+                  - Spacer
+                  - Text:
+                      text: '${getMacFiltering.body.status.wlanvap.vap2g0priv.MACFiltering.Mode == "WhiteList"  ? "r@kpn.yes" : "r@kpn.no"}'
+                      styles: { textStyle: { color: 0xFF939393 } }
+                  - Icon:
+                      name: 0xe920
+                      library: kpnUI
+                      styles: { size: 24, color: 0xFF939393 }
+
+      # parental control
+      - Column:
+          styles: { gap: 16 }
+          children:
+            - Divider
+            - Row:
+                onTap:
+                  navigateScreen:
+                    name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                    inputs:
+                      selectedIndex: 4
+                      securityTabIndex: 2
+                styles: { gap: 8, padding: 0 8 0 0 }
+                children:
+                  - Column:
+                      children:
+                        - Text:
+                            text: r@kpn.home.parental_control
+                        - EyebrowText:
+                            inputs:
+                              title: r@kpn.home.parental_control_description
+
+                  - Spacer
+                  - Text:
+                      text: ${ensemble.storage.devicesWithParentalControlCount}
+                      styles: { textStyle: { color: 0xFF939393 } }
+                  - Icon:
+                      name: 0xe920
+                      library: kpnUI
+                      styles: { size: 24, color: 0xFF939393 }
+
+      # Port forwarding
+      - Column:
+          styles: { gap: 16 }
+          children: 
+            - Divider
+            - FittedRow:
+                onTap:
+                  navigateScreen:
+                    name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                    inputs:
+                      selectedIndex: 4
+                      securityTabIndex: 3
+                styles: 
+                  gap: 8
+                  padding: 0 8 0 0
+                  childrenFits:
+                    - 1
+                    - auto
+                    - auto
+                    - auto
+                children:
+                  - Column:
+                      children:
+                        - Text:
+                            text: r@kpn.home.firewall
+                        - EyebrowText:
+                            inputs:
+                              title: r@kpn.home.firewall_description
+                  - Spacer:
+                      styles:
+                        size: 8
+                  - Text:
+                      text: ${getIPv4Rules.body.CustomList.length}
+                      styles: { textStyle: { color: 0xFF939393 } }
+                  - Icon:
+                      name: 0xe920
+                      library: kpnUI
+                      styles: { size: 24, color: 0xFF939393 }
+
+
+      # DMZ
+      - Column:
+          styles: { gap: 16 }
+          children:
+            - Divider
+            - Row:
+                onTap:
+                  navigateScreen:
+                    name: "${device.width > 768 ? 'AppGateway' : 'AppGatewayDrawer'}"
+                    inputs:
+                      selectedIndex: 4
+                      securityTabIndex: 5
+                      dmzTabIndex: 0
+                styles: { gap: 8, padding: 0 8 8 0 }
+                children:
+                  - Text:
+                      text: r@kpn.security.dmz
+                  - Spacer
+                  - Text:
+                      id: dmzStatus
+                      styles: { textStyle: { color: 0xFF939393 } }
+                  - Icon:
+                      name: 0xe920
+                      library: kpnUI
+                      styles: { size: 24, color: 0xFF939393 }
+
+
+
+API:
+
+  getActiveDevices:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getActiveDevices }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression":
+          "wifi": "not interface and wifi and .Active==true"
+          "ethernet": "not interface and eth and .Active==true"
+        "flags": "full_links"
+    onResponse: |
+      //@code
+
+      var devicesPerInterface = {
+        'all': 0,
+        'ethernet': 0,
+        'vap2g0priv': 0,
+        'vap5g0priv': 0,
+        'vap2g0guest': 0,
+        'vap5g0guest': 0,
+        'vap2g0ext': 0,
+        'vap5g0ext': 0,
+        'vap2g0Ext': 0,
+        'vap5g0Ext': 0
+      };
+
+      // count ethernet devices
+      response.body.status.ethernet.map(function(wired_device) {
+        // exclude extenders and switches
+        var tagsArray = wired_device.Tags.split(' ');
+        if (tagsArray.includes('ssw') == false && tagsArray.includes('hnid') == false) {
+
+          // exclude ghost devices
+          if (wired_device.ULinks != null && wired_device.ULinks.length > 0) {
+            // exclude alternative macs
+            if (ensemble.storage.alternative_devices_macs.includes(wired_device.Key) == false)
+              devicesPerInterface['ethernet'] = devicesPerInterface['ethernet'] + 1;
+            
+            devicesPerInterface['all'] = devicesPerInterface['all'] + 1;
+          }
+        }
+      });
+      
+      // count wifi devices
+      response.body.status.wifi.map(function(wireless_device) {
+        // exclude extenders and switches
+        var tagsArray = wireless_device.Tags.split(' ');
+        if (tagsArray.includes('ssw') == false && tagsArray.includes('hnid') == false) {
+          var interface = 'vap5g0priv';
+          // exclude ghost devices
+          if (wireless_device.ULinks != null && wireless_device.ULinks.length > 0) {
+            // exclude alternative macs
+            if (ensemble.storage.alternative_devices_macs.includes(wireless_device.Key) == false) {
+              if (devicesPerInterface[wireless_device.ULinks[0].Key] != null ) {
+                interface = wireless_device.ULinks[0].Key;
+              } else {
+                // handle devices connected to extenders
+                // example format: "Key": "_C0:D7:AA:25:AA:0F_ETH1"
+                var keyArr = wireless_device.ULinks[0].Key.split("_");
+                if (keyArr.length == 3)
+                  interface = keyArr[2];
+              }
+
+              devicesPerInterface[interface] = devicesPerInterface[interface] + 1;
+              devicesPerInterface['all'] = devicesPerInterface['all'] + 1;
+            }
+          }
+        }
+      });
+
+      response.body.devicesPerInterface = devicesPerInterface;
+      ensemble.storage.totalActiveDeviceCount = devicesPerInterface['all'];
+
+  getSSWs:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getSSWs }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression": "not interface and not self and ssw"
+        "flags": "alternatives"
+    onResponse: |
+      ensemble.storage.extenderCount = response.body.status.length;
+      ensemble.storage.alternative_devices_macs = [];
+      response.body.status.map(function (d) {
+
+        if (d.Alternative == null ) {
+        } else {
+          d.Alternative.map(function(a) {
+            ensemble.storage.alternative_devices_macs.push(a.Key);
+          });
+        }
+      });
+
+
+
+
+  getDeviceInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDeviceInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "DeviceInfo"
+      "method": "get"
+      "parameters": ""
+
+  getDeviceInfoHGW:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDeviceInfoHGW }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.HGW"
+      "method": "get"
+      "parameters": { }
+
+  getWifiStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWifiStatus }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "get"
+      "parameters": {}
+    
+
+  getPrivWiFi:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getPrivWiFi }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters": {
+        "mibs": "wlanvap",
+        "flag": "!backhaul"
+      }
+
+  getGuestWiFiStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGuestWiFiStatus }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Guest"
+      "method": "get"
+      "parameters": ""
+
+  getGuestWiFiInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGuestWiFiInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.brguest"
+      "method": "getMIBs"
+      "parameters": { mibs: "wlanvap", flag: "!backhaul", traverse: "one level down" }
+
+
+  getWANInfo:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWANInfo }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC"
+      "method": "getWANStatus"
+      "parameters": {}
+
+  getInternetConnection:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getInternetConnection }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.data"
+      "method": "getMIBs"
+      "parameters": {"mibs": "base ppp dhcp"}
+
+
+  # 4g backup
+  getWWAN:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getWWAN }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.wwan"
+      "method": "get"
+      "parameters": {}
+
+
+  getIPTV:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getIPTV }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.iptv"
+      "method": "get"
+      "parameters": {}
+
+  getSTBs:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getSTBs }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters": {
+        "expression": "not interface and stb and .Active==true",
+        "flags": "full_links"
+      }
+
+  getPhone:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getPhone }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "VoiceService.VoiceApplication"
+      "method": "listTrunks"
+      "parameters": {}
+
+  getCurrentUser:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getCurrentUser }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "HTTPService"
+      "method": "getCurrentUser"
+      "parameters": {}
+
+
+  getDevicesSchedule:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDevicesSchedule }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Scheduler"
+      "method": "getCompleteSchedules"
+      "parameters":
+        "type": "ToD"
+    onResponse: |
+      var devicesWithSchedule = ensemble.storage.devicesWithParentalControlCount; 
+      response.body.data.scheduleInfo.map(function(s) {
+        // always blocked
+        if (s.override == "Disable")
+          devicesWithSchedule = devicesWithSchedule + 1;
+
+        // blocked during certain hours
+        if (s.override == "" && s.schedule.length > 0) 
+          devicesWithSchedule = devicesWithSchedule + 1;
+      });
+
+      ensemble.storage.devicesWithParentalControlCount = devicesWithSchedule;
+
+
+  listMST:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_listMST }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "listMST"
+      "parameters": {}
+    onResponse: |
+      response.body.data.ids.map(function(id) {
+        ensemble.invokeAPI('getMST', { 'id': id });
+      });
+
+  getMST:
+    inputs:
+      - id
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getMST }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "ToD"
+      "method": "getMST"
+      "parameters":
+        "id": "${id}"
+    onResponse:
+      executeCode:
+        body: |
+          var devicesWithTimeLimit = ensemble.storage.devicesWithParentalControlCount;
+          if (response.body.data.enable)
+            devicesWithTimeLimit = devicesWithTimeLimit + 1;
+
+          ensemble.storage.devicesWithParentalControlCount = devicesWithTimeLimit;
+
+  getIPv4Rules:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getIPv4Rules }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Firewall"
+      "method": "getPortForwarding"
+      "parameters": {
+        "origin": "webui"
+      }
+    onResponse: |
+      //@code
+      var ipv4RulesArray = [];
+      
+      for (key in response.body.status)
+        ipv4RulesArray.push(response.body.status[key]);
+    
+      response.body.CustomList = ipv4RulesArray;
+
+  getFirewallLevel:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getFirewallLevel }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Firewall"
+      "method": "getFirewallLevel"
+      "parameters": {}
+
+  setWifiStatus:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NMC.Wifi"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeCode:
+        body: |
+          // set 2g and 5g radio
+          ensemble.invokeAPI("setWifiStatus2g", { "status": status });
+          ensemble.invokeAPI("setWifiStatus5g", { "status": status });
+
+          var widget = "WifiSwitchSuccessToast";
+          var styles = {
+            padding: 0
+          };
+            var options = {
+            type: 'custom',
+            duration: 35,
+            dismissible: false,
+            alignment: 'center'
+          };
+          showToast(widget, styles, options);
+        onComplete:
+          startTimer:
+            options:
+              startAfter: 30
+            onTimer:
+              invokeAPI:
+                name: getWifiStatus
+                onResponse:
+                  invokeAPI:
+                    name: getPrivWiFi
+                    onResponse:
+                      invokeAPI:
+                        name: getGuestWiFiInfo
+
+
+  setWifiStatus2g:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad2g0"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeConditionalAction:
+        conditions:
+          - if: ${status}
+            action:
+              invokeAPI:
+                name: setWLanManager
+                inputs:
+                  service: vap2g0priv
+                  status: true
+
+  setWifiStatus5g:
+    inputs: [status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.rad5g0"
+      "method": "set"
+      "parameters":
+        "Enable": "${status}"
+    onResponse:
+      executeConditionalAction:
+        conditions:
+          - if: ${status}
+            action:
+              invokeAPI:
+                name: setWLanManager
+                inputs:
+                  service: vap5g0priv
+                  status: true
+
+  setWLanManager:
+    inputs: [service, status]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.${service}"
+      "method": "set"
+      "parameters":
+        "PersistentEnable": ${status}
+
+  getStaticLeases:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getStaticLeases }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "DHCPv4.Server.Pool.default"
+      "method": "getStaticLeases"
+      "parameters": ""
+    onResponse: |
+      //@code
+      var leasesList = [];
+      response.body.status.map(function (i) {
+        leasesList.push(i.IPAddress);
+      });
+      response.body.leasesList = leasesList;
+
+  getMacFiltering:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getMacFiltering }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.lan"
+      "method": "getMIBs"
+      "parameters":
+        "mibs": "wlanvap"
+        "flag": "!backhaul"
+  
+  getLatestVersion:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getLatestVersion }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "WebuiupgradeService"
+      "method": "getLatestVersion"
+      "parameters": {}
+
+
+  getExtenders:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getExtenders }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices"
+      "method": "get"
+      "parameters":
+        "expression": "not interface and not self and ssw"
+        "flags": "full_links"
+    onResponse: |
+      var extenders = {};
+      var extendersMacs = {};
+      response.body.status.map(function(d) {
+        extendersMacs[d.Key] = d.Name;
+
+        var thisExtender = {};
+        thisExtender = {
+          "Name": d.Name,
+          "BaseMac": d.Key
+        }
+        extenders[d.Key] = thisExtender;
+        ensemble.storage.extenders = extenders;
+      });
+
+      // keep a flat object for fast lookup
+      ensemble.storage.extendersMacs = extendersMacs;
+
+
+
+  getExtenderTopology:
+    inputs: [ mac ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getExtenderTopology }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.${mac}"
+      "method": "topology"
+      "parameters":
+        "expression": "not logical"
+        "flags": "no_recurse|no_actions"
+    onResponse: |
+      // keep a flat object for fast lookup
+      var extendersMacs = ensemble.storage.extendersMacs;
+
+      // build a detailed object to add to extender
+      var interfaces = {};
+
+      response.body.status[0].Children.map(function(i) {
+        if (i.BSSID != null && i.Name != null) {
+          interfaces[i.Name] = {
+            "Name": i.Name,
+            "BSSID": i.BSSID
+          }
+          extendersMacs[i.BSSID] = response.body.status[0].Name + " " + i.Name;
+        }
+      });
+     
+      ensemble.storage.extenders[mac].interfaces = interfaces;
+      ensemble.storage.extendersMacs = extendersMacs;
+
+
+  getDMZ:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDMZ }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Firewall"
+      "method": "getDMZ"
+      "parameters": { }
+
+
+  getIPv6OpenPorts:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getIPv6OpenPorts }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Firewall"
+      "method": "getPinhole"
+      "parameters": {}
+    onResponse:
+      executeCode:
+        body: |
+          //@code
+          var ipv6OpenPorts = [];
+          var ipv6DmzDevices = [];
+          
+          for (key in response.body.status) {
+            ipv6OpenPorts.push(response.body.status[key]);
+
+            // if the port is 1-65535, add to DMZ list
+            if (response.body.status[key].DestinationPort == "1-65535")
+              ipv6DmzDevices.push(response.body.status[key]);
+          }
+            
+          response.body.CustomList = ipv6OpenPorts;
+          response.body.DmzList = ipv6DmzDevices;
+
+
+  getTopology:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getTopology }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Devices.Device.lan"
+      "method": "topology"
+      "parameters":
+        "expression": "not logical"
+        "flags": "no_recurse|no_actions"
+    onResponse: |
+      var ethPorts = {};
+      response.body.status[0].Children.map(function (i) {
+        var tagsArray = i.Tags.split(' ');
+        if (tagsArray.includes('eth') && tagsArray.includes('interface')) {
+          i.CurrentBitRateFormatted = formatSpeed(i.CurrentBitRate);
+          ethPorts[i.Key] = i;
+        }
+      });
+      ensemble.storage.ethPorts = ethPorts;
+
+  getIptvIp:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getIptvIp }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.iptv"
+      "method": "luckyAddrAddress"
+      "parameters":
+        "flag": "ipv4"
+        "traverse": "down"
+  
+  getGlobalIPV6:
+    url: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getGlobalIPV6 }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "NeMo.Intf.data"
+      "method": "luckyAddrAddress"
+      "parameters":
+        "flag": "ipv6 && global && @gua"
+        "traverse": "down"
+
+
+  runUpstreamSpeedTest:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "SpeedTest.Diagnostics.Upstream"
+      "method": "runDiagnostics"
+      "parameters": ""
+
+  runDownstreamSpeedTest:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "SpeedTest.Diagnostics.Downstream"
+      "method": "runDiagnostics"
+      "parameters": ""
+
+
+  getHybridAccessStatus:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getHybridAccessStatus }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "Tessares"
+      "method": "get"
+      "parameters": {}
+    onResponse: |
+      var cleanedStatusValue = response.body.status.Status.replace(/\n/g, '');
+      response.body.status.Status = cleanedStatusValue;
+
+
+  getDhcpSettings:
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    mockResponse: 
+      body: ${ mock_getDhcpSettings }
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      "service": "DHCPv4.Server"
+      "method": "getDHCPServerPool"
+      "parameters":
+        "id": "default"
+    onResponse: |
+      var deviatingFromDefaults = false;
+
+      if ( getDhcpSettings.body.status.default.Server != defaultDhcp.server)
+        deviatingFromDefaults = true;
+      if ( getDhcpSettings.body.status.default.SubnetMask != defaultDhcp.subnetMask)
+        deviatingFromDefaults = true;
+
+      response.body.deviatingFromDefaults = deviatingFromDefaults;
+      ensemble.storage.showHybridAccessWarning = deviatingFromDefaults;
+
+  startPing:
+    inputs: [ ipversion, hostname ]
+    uri: ${app.baseUrl}/ws/NeMo/Intf/lan:getMIBs
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-sah-ws-4-call+json'
+      'Authorization': 'X-Sah ${ensemble.storage.get("contextId")}'
+      'X-Context': '${ensemble.storage.get("contextId")}'
+      'Cookie': '${ensemble.storage.get("cookie")}'
+    body:
+      service: IPPingDiagnostics
+      method: execDiagnostic
+      parameters: 
+        ipHost: ${hostname}
+        ProtocolVersion: ${ipversion}
+
+
+Global: |
+  
+  function reformatDateTime (d) {
+    var dd = d.substring(8,10);
+    var mm = d.substring(5,7);
+    var yyyy = d.substring(0,4);
+    var time = d.substring(11,19);
+    return (dd + '-' + mm + '-' + yyyy + '  ' + time);
+  }  
+  
+  function getWifiSpeed(download,upload) {
+    var d = '0';
+    if (download>1000000)
+      d = Math.round(download / 1000000) + ' Gbps';
+    else if (download>0)
+      d = Math.round(download / 1000) + ' Mbps';
+  
+    var u = '0';
+    if (upload>1000000)
+      u = Math.round(upload / 1000000) + ' Gbps';
+    else if (upload>0)
+      u = Math.round(upload / 1000) + ' Mbps';
+  
+    return (d + ' / ' + u);
+  }
+  
+  
+  
+  
+  function getDeviceConnectionDetails (ULink, InterfaceName) {
+    var connectionDetails = {
+      'type': '-',
+      'typeLabel': '-',
+      'networklabel': '-'
+    }
+
+    if (ULink.Type == "ethernet") {
+      var portNumber = reformatEthernetPort(ULink.Key);
+      connectionDetails = {
+        'type': 'Ethernet',
+        'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+        'networklabel': portNumber
+      }
+    } else if (ULink.Type == "wifi") {
+      connectionDetails = {
+        'type': 'WiFi',
+        'typeLabel': 'r@kpn.local_network.connection_type_wifi',
+        'networklabel': ensemble.storage.get(ULink.Key)
+      }
+    } else if (ULink.Type == "HNID") {
+      var portNumber = reformatEthernetPort(InterfaceName);
+      connectionDetails = {
+        'type': 'Ethernet',
+        'typeLabel': 'r@kpn.local_network.connection_type_ethernet',
+        'networklabel': portNumber + ' / Switch'
+      }
+    }
+  
+    return (connectionDetails);
+  }
+
+
+  function reformatEthernetPort (interface) {
+    var ethPort = '';
+    if (interface == 'ETH0')
+      ethPort = 'Ethernet 1'
+    else if (interface == 'ETH1')
+      ethPort = 'Ethernet 2'
+    else if (interface == 'ETH2')
+      ethPort = 'Ethernet 3'
+    else if (interface == 'ETH3')
+      ethPort = 'Ethernet 4'
+
+    return (ethPort);
+  }
+
+  function showToast (widget, styles, options) {
+    var payload = {
+      widget: widget,
+      styles: styles,
+      options: options
+    };
+    ensemble.showToast(payload);
+  }
+  
+  function getGhostDeviceMac (inputMac) {
+
+    // get last two characters
+    var lastTwo = inputMac.substring(15,17);
+    var lastTwoNum = parseInt(lastTwo, 16);
+
+    // adjust to get the ghost device last two
+    var ghostDeviceLastTwo = lastTwoNum - 7;
+    ghostDeviceLastTwoNum = ghostDeviceLastTwo.toString(16);
+
+    // ghost device full mac
+    var ghostDeviceMac = inputMac.substring(0,14) + ':' + ghostDeviceLastTwoNum.toUpperCase();
+
+    return(ghostDeviceMac);
+  }

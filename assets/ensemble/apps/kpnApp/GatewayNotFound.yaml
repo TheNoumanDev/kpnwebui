@@ -1,0 +1,40 @@
+View:
+  body:
+    Column:
+      styles: 
+        padding: 40
+        backgroundColor: 0xffeaeaea
+        mainAxis: center
+        crossAxis: stretch
+        gap: 8
+      children:
+        - Text:
+            text: Could not reach the gateway
+            styles:
+              textAlign: center
+              textStyle:
+                fontSize: 24
+                fontFamily: 'kpnMetricBold'
+        - Text:
+            text: Make sure you are connected to the same network as your home gateway.
+            styles:
+              height: 50
+              textAlign: center
+              textStyle:
+                fontSize: 16
+        - Column:
+            styles:
+              crossAxis: center
+            children:
+              - Button:
+                  label: Try again
+                  onTap:
+                    navigateScreen:
+                      name: Landing
+                      options:
+                        clearAllScreens: true
+                  styles:
+                    width: 250
+                    labelStyle:
+                      fontSize: 17
+                      color: white
